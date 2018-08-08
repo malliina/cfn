@@ -1,45 +1,22 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
 
-  "Description": "AWS CloudFormation Sample Template ElasticBeanstalk_Simple: Configure and launch an AWS Elastic Beanstalk application. Monitoring is setup on the database. **WARNING** This template creates one or more Amazon EC2 instances and an Amazon Relational Database Service database instance. You will be billed for the AWS resources used if you create a stack from this template.",
+  "Description": "AWS CloudFormation Sample Template ElasticBeanstalk_Simple: Configure and launch an AWS Elastic Beanstalk application. **WARNING** This template creates one or more Amazon EC2 instances and an Amazon Relational Database Service database instance. You will be billed for the AWS resources used if you create a stack from this template.",
 
   "Parameters": {
     "OperatorEMail": {
-      "Description": "EMail address to notify if there are any operational issues",
+      "Description": "Email address to notify if there are any operational issues",
       "Default": "malliina123@gmail.com",
       "Type": "String",
       "AllowedPattern": "([a-zA-Z0-9_\\-\\.]+)@((\\[[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.)|(([a-zA-Z0-9\\-]+\\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\\]?)",
       "ConstraintDescription": "must be a valid email address."
     },
 
-    "UrlPrefix": {
-      "Type": "String",
-      "Description": "CNAME Prefix",
-      "Default": "night-url",
-      "MinLength": "1",
-      "MaxLength": "16",
-      "AllowedPattern": "[a-zA-Z][-a-zA-Z0-9]*",
-      "ConstraintDescription": "must begin with a letter and contain only alphanumeric characters."
-    },
-
-    "AppName": {
-      "Type": "String",
-      "Description": "Application Name",
-      "Default": "night",
-      "MinLength": "1",
-      "MaxLength": "16",
-      "AllowedPattern": "[a-zA-Z][-a-zA-Z0-9]*",
-      "ConstraintDescription": "must begin with a letter and contain only alphanumeric characters."
-    },
-
-    "EnvName": {
-      "Type": "String",
-      "Description": "Environment Name",
-      "Default": "night-env",
-      "MinLength": "1",
-      "MaxLength": "16",
-      "AllowedPattern": "[a-zA-Z][-a-zA-Z0-9]*",
-      "ConstraintDescription": "must begin with a letter and contain only alphanumeric characters."
+    "InstanceType" : {
+      "Type" : "String",
+      "Default" : "t2.micro",
+      "AllowedValues" : ["t2.micro", "m1.small", "m1.large"],
+      "Description" : "Enter t2.micro, m1.small, or m1.large. Default is t2.micro."
     },
 
     "GitHubOwner": {
@@ -90,6 +67,16 @@
       "MaxLength": "256",
       "AllowedPattern": "[a-zA-Z0-9][-a-zA-Z0-9]*",
       "ConstraintDescription": "must contain only alphanumeric characters."
+    },
+
+    "HealthCheckPath": {
+      "Type": "String",
+      "Description": "Health check path",
+      "Default": "/health",
+      "MinLength": "1",
+      "MaxLength": "256",
+      "AllowedPattern": ".+",
+      "ConstraintDescription": "must be a URL."
     }
   },
 
@@ -128,11 +115,15 @@
       "Type": "AWS::IAM::Role",
       "Properties" : {
         "AssumeRolePolicyDocument" : {
-          "Statement"  : [{
-            "Effect"   : "Allow",
-            "Principal": { "Service": [{ "Fn::FindInMap" : ["Region2Principal", {"Ref" : "AWS::Region"}, "EC2Principal"]}] },
-            "Action"   : [ "sts:AssumeRole" ]
-          } ]
+          "Statement" : [
+            {
+              "Effect"   : "Allow",
+              "Principal": { "Service": [{ "Fn::FindInMap" : ["Region2Principal", {"Ref" : "AWS::Region"}, "EC2Principal"]}] },
+              "Action"   : [
+                "sts:AssumeRole"
+              ]
+            }
+          ]
         },
         "Path": "/"
       }
@@ -165,11 +156,11 @@
       "Type": "AWS::ElasticBeanstalk::Application",
       "Properties": {
         "Description": "AWS Elastic Beanstalk Application",
-        "ApplicationName": { "Ref": "AppName" }
+        "ApplicationName": { "Ref": "AWS::StackName" }
       }
     },
 
-    "DockerApplicationVersion": {
+    "BeanstalkApplicationVersion": {
       "Type": "AWS::ElasticBeanstalk::ApplicationVersion",
       "Properties": {
         "ApplicationName" : { "Ref" : "BeanstalkApp" },
@@ -181,12 +172,51 @@
       }
     },
 
-    "DockerConfigurationTemplate": {
+    "BeanstalkEnvironment": {
+      "Type": "AWS::ElasticBeanstalk::Environment",
+      "Properties": {
+        "Description": "AWS Elastic Beanstalk Environment running Sample Application",
+        "ApplicationName": { "Ref": "BeanstalkApp" },
+        "CNAMEPrefix": { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" }, "url" ] ] },
+        "EnvironmentName": { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" }, "env" ] ] },
+        "TemplateName": { "Ref" : "BeanstalkConfigurationTemplate" },
+        "VersionLabel": { "Ref" : "BeanstalkApplicationVersion" },
+        "Tier": {
+          "Name": "WebServer",
+          "Type": "Standard",
+          "Version": "1.0"
+        },
+        "OptionSettings": [
+          {
+            "Namespace": "aws:elasticbeanstalk:application",
+            "OptionName": "Application Healthcheck URL",
+            "Value": { "Ref": "HealthCheckPath" }
+          },
+          {
+            "Namespace": "aws:elasticbeanstalk:cloudwatch:logs",
+            "OptionName": "StreamLogs",
+            "Value": "true"
+          },
+          {
+            "Namespace": "aws:elasticbeanstalk:cloudwatch:logs",
+            "OptionName": "RetentionInDays",
+            "Value": 14
+          },
+          {
+            "Namespace": "aws:elasticbeanstalk:cloudwatch:logs:health",
+            "OptionName": "HealthStreamingEnabled",
+            "Value": "true"
+          }
+        ]
+      }
+    },
+
+    "BeanstalkConfigurationTemplate": {
       "Type": "AWS::ElasticBeanstalk::ConfigurationTemplate",
       "Properties": {
         "ApplicationName" : { "Ref" : "BeanstalkApp" },
         "Description" : "Single-container Docker Configuration",
-        "SolutionStackName": "64bit Amazon Linux 2018.03 v2.11.0 running Docker 18.03.1-ce",
+        "SolutionStackName": "64bit Amazon Linux 2018.03 v2.12.0 running Docker 18.03.1-ce",
         "OptionSettings": [
           {
             "Namespace": "aws:autoscaling:asg",
@@ -196,7 +226,7 @@
           {
             "Namespace": "aws:elasticbeanstalk:environment",
             "OptionName": "EnvironmentType",
-            "Value": "SingleInstance"
+            "Value": "LoadBalanced"
           },
           {
             "Namespace": "aws:elasticbeanstalk:healthreporting:system",
@@ -210,27 +240,15 @@
           },
           {
             "Namespace": "aws:autoscaling:launchconfiguration",
+            "OptionName": "InstanceType",
+            "Value": { "Ref": "InstanceType" }
+          },
+          {
+            "Namespace": "aws:autoscaling:launchconfiguration",
             "OptionName": "IamInstanceProfile",
             "Value": { "Ref": "WebServerInstanceProfile" }
           }
         ]
-      }
-    },
-
-    "BeanstalkEnvironment": {
-      "Type": "AWS::ElasticBeanstalk::Environment",
-      "Properties": {
-        "Description": "AWS Elastic Beanstalk Environment running Sample Application",
-        "ApplicationName": { "Ref": "BeanstalkApp" },
-        "CNAMEPrefix": { "Ref": "UrlPrefix" },
-        "EnvironmentName": { "Ref": "EnvName" },
-        "TemplateName": { "Ref" : "DockerConfigurationTemplate" },
-        "VersionLabel": { "Ref" : "DockerApplicationVersion" },
-        "Tier": {
-            "Name": "WebServer",
-            "Type": "Standard",
-            "Version": "1.0"
-        },
       }
     },
 
@@ -373,7 +391,7 @@
                     "Name": "MyAppBuild"
                   }
                 ], 
-                "Name": {"Ref" : "EnvName"}, 
+                "Name": {"Ref" : "BeanstalkEnvironment"},
                 "ActionTypeId": {
                   "Category": "Deploy", 
                   "Owner": "AWS", 
@@ -382,8 +400,8 @@
                 }, 
                 "OutputArtifacts": [], 
                 "Configuration": {
-                  "ApplicationName": {"Ref" : "AppName"}, 
-                  "EnvironmentName": {"Ref" : "EnvName"}
+                  "ApplicationName": {"Ref" : "AWS::StackName"},
+                  "EnvironmentName": {"Ref" : "BeanstalkEnvironment"}
                 }, 
                 "RunOrder": 1
               }
@@ -397,7 +415,8 @@
       }
     },
     "ArtifactStoreS3Bucket" : {
-      "Type" : "AWS::S3::Bucket"
+      "Type" : "AWS::S3::Bucket",
+      "DeletionPolicy" : "Retain"
     },
     "CodeBuildServiceRole": {
       "Type": "AWS::IAM::Role",
@@ -556,6 +575,13 @@
                     "cloudwatch:*",
                     "s3:*",
                     "sns:*",
+                    "logs:CreateLogGroup",
+                    "logs:CreateLogStream",
+                    "logs:DescribeLogGroups",
+                    "logs:DescribeLogStreams",
+                    "logs:GetLogEvents",
+                    "logs:PutLogEvents",
+                    "logs:PutRetentionPolicy",
                     "iam:PassRole"
                   ]
                 }

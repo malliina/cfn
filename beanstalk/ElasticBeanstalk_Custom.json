@@ -74,16 +74,6 @@
       "ConstraintDescription": "must begin with a letter and contain only alphanumeric characters."
     },
 
-    "ArtifactStoreS3BucketName": {
-      "Type": "String",
-      "Description": "Bucket for build artifacts",
-      "Default": "night-artifacts",
-      "MinLength": "1",
-      "MaxLength": "16",
-      "AllowedPattern": "[a-zA-Z][-a-zA-Z0-9]*",
-      "ConstraintDescription": "must begin with a letter and contain only alphanumeric characters."
-    },
-
     "GitHubOwner": {
       "Type": "String",
       "Description": "GitHub Owner or User",
@@ -238,7 +228,7 @@
           {
             "Namespace": "aws:elasticbeanstalk:environment",
             "OptionName": "EnvironmentType",
-            "Value": "SingleInstance"
+            "Value": "LoadBalanced"
           },
           {
             "Namespace": "aws:elasticbeanstalk:healthreporting:system",
@@ -486,7 +476,8 @@
       }
     },
     "ArtifactStoreS3Bucket" : {
-      "Type" : "AWS::S3::Bucket"
+      "Type" : "AWS::S3::Bucket",
+      "DeletionPolicy" : "Retain"
     },
     "CodeBuildServiceRole": {
       "Type": "AWS::IAM::Role",
