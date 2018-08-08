@@ -160,18 +160,6 @@
       }
     },
 
-    "BeanstalkApplicationVersion": {
-      "Type": "AWS::ElasticBeanstalk::ApplicationVersion",
-      "Properties": {
-        "ApplicationName" : { "Ref" : "BeanstalkApp" },
-        "Description" : "Version 1.0",
-        "SourceBundle": {
-          "S3Bucket": { "Fn::Join": [ "-", [ "elasticbeanstalk-samples", { "Ref": "AWS::Region" } ] ] },
-          "S3Key": "docker-sample-v3.zip"
-        }
-      }
-    },
-
     "BeanstalkEnvironment": {
       "Type": "AWS::ElasticBeanstalk::Environment",
       "Properties": {
@@ -180,7 +168,6 @@
         "CNAMEPrefix": { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" }, "url" ] ] },
         "EnvironmentName": { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" }, "env" ] ] },
         "TemplateName": { "Ref" : "BeanstalkConfigurationTemplate" },
-        "VersionLabel": { "Ref" : "BeanstalkApplicationVersion" },
         "Tier": {
           "Name": "WebServer",
           "Type": "Standard",
@@ -200,7 +187,7 @@
           {
             "Namespace": "aws:elasticbeanstalk:cloudwatch:logs",
             "OptionName": "RetentionInDays",
-            "Value": 14
+            "Value": 30
           },
           {
             "Namespace": "aws:elasticbeanstalk:cloudwatch:logs:health",
