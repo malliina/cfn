@@ -1,8 +1,6 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
-
   "Description": "AWS CloudFormation Sample Template ElasticBeanstalk_Simple: Configure and launch an AWS Elastic Beanstalk application. **WARNING** This template creates one or more Amazon EC2 instances and an Amazon Relational Database Service database instance. You will be billed for the AWS resources used if you create a stack from this template.",
-
   "Parameters": {
     "OperatorEMail": {
       "Description": "Email address to notify if there are any operational issues",
@@ -11,14 +9,16 @@
       "AllowedPattern": "([a-zA-Z0-9_\\-\\.]+)@((\\[[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.)|(([a-zA-Z0-9\\-]+\\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\\]?)",
       "ConstraintDescription": "must be a valid email address."
     },
-
-    "InstanceType" : {
-      "Type" : "String",
-      "Default" : "t2.micro",
-      "AllowedValues" : ["t2.micro", "m1.small", "m1.large"],
-      "Description" : "Enter t2.micro, m1.small, or m1.large. Default is t2.micro."
+    "InstanceType": {
+      "Type": "String",
+      "Default": "t2.micro",
+      "AllowedValues": [
+        "t2.micro",
+        "m1.small",
+        "m1.large"
+      ],
+      "Description": "Enter t2.micro, m1.small, or m1.large. Default is t2.micro."
     },
-
     "GitHubOwner": {
       "Type": "String",
       "Description": "GitHub Owner or User",
@@ -28,7 +28,6 @@
       "AllowedPattern": "[a-zA-Z0-9][-a-zA-Z0-9]*",
       "ConstraintDescription": "must contain only alphanumeric characters."
     },
-
     "GitHubRepository": {
       "Type": "String",
       "Description": "GitHub Repository",
@@ -38,7 +37,6 @@
       "AllowedPattern": "[a-zA-Z0-9][-a-zA-Z0-9]*",
       "ConstraintDescription": "must contain only alphanumeric characters."
     },
-
     "GitHubAccessToken": {
       "NoEcho": "true",
       "Type": "String",
@@ -48,7 +46,6 @@
       "AllowedPattern": "[a-zA-Z0-9][-a-zA-Z0-9]*",
       "ConstraintDescription": "must contain only alphanumeric characters."
     },
-
     "BuildImageRepoName": {
       "Type": "String",
       "Description": "ECR repo name with build images",
@@ -58,7 +55,6 @@
       "AllowedPattern": "[a-zA-Z0-9][-a-zA-Z0-9]*",
       "ConstraintDescription": "must contain only alphanumeric characters."
     },
-
     "BuildImageTag": {
       "Type": "String",
       "Description": "ECR image tag of build image",
@@ -68,7 +64,6 @@
       "AllowedPattern": "[a-zA-Z0-9][-a-zA-Z0-9]*",
       "ConstraintDescription": "must contain only alphanumeric characters."
     },
-
     "HealthCheckPath": {
       "Type": "String",
       "Description": "Health check path",
@@ -79,47 +74,200 @@
       "ConstraintDescription": "must be a URL."
     }
   },
-
-  "Mappings" : {
-    "Region2Principal" : {
-      "us-east-1"      : { "EC2Principal" : "ec2.amazonaws.com", "OpsWorksPrincipal" : "opsworks.amazonaws.com" },
-      "us-west-2"      : { "EC2Principal" : "ec2.amazonaws.com", "OpsWorksPrincipal" : "opsworks.amazonaws.com" },
-      "us-west-1"      : { "EC2Principal" : "ec2.amazonaws.com", "OpsWorksPrincipal" : "opsworks.amazonaws.com" },
-      "eu-west-1"      : { "EC2Principal" : "ec2.amazonaws.com", "OpsWorksPrincipal" : "opsworks.amazonaws.com" },
-      "eu-west-2"      : { "EC2Principal" : "ec2.amazonaws.com", "OpsWorksPrincipal" : "opsworks.amazonaws.com" },
-      "eu-west-3"      : { "EC2Principal" : "ec2.amazonaws.com", "OpsWorksPrincipal" : "opsworks.amazonaws.com" },
-      "ap-southeast-1" : { "EC2Principal" : "ec2.amazonaws.com", "OpsWorksPrincipal" : "opsworks.amazonaws.com" },
-      "ap-northeast-1" : { "EC2Principal" : "ec2.amazonaws.com", "OpsWorksPrincipal" : "opsworks.amazonaws.com" },
-      "ap-northeast-2" : { "EC2Principal" : "ec2.amazonaws.com", "OpsWorksPrincipal" : "opsworks.amazonaws.com" },
-      "ap-northeast-3" : { "EC2Principal" : "ec2.amazonaws.com", "OpsWorksPrincipal" : "opsworks.amazonaws.com" },
-      "ap-southeast-2" : { "EC2Principal" : "ec2.amazonaws.com", "OpsWorksPrincipal" : "opsworks.amazonaws.com" },
-      "ap-south-1"     : { "EC2Principal" : "ec2.amazonaws.com", "OpsWorksPrincipal" : "opsworks.amazonaws.com" },
-      "us-east-2"      : { "EC2Principal" : "ec2.amazonaws.com", "OpsWorksPrincipal" : "opsworks.amazonaws.com" },
-      "ca-central-1"   : { "EC2Principal" : "ec2.amazonaws.com", "OpsWorksPrincipal" : "opsworks.amazonaws.com" },
-      "sa-east-1"      : { "EC2Principal" : "ec2.amazonaws.com", "OpsWorksPrincipal" : "opsworks.amazonaws.com" },
-      "cn-north-1"     : { "EC2Principal" : "ec2.amazonaws.com.cn", "OpsWorksPrincipal" : "opsworks.amazonaws.com.cn" },
-      "cn-northwest-1" : { "EC2Principal" : "ec2.amazonaws.com.cn", "OpsWorksPrincipal" : "opsworks.amazonaws.com.cn" },
-      "eu-central-1"   : { "EC2Principal" : "ec2.amazonaws.com", "OpsWorksPrincipal" : "opsworks.amazonaws.com" }
+  "Mappings": {
+    "Region2Principal": {
+      "us-east-1": {
+        "EC2Principal": "ec2.amazonaws.com",
+        "OpsWorksPrincipal": "opsworks.amazonaws.com"
+      },
+      "us-west-2": {
+        "EC2Principal": "ec2.amazonaws.com",
+        "OpsWorksPrincipal": "opsworks.amazonaws.com"
+      },
+      "us-west-1": {
+        "EC2Principal": "ec2.amazonaws.com",
+        "OpsWorksPrincipal": "opsworks.amazonaws.com"
+      },
+      "eu-west-1": {
+        "EC2Principal": "ec2.amazonaws.com",
+        "OpsWorksPrincipal": "opsworks.amazonaws.com"
+      },
+      "eu-west-2": {
+        "EC2Principal": "ec2.amazonaws.com",
+        "OpsWorksPrincipal": "opsworks.amazonaws.com"
+      },
+      "eu-west-3": {
+        "EC2Principal": "ec2.amazonaws.com",
+        "OpsWorksPrincipal": "opsworks.amazonaws.com"
+      },
+      "ap-southeast-1": {
+        "EC2Principal": "ec2.amazonaws.com",
+        "OpsWorksPrincipal": "opsworks.amazonaws.com"
+      },
+      "ap-northeast-1": {
+        "EC2Principal": "ec2.amazonaws.com",
+        "OpsWorksPrincipal": "opsworks.amazonaws.com"
+      },
+      "ap-northeast-2": {
+        "EC2Principal": "ec2.amazonaws.com",
+        "OpsWorksPrincipal": "opsworks.amazonaws.com"
+      },
+      "ap-northeast-3": {
+        "EC2Principal": "ec2.amazonaws.com",
+        "OpsWorksPrincipal": "opsworks.amazonaws.com"
+      },
+      "ap-southeast-2": {
+        "EC2Principal": "ec2.amazonaws.com",
+        "OpsWorksPrincipal": "opsworks.amazonaws.com"
+      },
+      "ap-south-1": {
+        "EC2Principal": "ec2.amazonaws.com",
+        "OpsWorksPrincipal": "opsworks.amazonaws.com"
+      },
+      "us-east-2": {
+        "EC2Principal": "ec2.amazonaws.com",
+        "OpsWorksPrincipal": "opsworks.amazonaws.com"
+      },
+      "ca-central-1": {
+        "EC2Principal": "ec2.amazonaws.com",
+        "OpsWorksPrincipal": "opsworks.amazonaws.com"
+      },
+      "sa-east-1": {
+        "EC2Principal": "ec2.amazonaws.com",
+        "OpsWorksPrincipal": "opsworks.amazonaws.com"
+      },
+      "cn-north-1": {
+        "EC2Principal": "ec2.amazonaws.com.cn",
+        "OpsWorksPrincipal": "opsworks.amazonaws.com.cn"
+      },
+      "cn-northwest-1": {
+        "EC2Principal": "ec2.amazonaws.com.cn",
+        "OpsWorksPrincipal": "opsworks.amazonaws.com.cn"
+      },
+      "eu-central-1": {
+        "EC2Principal": "ec2.amazonaws.com",
+        "OpsWorksPrincipal": "opsworks.amazonaws.com"
+      }
     }
-
   },
-
-  "Conditions" : {
-    "Is-EC2-VPC"     : { "Fn::Or" : [ {"Fn::Equals" : [{"Ref" : "AWS::Region"}, "eu-central-1" ]},
-                                      {"Fn::Equals" : [{"Ref" : "AWS::Region"}, "cn-north-1" ]}]},
-    "Is-EC2-Classic" : { "Fn::Not" : [{ "Condition" : "Is-EC2-VPC"}]}
+  "Conditions": {
+    "Is-EC2-VPC": {
+      "Fn::Or": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "AWS::Region"
+            },
+            "eu-central-1"
+          ]
+        },
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "AWS::Region"
+            },
+            "cn-north-1"
+          ]
+        }
+      ]
+    },
+    "Is-EC2-Classic": {
+      "Fn::Not": [
+        {
+          "Condition": "Is-EC2-VPC"
+        }
+      ]
+    }
   },
-
   "Resources": {
+    "CloudFront": {
+      "Type": "AWS::CloudFront::Distribution",
+      "Properties": {
+        "DistributionConfig": {
+          "Enabled": "true",
+          "Comment": "Default distro",
+          "DefaultCacheBehavior": {
+            "AllowedMethods": [
+              "DELETE",
+              "GET",
+              "HEAD",
+              "OPTIONS",
+              "PATCH",
+              "POST",
+              "PUT"
+            ],
+            "TargetOriginId": {
+              "Ref": "AWS::StackName"
+            },
+            "ForwardedValues": {
+              "QueryString": "true",
+              "Headers": [
+                "Authorization",
+                "Host"
+              ],
+              "Cookies": {
+                "Forward": "all"
+              }
+            },
+            "TrustedSigners": [],
+            "ViewerProtocolPolicy": "allow-all"
+          },
+          "Origins": [
+            {
+              "DomainName": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "",
+                    {
+                      "Fn::GetAtt": [
+                        "BeanstalkEnvironment",
+                        "EndpointURL"
+                      ]
+                    }
+                  ]
+                ]
+              },
+              "Id": {
+                "Ref": "AWS::StackName"
+              },
+              "CustomOriginConfig": {
+                "HTTPPort": "80",
+                "HTTPSPort": "443",
+                "OriginProtocolPolicy": "http-only"
+              }
+            }
+          ],
+          "PriceClass": "PriceClass_100",
+          "ViewerCertificate": {
+            "CloudFrontDefaultCertificate": "true"
+          }
+        },
+        "Tags": [
+        ]
+      }
+    },
     "WebServerRole": {
       "Type": "AWS::IAM::Role",
-      "Properties" : {
-        "AssumeRolePolicyDocument" : {
-          "Statement" : [
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
             {
-              "Effect"   : "Allow",
-              "Principal": { "Service": [{ "Fn::FindInMap" : ["Region2Principal", {"Ref" : "AWS::Region"}, "EC2Principal"]}] },
-              "Action"   : [
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  {
+                    "Fn::FindInMap": [
+                      "Region2Principal",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      "EC2Principal"
+                    ]
+                  }
+                ]
+              },
+              "Action": [
                 "sts:AssumeRole"
               ]
             }
@@ -128,46 +276,78 @@
         "Path": "/"
       }
     },
-
     "WebServerRolePolicy": {
       "Type": "AWS::IAM::Policy",
       "Properties": {
-        "PolicyName" : "WebServerRole",
-        "PolicyDocument" : {
-          "Statement"  : [ {
-            "Effect"    : "Allow",
-            "NotAction" : "iam:*",
-            "Resource"  : "*"
-          } ]
+        "PolicyName": "WebServerRole",
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "NotAction": "iam:*",
+              "Resource": "*"
+            }
+          ]
         },
-        "Roles": [ { "Ref": "WebServerRole" } ]
+        "Roles": [
+          {
+            "Ref": "WebServerRole"
+          }
+        ]
       }
     },
-
     "WebServerInstanceProfile": {
       "Type": "AWS::IAM::InstanceProfile",
       "Properties": {
         "Path": "/",
-        "Roles": [ { "Ref": "WebServerRole" } ]
+        "Roles": [
+          {
+            "Ref": "WebServerRole"
+          }
+        ]
       }
     },
-
     "BeanstalkApp": {
       "Type": "AWS::ElasticBeanstalk::Application",
       "Properties": {
         "Description": "AWS Elastic Beanstalk Application",
-        "ApplicationName": { "Ref": "AWS::StackName" }
+        "ApplicationName": {
+          "Ref": "AWS::StackName"
+        }
       }
     },
-
     "BeanstalkEnvironment": {
       "Type": "AWS::ElasticBeanstalk::Environment",
       "Properties": {
         "Description": "AWS Elastic Beanstalk Environment running Sample Application",
-        "ApplicationName": { "Ref": "BeanstalkApp" },
-        "CNAMEPrefix": { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" }, "url" ] ] },
-        "EnvironmentName": { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" }, "env" ] ] },
-        "TemplateName": { "Ref" : "BeanstalkConfigurationTemplate" },
+        "ApplicationName": {
+          "Ref": "BeanstalkApp"
+        },
+        "CNAMEPrefix": {
+          "Fn::Join": [
+            "-",
+            [
+              {
+                "Ref": "AWS::StackName"
+              },
+              "url"
+            ]
+          ]
+        },
+        "EnvironmentName": {
+          "Fn::Join": [
+            "-",
+            [
+              {
+                "Ref": "AWS::StackName"
+              },
+              "env"
+            ]
+          ]
+        },
+        "TemplateName": {
+          "Ref": "BeanstalkConfigurationTemplate"
+        },
         "Tier": {
           "Name": "WebServer",
           "Type": "Standard",
@@ -177,7 +357,9 @@
           {
             "Namespace": "aws:elasticbeanstalk:application",
             "OptionName": "Application Healthcheck URL",
-            "Value": { "Ref": "HealthCheckPath" }
+            "Value": {
+              "Ref": "HealthCheckPath"
+            }
           },
           {
             "Namespace": "aws:elasticbeanstalk:cloudwatch:logs",
@@ -197,12 +379,13 @@
         ]
       }
     },
-
     "BeanstalkConfigurationTemplate": {
       "Type": "AWS::ElasticBeanstalk::ConfigurationTemplate",
       "Properties": {
-        "ApplicationName" : { "Ref" : "BeanstalkApp" },
-        "Description" : "Single-container Docker Configuration",
+        "ApplicationName": {
+          "Ref": "BeanstalkApp"
+        },
+        "Description": "Single-container Docker Configuration",
         "SolutionStackName": "64bit Amazon Linux 2018.03 v2.12.0 running Docker 18.03.1-ce",
         "OptionSettings": [
           {
@@ -223,22 +406,27 @@
           {
             "Namespace": "aws:autoscaling:launchconfiguration",
             "OptionName": "SecurityGroups",
-            "Value": { "Ref": "InstanceSecurityGroup" }
+            "Value": {
+              "Ref": "InstanceSecurityGroup"
+            }
           },
           {
             "Namespace": "aws:autoscaling:launchconfiguration",
             "OptionName": "InstanceType",
-            "Value": { "Ref": "InstanceType" }
+            "Value": {
+              "Ref": "InstanceType"
+            }
           },
           {
             "Namespace": "aws:autoscaling:launchconfiguration",
             "OptionName": "IamInstanceProfile",
-            "Value": { "Ref": "WebServerInstanceProfile" }
+            "Value": {
+              "Ref": "WebServerInstanceProfile"
+            }
           }
         ]
       }
     },
-
     "InstanceSecurityGroup": {
       "Type": "AWS::EC2::SecurityGroup",
       "Properties": {
@@ -246,52 +434,81 @@
         "SecurityGroupIngress": []
       }
     },
-
     "DBEC2SecurityGroup": {
       "Type": "AWS::EC2::SecurityGroup",
-      "Condition" : "Is-EC2-VPC",
-      "Properties" : {
+      "Condition": "Is-EC2-VPC",
+      "Properties": {
         "GroupDescription": "Open database for access",
-        "SecurityGroupIngress" : [{
-          "IpProtocol" : "tcp",
-          "FromPort" : "3306", 
-          "ToPort" : "3306",
-          "SourceSecurityGroupName" : { "Ref" : "InstanceSecurityGroup" }
-        }]
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "3306",
+            "ToPort": "3306",
+            "SourceSecurityGroupName": {
+              "Ref": "InstanceSecurityGroup"
+            }
+          }
+        ]
       }
     },
-
     "DBSecurityGroup": {
       "Type": "AWS::RDS::DBSecurityGroup",
-      "Condition" : "Is-EC2-Classic",
+      "Condition": "Is-EC2-Classic",
       "Properties": {
         "DBSecurityGroupIngress": {
-          "EC2SecurityGroupName": { "Ref": "InstanceSecurityGroup" }
+          "EC2SecurityGroupName": {
+            "Ref": "InstanceSecurityGroup"
+          }
         },
         "GroupDescription": "database access"
       }
     },
-
     "AlarmTopic": {
       "Type": "AWS::SNS::Topic",
       "Properties": {
-        "Subscription": [{ "Endpoint": { "Ref": "OperatorEMail" }, "Protocol": "email" }]
+        "Subscription": [
+          {
+            "Endpoint": {
+              "Ref": "OperatorEMail"
+            },
+            "Protocol": "email"
+          }
+        ]
       }
     },
-
     "AppCodeBuild": {
       "Type": "AWS::CodeBuild::Project",
       "Properties": {
-        "Name": {"Ref": "AWS::StackName"},
+        "Name": {
+          "Ref": "AWS::StackName"
+        },
         "Description": "Builds the project",
-        "ServiceRole": { "Ref": "CodeBuildServiceRole" },
+        "ServiceRole": {
+          "Ref": "CodeBuildServiceRole"
+        },
         "Artifacts": {
           "Type": "CODEPIPELINE"
         },
         "Environment": {
           "Type": "LINUX_CONTAINER",
           "ComputeType": "BUILD_GENERAL1_SMALL",
-          "Image": { "Fn::Join" : ["", [ { "Fn::Sub": "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/" }, { "Ref": "BuildImageRepoName" }, ":", { "Ref": "BuildImageTag" } ] ] }
+          "Image": {
+            "Fn::Join": [
+              "",
+              [
+                {
+                  "Fn::Sub": "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/"
+                },
+                {
+                  "Ref": "BuildImageRepoName"
+                },
+                ":",
+                {
+                  "Ref": "BuildImageTag"
+                }
+              ]
+            ]
+          }
         },
         "Source": {
           "Type": "CODEPIPELINE"
@@ -299,60 +516,65 @@
         "TimeoutInMinutes": 30
       }
     },
-
     "AppPipeline": {
       "Type": "AWS::CodePipeline::Pipeline",
-      "DependsOn" : "BeanstalkEnvironment",
+      "DependsOn": "BeanstalkEnvironment",
       "Properties": {
-        "RoleArn": { 
+        "RoleArn": {
           "Fn::GetAtt": [
             "CodePipelineServiceRole",
             "Arn"
-          ] 
+          ]
         },
         "Stages": [
           {
-            "Name": "Source", 
+            "Name": "Source",
             "Actions": [
               {
-                "InputArtifacts": [], 
-                "Name": "Source", 
+                "InputArtifacts": [],
+                "Name": "Source",
                 "ActionTypeId": {
-                  "Category": "Source", 
-                  "Owner": "ThirdParty", 
-                  "Version": "1", 
+                  "Category": "Source",
+                  "Owner": "ThirdParty",
+                  "Version": "1",
                   "Provider": "GitHub"
-                }, 
+                },
                 "OutputArtifacts": [
                   {
                     "Name": "MyApp"
                   }
-                ], 
+                ],
                 "Configuration": {
-                  "Owner": {"Ref" : "GitHubOwner"}, 
-                  "Repo": {"Ref" : "GitHubRepository"}, 
-                  "PollForSourceChanges": "true", 
+                  "Owner": {
+                    "Ref": "GitHubOwner"
+                  },
+                  "Repo": {
+                    "Ref": "GitHubRepository"
+                  },
+                  "PollForSourceChanges": "true",
                   "Branch": "master",
-                  "OAuthToken": {"Ref" : "GitHubAccessToken"}
+                  "OAuthToken": {
+                    "Ref": "GitHubAccessToken"
+                  }
                 },
                 "RunOrder": 1
               }
             ]
           },
           {
-            "Name": "Build", 
+            "Name": "Build",
             "Actions": [
               {
                 "InputArtifacts": [
                   {
                     "Name": "MyApp"
                   }
-                ], 
-                "Name": "CodeBuild", 
+                ],
+                "Name": "CodeBuild",
                 "ActionTypeId": {
-                  "Category": "Build", 
-                  "Owner": "AWS", 
-                  "Version": "1", 
+                  "Category": "Build",
+                  "Owner": "AWS",
+                  "Version": "1",
                   "Provider": "CodeBuild"
                 },
                 "Configuration": {
@@ -368,42 +590,50 @@
                 "RunOrder": 1
               }
             ]
-          }, 
+          },
           {
-            "Name": "Staging", 
+            "Name": "Staging",
             "Actions": [
               {
                 "InputArtifacts": [
                   {
                     "Name": "MyAppBuild"
                   }
-                ], 
-                "Name": {"Ref" : "BeanstalkEnvironment"},
+                ],
+                "Name": {
+                  "Ref": "BeanstalkEnvironment"
+                },
                 "ActionTypeId": {
-                  "Category": "Deploy", 
-                  "Owner": "AWS", 
-                  "Version": "1", 
+                  "Category": "Deploy",
+                  "Owner": "AWS",
+                  "Version": "1",
                   "Provider": "ElasticBeanstalk"
-                }, 
-                "OutputArtifacts": [], 
+                },
+                "OutputArtifacts": [],
                 "Configuration": {
-                  "ApplicationName": {"Ref" : "AWS::StackName"},
-                  "EnvironmentName": {"Ref" : "BeanstalkEnvironment"}
-                }, 
+                  "ApplicationName": {
+                    "Ref": "AWS::StackName"
+                  },
+                  "EnvironmentName": {
+                    "Ref": "BeanstalkEnvironment"
+                  }
+                },
                 "RunOrder": 1
               }
             ]
           }
-        ], 
+        ],
         "ArtifactStore": {
-            "Type": "S3", 
-            "Location": { "Ref" : "ArtifactStoreS3Bucket" }
+          "Type": "S3",
+          "Location": {
+            "Ref": "ArtifactStoreS3Bucket"
+          }
         }
       }
     },
-    "ArtifactStoreS3Bucket" : {
-      "Type" : "AWS::S3::Bucket",
-      "DeletionPolicy" : "Retain"
+    "ArtifactStoreS3Bucket": {
+      "Type": "AWS::S3::Bucket",
+      "DeletionPolicy": "Retain"
     },
     "CodeBuildServiceRole": {
       "Type": "AWS::IAM::Role",
@@ -450,7 +680,17 @@
                 },
                 {
                   "Resource": {
-                    "Fn::Join" : ["", [ { "Fn::Sub": "arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/" }, { "Ref": "BuildImageRepoName" } ] ]
+                    "Fn::Join": [
+                      "",
+                      [
+                        {
+                          "Fn::Sub": "arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/"
+                        },
+                        {
+                          "Ref": "BuildImageRepoName"
+                        }
+                      ]
+                    ]
                   },
                   "Effect": "Allow",
                   "Action": [
@@ -469,7 +709,6 @@
         ]
       }
     },
-
     "CodePipelineServiceRole": {
       "Type": "AWS::IAM::Role",
       "Properties": {
@@ -579,12 +818,39 @@
       }
     }
   },
-
   "Outputs": {
-    "URL": {
+    "BeanstalkURL": {
       "Description": "URL of the AWS Elastic Beanstalk Environment",
-      "Value": { 
-        "Fn::Join": ["", ["http://", { "Fn::GetAtt": ["BeanstalkEnvironment", "EndpointURL"] }]]
+      "Value": {
+        "Fn::Join": [
+          "",
+          [
+            "http://",
+            {
+              "Fn::GetAtt": [
+                "BeanstalkEnvironment",
+                "EndpointURL"
+              ]
+            }
+          ]
+        ]
+      }
+    },
+    "CloudFrontDomain": {
+      "Description": "Domain Name of the CloudFront Distribution",
+      "Value": {
+        "Fn::Join": [
+          "",
+          [
+            "",
+            {
+              "Fn::GetAtt": [
+                "CloudFront",
+                "DomainName"
+              ]
+            }
+          ]
+        ]
       }
     }
   }
