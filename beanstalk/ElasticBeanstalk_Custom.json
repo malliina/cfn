@@ -249,7 +249,8 @@
             "Namespace": "aws:elasticbeanstalk:application:environment",
             "OptionName": "RDS_URL",
             "Value": {
-              "Fn::Join": ["", ["jdbc:mysql://", { "Fn::GetAtt": ["AppDB", "Endpoint.Address"] }, ":", { "Fn::GetAtt": ["AppDB", "Endpoint.Port"] }, { "Ref": "DBName" } ]] }
+              "Fn::Join": ["", ["jdbc:mysql://", { "Fn::GetAtt": ["AppDB", "Endpoint.Address"] }, ":", { "Fn::GetAtt": ["AppDB", "Endpoint.Port"] }, { "Ref": "DBName" } ]]
+            }
           },
           {
             "Namespace": "aws:elasticbeanstalk:application:environment",
@@ -284,7 +285,7 @@
     "InstanceSecurityGroup": {
       "Type": "AWS::EC2::SecurityGroup",
       "Properties": {
-        "GroupDescription": "RDS allows ingress from EC2 instances in this group.",
+        "GroupDescription": "The security group to assign to the EC2 instances",
         "SecurityGroupIngress": []
       }
     },
