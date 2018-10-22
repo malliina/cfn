@@ -295,7 +295,7 @@ Resources:
         EC2SecurityGroupName: !Ref 'InstanceSecurityGroup'
       GroupDescription: database access
   AppDB:
-    Type: AWS::RDS::DBInstance
+    Type: AWS::RDS::DBInstances
     Properties:
       Engine: MySQL
       DBName: !Ref 'DBName'
