@@ -1,0 +1,257 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description: 'AWS CloudFormation CodePipeline'
+
+Parameters:
+
+  GitHubOwner:
+    Type: String
+    Description: GitHub Owner or User
+    Default: malliina
+    MinLength: '1'
+    MaxLength: '256'
+    AllowedPattern: '[a-zA-Z0-9][-a-zA-Z0-9]*'
+    ConstraintDescription: must contain only alphanumeric characters.
+
+  GitHubRepository:
+    Type: String
+    Description: GitHub Repository
+    Default: play-docka
+    MinLength: '1'
+    MaxLength: '256'
+    AllowedPattern: '[a-zA-Z0-9][-a-zA-Z0-9]*'
+    ConstraintDescription: must contain only alphanumeric characters.
+
+  GitHubAccessToken:
+    NoEcho: 'true'
+    Type: String
+    Description: GitHub Access Token
+    MinLength: '1'
+    MaxLength: '256'
+    AllowedPattern: '[a-zA-Z0-9][-a-zA-Z0-9]*'
+    ConstraintDescription: must contain only alphanumeric characters.
+
+  BuildImageRepoName:
+    Type: String
+    Description: ECR repo name with build images
+    Default: build-images
+    MinLength: '1'
+    MaxLength: '256'
+    AllowedPattern: '[a-zA-Z0-9][-a-zA-Z0-9]*'
+    ConstraintDescription: must contain only alphanumeric characters.
+
+  BuildImageTag:
+    Type: String
+    Description: ECR image tag of build image
+    Default: 220b996
+    MinLength: '1'
+    MaxLength: '256'
+    AllowedPattern: '[a-zA-Z0-9][-a-zA-Z0-9]*'
+    ConstraintDescription: must contain only alphanumeric characters.
+
+Resources:
+  AppCodeBuild:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: !Ref AWS::StackName
+      Description: Builds the project
+      ServiceRole: !Ref CodeBuildServiceRole
+      Artifacts:
+        Type: CODEPIPELINE
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: !Join
+        - ''
+        - - !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/'
+          - !Ref BuildImageRepoName
+          - ':'
+          - !Ref BuildImageTag
+      Source:
+        Type: CODEPIPELINE
+      TimeoutInMinutes: 30
+  AppPipeline:
+    Type: AWS::CodePipeline::Pipeline
+    # DependsOn: BeanstalkEnvironment
+    Properties:
+      RoleArn: !GetAtt 'CodePipelineServiceRole.Arn'
+      Stages:
+      - Name: Source
+        Actions:
+        - InputArtifacts: []
+          Name: Source
+          ActionTypeId:
+            Category: Source
+            Owner: ThirdParty
+            Version: '1'
+            Provider: GitHub
+          OutputArtifacts:
+          - Name: MyApp
+          Configuration:
+            Owner: !Ref GitHubOwner
+            Repo: !Ref GitHubRepository
+            PollForSourceChanges: 'true'
+            Branch: master
+            OAuthToken: !Ref GitHubAccessToken
+          RunOrder: 1
+      - Name: Build
+        Actions:
+        - InputArtifacts:
+          - Name: MyApp
+          Name: CodeBuild
+          ActionTypeId:
+            Category: Build
+            Owner: AWS
+            Version: '1'
+            Provider: CodeBuild
+          Configuration:
+            ProjectName: !Ref AppCodeBuild
+          OutputArtifacts:
+          - Name: MyAppBuild
+          RunOrder: 1
+#      - Name: Staging
+#        Actions:
+#        - InputArtifacts:
+#          - Name: MyAppBuild
+#          Name: !Ref BeanstalkEnvironment
+#          ActionTypeId:
+#            Category: Deploy
+#            Owner: AWS
+#            Version: '1'
+#            Provider: ElasticBeanstalk
+#          OutputArtifacts: []
+#          Configuration:
+#            ApplicationName: !Ref AWS::StackName
+#            EnvironmentName: !Ref BeanstalkEnvironment
+#          RunOrder: 1
+      ArtifactStore:
+        Type: S3
+        Location: !Ref ArtifactStoreS3Bucket
+  ArtifactStoreS3Bucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+  CodeBuildServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Path: /
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: codebuild.amazonaws.com
+          Action: sts:AssumeRole
+      Policies:
+      - PolicyName: root
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Resource: '*'
+            Effect: Allow
+            Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+            - ecr:GetAuthorizationToken
+          - Resource: !Sub 'arn:aws:s3:::${ArtifactStoreS3Bucket}/*'
+            Effect: Allow
+            Action:
+            - s3:GetObject
+            - s3:PutObject
+            - s3:GetObjectVersion
+          - Resource: !Join
+            - ''
+            - - !Sub 'arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/'
+              - !Ref 'BuildImageRepoName'
+            Effect: Allow
+            Action:
+            - ecr:GetDownloadUrlForLayer
+            - ecr:BatchGetImage
+            - ecr:BatchCheckLayerAvailability
+            - ecr:PutImage
+            - ecr:InitiateLayerUpload
+            - ecr:UploadLayerPart
+            - ecr:CompleteLayerUpload
+  CodePipelineServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Path: /
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: codepipeline.amazonaws.com
+          Action: sts:AssumeRole
+      Policies:
+      - PolicyName: root
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Resource:
+            - !Sub 'arn:aws:s3:::${ArtifactStoreS3Bucket}/*'
+            Effect: Allow
+            Action:
+            - s3:PutObject
+            - s3:GetObject
+            - s3:GetObjectVersion
+            - s3:GetBucketVersioning
+          - Resource:
+            - arn:aws:s3:::codepipeline*
+            - arn:aws:s3:::elasticbeanstalk*
+            Effect: Allow
+            Action:
+            - s3:ListBucket
+            - s3:GetBucketPolicy
+            - s3:GetObjectAcl
+            - s3:PutObjectAcl
+            - s3:DeleteObject
+            - s3:PutObject
+          - Resource: '*'
+            Effect: Allow
+            Action:
+            - elasticbeanstalk:*
+            - ecs:DescribeServices
+            - ecs:DescribeTaskDefinition
+            - ecs:DescribeTasks
+            - ecs:ListTasks
+            - ecs:RegisterTaskDefinition
+            - ecs:UpdateService
+            - codebuild:StartBuild
+            - codebuild:BatchGetBuilds
+            - autoscaling:DescribeAutoScalingGroups
+            - autoscaling:DescribeLaunchConfigurations
+            - autoscaling:DescribeScalingActivities
+            - autoscaling:ResumeProcesses
+            - autoscaling:SuspendProcesses
+            - cloudformation:GetTemplate
+            - cloudformation:DescribeStackResource
+            - cloudformation:DescribeStackResources
+            - cloudformation:DescribeStackEvents
+            - cloudformation:DescribeStacks
+            - cloudformation:UpdateStack
+            - ec2:DescribeInstances
+            - ec2:DescribeImages
+            - ec2:DescribeAddresses
+            - ec2:DescribeSubnets
+            - ec2:DescribeVpcs
+            - ec2:DescribeSecurityGroups
+            - ec2:DescribeKeyPairs
+            - elasticloadbalancing:DescribeLoadBalancers
+            - rds:DescribeDBInstances
+            - rds:DescribeOrderableDBInstanceOptions
+            - sns:ListSubscriptionsByTopic
+            - ec2:*
+            - elasticloadbalancing:*
+            - autoscaling:*
+            - cloudwatch:*
+            - s3:*
+            - sns:*
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:DescribeLogGroups
+            - logs:DescribeLogStreams
+            - logs:GetLogEvents
+            - logs:PutLogEvents
+            - logs:PutRetentionPolicy
+            - iam:PassRole
