@@ -387,6 +387,12 @@ Outputs:
     Export:
       Name: !Sub "${AWS::StackName}-EnvironmentURL"
 
+  ApplicationName:
+    Description: Application Name
+    Value: !Ref ApplicationName
+    Export:
+      Name: !Sub "${AWS::StackName}-ApplicationName"
+
   EnvironmentName:
     Description: Environment Name
     Value: !Sub "${ApplicationName}-${EnvironmentName}"

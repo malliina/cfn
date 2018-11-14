@@ -274,6 +274,52 @@ Parameters:
     MinValue: 1
     ConstraintDescription: A value of one byte or more
 
+  # codepipeline-eb.cfn.yml parameters
+  GitHubOwner:
+    Type: String
+    Description: GitHub Owner or User
+    Default: malliina
+    MinLength: '1'
+    MaxLength: '256'
+    AllowedPattern: '[a-zA-Z0-9][-a-zA-Z0-9]*'
+    ConstraintDescription: must contain only alphanumeric characters.
+
+  GitHubRepository:
+    Type: String
+    Description: GitHub Repository
+    Default: play-docka
+    MinLength: '1'
+    MaxLength: '256'
+    AllowedPattern: '[a-zA-Z0-9][-a-zA-Z0-9]*'
+    ConstraintDescription: must contain only alphanumeric characters.
+
+  GitHubAccessToken:
+    NoEcho: 'true'
+    Type: String
+    Description: GitHub Access Token
+    MinLength: '1'
+    MaxLength: '256'
+    AllowedPattern: '[a-zA-Z0-9][-a-zA-Z0-9]*'
+    ConstraintDescription: must contain only alphanumeric characters.
+
+  BuildImageRepoName:
+    Type: String
+    Description: ECR repo name with build images
+    Default: build-images
+    MinLength: '1'
+    MaxLength: '256'
+    AllowedPattern: '[a-zA-Z0-9][-a-zA-Z0-9]*'
+    ConstraintDescription: must contain only alphanumeric characters.
+
+  BuildImageTag:
+    Type: String
+    Description: ECR image tag of build image
+    Default: 220b996
+    MinLength: '1'
+    MaxLength: '256'
+    AllowedPattern: '[a-zA-Z0-9][-a-zA-Z0-9]*'
+    ConstraintDescription: must contain only alphanumeric characters.
+
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
@@ -469,6 +515,19 @@ Resources:
         AutoScalingMinInstanceCount: !Ref AutoScalingMinInstanceCount
         AutoScalingMaxInstanceCount: !Ref AutoScalingMaxInstanceCount
 
+  CodePipelineStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub https://s3.amazonaws.com/${TemplateBucket}/codepipeline-eb.cfn.yml
+      Parameters:
+        GitHubOwner: !Ref GitHubOwner
+        GitHubRepository: !Ref GitHubRepository
+        GitHubAccessToken: !Ref GitHubAccessToken
+        BuildImageRepoName: !Ref BuildImageRepoName
+        BuildImageTag: !Ref BuildImageTag
+        ApplicationName: !GetAtt ElasticBeanstalkStack.Outputs.ApplicationName
+        BeanstalkEnvironment: !GetAtt ElasticBeanstalkStack.Outputs.EnvironmentName
+    DependsOn: ElasticBeanstalkStack
 
 Outputs:
 
