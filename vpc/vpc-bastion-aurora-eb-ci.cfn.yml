@@ -525,7 +525,7 @@ Resources:
         GitHubAccessToken: !Ref GitHubAccessToken
         BuildImageRepoName: !Ref BuildImageRepoName
         BuildImageTag: !Ref BuildImageTag
-        ApplicationName: !GetAtt ElasticBeanstalkStack.Outputs.ApplicationName
+        ApplicationName: !Ref AWS::StackName
         BeanstalkEnvironment: !GetAtt ElasticBeanstalkStack.Outputs.EnvironmentName
     DependsOn: ElasticBeanstalkStack
 
