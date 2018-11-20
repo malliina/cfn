@@ -54,7 +54,7 @@ Parameters:
   BuildImageTag:
     Type: String
     Description: ECR image tag of build image
-    Default: 220b996
+    Default: 2d22396
     MinLength: '1'
     MaxLength: '256'
     AllowedPattern: '[a-zA-Z0-9][-a-zA-Z0-9]*'
