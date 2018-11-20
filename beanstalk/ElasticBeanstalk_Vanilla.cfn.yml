@@ -246,7 +246,7 @@ Resources:
     Properties:
       ApplicationName: !Ref BeanstalkApp
       Description: Single-container Docker Configuration
-      SolutionStackName: 64bit Amazon Linux 2018.03 v2.12.0 running Docker 18.03.1-ce
+      SolutionStackName: 64bit Amazon Linux 2018.03 v2.12.5 running Docker 18.06.1-ce
       OptionSettings:
         - Namespace: aws:autoscaling:asg
           OptionName: MaxSize

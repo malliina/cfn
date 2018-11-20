@@ -2,7 +2,7 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 
-Description: VPC + Bastion + Elastic Beanstalk + Database
+Description: VPC + Bastion + Elastic Beanstalk + Database + CodePipeline
 
 
 Parameters:
@@ -499,7 +499,7 @@ Resources:
   ElasticBeanstalkStack:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: !Sub https://s3.amazonaws.com/${TemplateBucket}/elastic-docker.cfn.yml
+      TemplateURL: !Sub https://s3.amazonaws.com/${TemplateBucket}/elastic-docker-aurora.cfn.yml
       Parameters:
         ApplicationName: !Ref AWS::StackName
         StackType: !Ref StackType

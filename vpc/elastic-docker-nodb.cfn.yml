@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 
-# App stack creation prerequisites: first create a VPC stack, then a DB stack.
+# App stack creation prerequisites: first create a VPC stack.
 
 Description: Elastic Beanstalk
 
@@ -38,29 +38,6 @@ Parameters:
     MinLength: 1
     MaxLength: 255
     AllowedPattern: "^[a-zA-Z][-a-zA-Z0-9]*$"
-
-  DatabaseStackName:
-    Description: Name of an active CloudFormation stack of database resources
-    Type: String
-    MinLength: 1
-    MaxLength: 255
-    AllowedPattern: "^[a-zA-Z][-a-zA-Z0-9]*$"
-
-  DatabaseName:
-    Description: Database name (schema).
-    Type: String
-    MinLength: 1
-    MaxLength: 255
-    AllowedPattern: "^[a-zA-Z][-a-zA-Z0-9]*$"
-
-  DatabasePassword:
-    NoEcho: true
-    Type: String
-    Description: Database admin account password
-    MinLength: 6
-    MaxLength: 41
-    AllowedPattern: "[a-zA-Z0-9]*"
-    ConstraintDescription: Password must contain only alphanumeric characters
 
   EC2KeyPairName:
     Description: EC2 key pair name for SSH access
@@ -113,7 +90,7 @@ Mappings:
   # Maps stack type parameter to solution stack name string
   StackMap:
     docker:
-      stackName: 64bit Amazon Linux 2018.03 v2.11.0 running Docker 18.03.1-ce
+      stackName: 64bit Amazon Linux 2018.03 v2.12.5 running Docker 18.06.1-ce
 
 Resources:
 
@@ -306,35 +283,6 @@ Resources:
       - Namespace: aws:elasticbeanstalk:application:environment
         OptionName: AWS_REGION
         Value: !Ref AWS::Region
-
-      - Namespace: aws:elasticbeanstalk:application:environment
-        OptionName: DB_PASSWORD
-        Value: !Ref DatabasePassword
-
-      - Namespace: aws:elasticbeanstalk:application:environment
-        OptionName: DB_USER
-        Value:
-          Fn::ImportValue: !Sub ${DatabaseStackName}-DatabaseUser
-
-      - Namespace: aws:elasticbeanstalk:application:environment
-        OptionName: DB_NAME
-        Value: !Ref DatabaseName
-
-      - Namespace: aws:elasticbeanstalk:application:environment
-        OptionName: DB_HOST
-        Value:
-          Fn::ImportValue: !Sub "${DatabaseStackName}-DatabaseURL"
-
-      - Namespace: aws:elasticbeanstalk:application:environment
-        OptionName: DB_URL
-        Value:
-          "Fn::Join":
-          - ''
-          - - 'jdbc:mysql://'
-            - !ImportValue
-                "Fn::Sub": "${DatabaseStackName}-DatabaseURL"
-            - ':3306/'
-            - Ref: DatabaseName
 
   # IAM resources
   AppRole:
