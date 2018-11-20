@@ -25,6 +25,10 @@ Create
 
 1. vpc-bastion-aurora-eb-ci
 
+or without a database
+
+1. vpc-bastion-eb-ci
+
 ### Separately
 
 Create
@@ -32,5 +36,5 @@ Create
 1. vpc
 1. bastion
 1. aurora
-1. elastic-docker
+1. elastic-docker-aurora
 1. codepipeline-eb
