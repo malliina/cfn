@@ -1,6 +1,6 @@
 FROM openjdk:8u171-jdk-slim-stretch
 
-ENV SBT_VERSION 1.1.6
+ENV SBT_VERSION 1.2.6
 
 RUN apt-get update
 RUN apt-get install -y curl git
