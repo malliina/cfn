@@ -38,3 +38,10 @@ Create
 1. aurora
 1. elastic-docker-aurora
 1. codepipeline-eb
+
+or without a database
+
+1. vpc
+1. bastion
+1. elastic-docker-nodb
+1. codepipeline-eb
