@@ -8,35 +8,43 @@ Parameters:
     Type: String
     Description: GitHub Owner or User
     Default: malliina
-    MinLength: '1'
-    MaxLength: '256'
+    MinLength: 1
+    MaxLength: 256
     AllowedPattern: '[a-zA-Z0-9][-a-zA-Z0-9]*'
     ConstraintDescription: must contain only alphanumeric characters.
 
   GitHubRepository:
     Type: String
-    Description: GitHub Repository
+    Description: GitHub repository
     Default: play-docka
-    MinLength: '1'
-    MaxLength: '256'
+    MinLength: 1
+    MaxLength: 256
     AllowedPattern: '[a-zA-Z0-9][-a-zA-Z0-9]*'
     ConstraintDescription: must contain only alphanumeric characters.
 
   GitHubAccessToken:
     NoEcho: 'true'
     Type: String
-    Description: GitHub Access Token
-    MinLength: '1'
-    MaxLength: '256'
+    Description: GitHub access token
+    MinLength: 1
+    MaxLength: 256
     AllowedPattern: '[a-zA-Z0-9][-a-zA-Z0-9]*'
     ConstraintDescription: must contain only alphanumeric characters.
+
+  GitHubWebhookSecret:
+    NoEcho: 'true'
+    Type: String
+    Description: GitHub webhook secret for the repo
+    MinLength: 0
+    MaxLength: 256
+    Default: ""
 
   BuildImageRepoName:
     Type: String
     Description: ECR repo name with build images
     Default: build-images
-    MinLength: '1'
-    MaxLength: '256'
+    MinLength: 1
+    MaxLength: 256
     AllowedPattern: '[a-zA-Z0-9][-a-zA-Z0-9]*'
     ConstraintDescription: must contain only alphanumeric characters.
 
@@ -44,26 +52,30 @@ Parameters:
     Type: String
     Description: ECR image tag of build image
     Default: 2d22396
-    MinLength: '1'
-    MaxLength: '256'
+    MinLength: 1
+    MaxLength: 256
     AllowedPattern: '[a-zA-Z0-9][-a-zA-Z0-9]*'
     ConstraintDescription: must contain only alphanumeric characters.
 
   ApplicationName:
     Type: String
     Description: Beanstalk application name
-    MinLength: '1'
-    MaxLength: '256'
+    MinLength: 1
+    MaxLength: 256
     AllowedPattern: '[a-zA-Z0-9][-a-zA-Z0-9]*'
     ConstraintDescription: must contain only alphanumeric characters.
 
   BeanstalkEnvironment:
     Type: String
     Description: Beanstalk environment
-    MinLength: '1'
-    MaxLength: '256'
+    MinLength: 1
+    MaxLength: 256
     AllowedPattern: '[a-zA-Z0-9][-a-zA-Z0-9]*'
     ConstraintDescription: must contain only alphanumeric characters.
+
+Conditions:
+
+  WebhookEnabled: !Not [ !Equals [ !Ref GitHubWebhookSecret, "" ] ]
 
 Resources:
   AppCodeBuild:
@@ -106,7 +118,7 @@ Resources:
           Configuration:
             Owner: !Ref GitHubOwner
             Repo: !Ref GitHubRepository
-            PollForSourceChanges: 'true'
+            PollForSourceChanges: !If [ WebhookEnabled, false, true ]
             Branch: master
             OAuthToken: !Ref GitHubAccessToken
           RunOrder: 1
@@ -143,6 +155,21 @@ Resources:
       ArtifactStore:
         Type: S3
         Location: !Ref ArtifactStoreS3Bucket
+  Webhook:
+    Type: AWS::CodePipeline::Webhook
+    Condition: WebhookEnabled
+    Properties:
+      Name: CodePipelineGitHubWebhook
+      AuthenticationConfiguration:
+        SecretToken: !Ref GitHubWebhookSecret
+      Filters:
+        - JsonPath: "$.ref"
+          MatchEquals: refs/heads/{Branch}
+      Authentication: GITHUB_HMAC
+      TargetPipeline: !Ref AppPipeline
+      TargetAction: Source
+      TargetPipelineVersion: !GetAtt AppPipeline.Version
+      RegisterWithThirdParty: 'true'
   ArtifactStoreS3Bucket:
     Type: AWS::S3::Bucket
     DeletionPolicy: Retain

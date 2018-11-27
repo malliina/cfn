@@ -91,7 +91,7 @@ Parameters:
   EbInstanceType:
     Description: The instance type for Elastic Beanstalk
     Type: String
-    Default: t2.small
+    Default: t3.small
     ConstraintDescription: Instance type not supported
     AllowedValues:
       - t3.nano

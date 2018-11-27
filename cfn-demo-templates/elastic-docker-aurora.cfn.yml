@@ -71,14 +71,14 @@ Parameters:
     Type: String
     MinLength: 1
     MaxLength: 255
-    Default: t2.micro
+    Default: t3.micro
 
   ProdInstanceType:
     Description: The instance type for the prod environment
     Type: String
     MinLength: 1
     MaxLength: 255
-    Default: t2.large
+    Default: t3.large
 
   SSLCertificateArn:
     Description: The SSL/TLS certificate ARN

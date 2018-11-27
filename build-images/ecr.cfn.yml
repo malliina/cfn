@@ -8,8 +8,8 @@ Parameters:
     Type: String
     Description: Location of buildspec.yml relative to repo root
     Default: build-images/buildspec.yml
-    MinLength: '1'
-    MaxLength: '256'
+    MinLength: 1
+    MaxLength: 256
     AllowedPattern: '[a-zA-Z][-a-zA-Z0-9/.]*'
     ConstraintDescription: must begin with a letter and contain only alphanumeric
       characters.
@@ -17,8 +17,8 @@ Parameters:
     Type: String
     Description: HTTPS GitHub Repository URL
     Default: https://github.com/malliina/cfn.git
-    MinLength: '1'
-    MaxLength: '256'
+    MinLength: 1
+    MaxLength: 256
     AllowedPattern: https://[a-zA-Z0-9:/.]*
     ConstraintDescription: must be a URL.
 Mappings:
@@ -80,10 +80,10 @@ Mappings:
 Conditions:
   Is-EC2-VPC: !Or
     - !Equals
-      - !Ref 'AWS::Region'
+      - !Ref AWS::Region
       - eu-central-1
     - !Equals
-      - !Ref 'AWS::Region'
+      - !Ref AWS::Region
       - cn-north-1
   Is-EC2-Classic: !Not
     - !Condition 'Is-EC2-VPC'
@@ -110,7 +110,7 @@ Resources:
   AppCodeBuild:
     Type: AWS::CodeBuild::Project
     Properties:
-      Name: !Ref 'AWS::StackName'
+      Name: !Ref AWS::StackName
       Description: Builds the project
       ServiceRole: !Ref 'CodeBuildServiceRole'
       Artifacts:
@@ -124,10 +124,10 @@ Resources:
             Value: !Join
               - ''
               - - !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/'
-                - !Ref 'AWS::StackName'
+                - !Ref AWS::StackName
       Source:
-        Location: !Ref 'GitHubRepository'
-        BuildSpec: !Ref 'BuildSpecFile'
+        Location: !Ref GitHubRepository
+        BuildSpec: !Ref BuildSpecFile
         Type: GITHUB
       TimeoutInMinutes: 30
   CodeBuildServiceRole:
@@ -156,7 +156,7 @@ Resources:
               - Resource: !Join
                   - ''
                   - - !Sub 'arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/'
-                    - !Ref 'AWS::StackName'
+                    - !Ref AWS::StackName
                 Effect: Allow
                 Action:
                   - ecr:GetDownloadUrlForLayer
