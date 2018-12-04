@@ -165,6 +165,14 @@ Parameters:
     AllowedPattern: '[a-zA-Z0-9][-a-zA-Z0-9]*'
     ConstraintDescription: must contain only alphanumeric characters.
 
+  GitHubWebhookSecret:
+    NoEcho: 'true'
+    Type: String
+    Description: GitHub webhook secret for the repo
+    MinLength: 0
+    MaxLength: 256
+    Default: ""
+
   BuildImageRepoName:
     Type: String
     Description: ECR repo name with build images
@@ -309,6 +317,7 @@ Resources:
         GitHubOwner: !Ref GitHubOwner
         GitHubRepository: !Ref GitHubRepository
         GitHubAccessToken: !Ref GitHubAccessToken
+        GitHubWebhookSecret: !Ref GitHubWebhookSecret
         BuildImageRepoName: !Ref BuildImageRepoName
         BuildImageTag: !Ref BuildImageTag
         ApplicationName: !Ref AWS::StackName

@@ -279,7 +279,7 @@ Parameters:
   # codepipeline-eb.cfn.yml parameters
   GitHubOwner:
     Type: String
-    Description: GitHub Owner or User
+    Description: GitHub owner or user
     Default: malliina
     MinLength: '1'
     MaxLength: '256'
@@ -288,7 +288,7 @@ Parameters:
 
   GitHubRepository:
     Type: String
-    Description: GitHub Repository
+    Description: GitHub repository
     Default: play-docka
     MinLength: '1'
     MaxLength: '256'
@@ -298,11 +298,19 @@ Parameters:
   GitHubAccessToken:
     NoEcho: 'true'
     Type: String
-    Description: GitHub Access Token
+    Description: GitHub access token
     MinLength: '1'
     MaxLength: '256'
     AllowedPattern: '[a-zA-Z0-9][-a-zA-Z0-9]*'
     ConstraintDescription: must contain only alphanumeric characters.
+
+  GitHubWebhookSecret:
+    NoEcho: 'true'
+    Type: String
+    Description: GitHub webhook secret for the repo
+    MinLength: 0
+    MaxLength: 256
+    Default: ""
 
   BuildImageRepoName:
     Type: String
@@ -525,6 +533,7 @@ Resources:
         GitHubOwner: !Ref GitHubOwner
         GitHubRepository: !Ref GitHubRepository
         GitHubAccessToken: !Ref GitHubAccessToken
+        GitHubWebhookSecret: !Ref GitHubWebhookSecret
         BuildImageRepoName: !Ref BuildImageRepoName
         BuildImageTag: !Ref BuildImageTag
         ApplicationName: !Ref AWS::StackName
