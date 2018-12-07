@@ -17,7 +17,8 @@ The ECR repository contains build images used by CodeBuild to build the applicat
 
 ## Usage
 
-Create everything in one nested stack, or create the resources separately.
+Create everything in one nested stack, or create the resources separately. Add `.cfn.yml` to the below names to find the
+relevant files.
 
 ### Nested
 
@@ -29,7 +30,7 @@ or without a database
 
 1. vpc-bastion-eb-ci
 
-### Separately
+### Standalone
 
 Create
 

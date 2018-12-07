@@ -142,26 +142,26 @@ Parameters:
     Type: String
     Description: GitHub Owner or User
     Default: malliina
-    MinLength: '1'
-    MaxLength: '256'
+    MinLength: 1
+    MaxLength: 256
     AllowedPattern: '[a-zA-Z0-9][-a-zA-Z0-9]*'
     ConstraintDescription: must contain only alphanumeric characters.
 
   GitHubRepository:
     Type: String
-    Description: GitHub Repository
+    Description: GitHub repository
     Default: play-docka
-    MinLength: '1'
-    MaxLength: '256'
+    MinLength: 1
+    MaxLength: 256
     AllowedPattern: '[a-zA-Z0-9][-a-zA-Z0-9]*'
     ConstraintDescription: must contain only alphanumeric characters.
 
   GitHubAccessToken:
     NoEcho: 'true'
     Type: String
-    Description: GitHub Access Token
-    MinLength: '1'
-    MaxLength: '256'
+    Description: GitHub access token
+    MinLength: 1
+    MaxLength: 256
     AllowedPattern: '[a-zA-Z0-9][-a-zA-Z0-9]*'
     ConstraintDescription: must contain only alphanumeric characters.
 
@@ -177,8 +177,8 @@ Parameters:
     Type: String
     Description: ECR repo name with build images
     Default: build-images
-    MinLength: '1'
-    MaxLength: '256'
+    MinLength: 1
+    MaxLength: 256
     AllowedPattern: '[a-zA-Z0-9][-a-zA-Z0-9]*'
     ConstraintDescription: must contain only alphanumeric characters.
 
@@ -186,8 +186,8 @@ Parameters:
     Type: String
     Description: ECR image tag of build image
     Default: 2d22396
-    MinLength: '1'
-    MaxLength: '256'
+    MinLength: 1
+    MaxLength: 256
     AllowedPattern: '[a-zA-Z0-9][-a-zA-Z0-9]*'
     ConstraintDescription: must contain only alphanumeric characters.
 

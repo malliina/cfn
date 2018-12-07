@@ -118,7 +118,7 @@ Resources:
   Environment:
     Type: AWS::ElasticBeanstalk::Environment
     Properties:
-      EnvironmentName: !Sub "${ApplicationName}-${EnvironmentName}"
+      EnvironmentName: !Sub ${ApplicationName}-${EnvironmentName}
       ApplicationName: !Ref Application
       TemplateName: !Ref ConfigurationTemplate
     DependsOn:
@@ -333,22 +333,22 @@ Outputs:
     Description: Environment URL
     Value: !GetAtt Environment.EndpointURL
     Export:
-      Name: !Sub "${AWS::StackName}-EnvironmentURL"
+      Name: !Sub ${AWS::StackName}-EnvironmentURL
 
   ApplicationName:
     Description: Application Name
     Value: !Ref ApplicationName
     Export:
-      Name: !Sub "${AWS::StackName}-ApplicationName"
+      Name: !Sub ${AWS::StackName}-ApplicationName
 
   EnvironmentName:
     Description: Environment Name
-    Value: !Sub "${ApplicationName}-${EnvironmentName}"
+    Value: !Sub ${ApplicationName}-${EnvironmentName}
     Export:
-      Name: !Sub "${AWS::StackName}-EnvironmentName"
+      Name: !Sub ${AWS::StackName}-EnvironmentName
 
   TypeOfStack:
     Description: Stack type
     Value: !Ref StackType
     Export:
-      Name: !Sub "${AWS::StackName}-TypeOfStack"
+      Name: !Sub ${AWS::StackName}-TypeOfStack

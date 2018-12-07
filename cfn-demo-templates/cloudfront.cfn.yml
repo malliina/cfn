@@ -1,0 +1,120 @@
+---
+AWSTemplateFormatVersion: 2010-09-09
+
+
+Description: CloudFront
+
+# CloudFront template with one origin and two behaviors. The first behavior
+# has path pattern assets/* and aggressive caching settings. The second behavior
+# is the default behavior with less aggressive settings.
+
+Parameters:
+  OriginDomainName:
+    Type: String
+    Description: Domain name of origin (e.g. Beanstalk endpoint URL)
+    MinLength: 1
+    MaxLength: 512
+
+  CustomDomainNames:
+    Type: CommaDelimitedList
+    Description: Optional custom domain names as a comma-separated string (from e.g. Route 53)
+
+  SSLCertificateArn:
+    Description: The SSL/TLS certificate ARN
+    Type: String
+    MinLength: 0
+    MaxLength: 2048
+    Default: ""
+
+Conditions:
+
+  HasCustomCertificate: !Not [ !Equals [ !Ref SSLCertificateArn, "" ] ]
+
+  # True if CustomDomainNames is non-empty, false otherwise
+  HasCustomDomains:
+    Fn::Not:
+      - Fn::Equals:
+          - Fn::Join:
+              - ""
+              - Ref: CustomDomainNames
+          - ""
+
+Resources:
+
+  CloudFront:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        Comment: Default distribution
+        Aliases: !If [ HasCustomDomains, !Ref CustomDomainNames, !Ref "AWS::NoValue" ]
+        CacheBehaviors:
+          - AllowedMethods:
+              - DELETE
+              - GET
+              - HEAD
+              - OPTIONS
+              - PATCH
+              - POST
+              - PUT
+            PathPattern: assets/*
+            TargetOriginId: !Ref AWS::StackName
+            ForwardedValues:
+              QueryString: true
+              # for SSL-enabled ELB origins
+              Headers:
+                - Host
+              Cookies:
+                # none, all, or whitelist
+                Forward: none
+            TrustedSigners: []
+            # allow-all, redirect-to-https, or https-only
+            ViewerProtocolPolicy: redirect-to-https
+        DefaultCacheBehavior:
+          AllowedMethods:
+            - DELETE
+            - GET
+            - HEAD
+            - OPTIONS
+            - PATCH
+            - POST
+            - PUT
+          TargetOriginId: !Ref AWS::StackName
+          ForwardedValues:
+            QueryString: true
+            Headers:
+              - Authorization
+              - Host
+            Cookies:
+              # none, all, or whitelist
+              Forward: all
+          TrustedSigners: []
+          # allow-all, redirect-to-https, or https-only
+          ViewerProtocolPolicy: redirect-to-https
+        Origins:
+          - DomainName: !Ref OriginDomainName
+            Id: !Ref AWS::StackName
+            CustomOriginConfig:
+              HTTPPort: 80
+              HTTPSPort: 443
+              # http-only, match-viewer, or https-only
+              OriginProtocolPolicy: !If [ HasCustomCertificate, https-only, match-viewer ]
+        PriceClass: PriceClass_100
+        ViewerCertificate:
+          AcmCertificateArn: !If [ HasCustomCertificate, !Ref SSLCertificateArn, !Ref "AWS::NoValue" ]
+          CloudFrontDefaultCertificate: !If [ HasCustomCertificate, !Ref "AWS::NoValue", true ]
+      Tags: []
+
+Outputs:
+
+  DistributionID:
+    Description: CloudFront Distribution ID
+    Value: !Ref CloudFront
+    Export:
+      Name: !Sub ${AWS::StackName}-CloudFrontDistributionID
+
+  OriginDomainName:
+    Description: CloudFront Origin Domain Name
+    Value: !GetAtt CloudFront.DomainName
+    Export:
+      Name: !Sub ${AWS::StackName}-CloudFrontOriginDomainName

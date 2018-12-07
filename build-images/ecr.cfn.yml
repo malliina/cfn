@@ -1,8 +1,10 @@
 AWSTemplateFormatVersion: '2010-09-09'
+
 Description: 'AWS CloudFormation Template: Configure an ECR repo and a GitHub repo.
   **WARNING** This template creates one or more Amazon EC2 instances and an Amazon
   Relational Database Service database instance. You will be billed for the AWS resources
   used if you create a stack from this template.'
+
 Parameters:
   BuildSpecFile:
     Type: String
@@ -21,6 +23,7 @@ Parameters:
     MaxLength: 256
     AllowedPattern: https://[a-zA-Z0-9:/.]*
     ConstraintDescription: must be a URL.
+
 Mappings:
   Region2Principal:
     us-east-1:
@@ -77,6 +80,7 @@ Mappings:
     eu-central-1:
       EC2Principal: ec2.amazonaws.com
       OpsWorksPrincipal: opsworks.amazonaws.com
+
 Conditions:
   Is-EC2-VPC: !Or
     - !Equals
@@ -87,6 +91,7 @@ Conditions:
       - cn-north-1
   Is-EC2-Classic: !Not
     - !Condition 'Is-EC2-VPC'
+
 Resources:
   BuildRepository:
     Type: AWS::ECR::Repository
@@ -166,6 +171,7 @@ Resources:
                   - ecr:InitiateLayerUpload
                   - ecr:UploadLayerPart
                   - ecr:CompleteLayerUpload
+
 Outputs:
   ECRArn:
-    Value: !GetAtt 'BuildRepository.Arn'
+    Value: !GetAtt BuildRepository.Arn

@@ -102,7 +102,7 @@ Resources:
     Type: AWS::CodePipeline::Pipeline
     # DependsOn: BeanstalkEnvironment
     Properties:
-      RoleArn: !GetAtt 'CodePipelineServiceRole.Arn'
+      RoleArn: !GetAtt CodePipelineServiceRole.Arn
       Stages:
       - Name: Source
         Actions:
