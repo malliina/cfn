@@ -1,0 +1,45 @@
+---
+AWSTemplateFormatVersion: 2010-09-09
+
+
+Description: Route 53
+
+# Route 53 template assuming a CloudFront distribution
+
+Parameters:
+  HostedZoneId:
+    Type: String
+    Description: Hosted Zone ID
+    MinLength: 1
+
+  DomainName:
+    Type: String
+    Description: A fully qualified domain name that ends with a period as the last label indication
+    MinLength: 1
+
+  CloudFrontDomainName:
+    Type: String
+    Description: CloudFront Domain Name
+    MinLength: 1
+
+Resources:
+
+  Route53:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      Name: !Ref DomainName
+      AliasTarget:
+        DNSName: !Ref CloudFrontDomainName
+        # Always this string when using CloudFront
+        # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-route53-aliastarget.html
+        HostedZoneId: Z2FDTNDATAQYW2
+      HostedZoneId: !Ref HostedZoneId
+      Type: A
+
+Outputs:
+
+  DistributionID:
+    Description: Route 53 Domain Name
+    Value: !Ref Route53
+    Export:
+      Name: !Sub ${AWS::StackName}-DomainName

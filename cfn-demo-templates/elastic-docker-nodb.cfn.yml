@@ -158,7 +158,7 @@ Resources:
       - Namespace: aws:autoscaling:launchconfiguration
         OptionName: SecurityGroups
         Value:
-          Fn::ImportValue: !Sub "${NetworkStackName}-AppSecurityGroupID"
+          Fn::ImportValue: !Sub ${NetworkStackName}-AppSecurityGroupID
 
       - Namespace: aws:autoscaling:launchconfiguration
         OptionName: SSHSourceRestriction
@@ -167,7 +167,7 @@ Resources:
           - ','
           - - 'tcp, 22, 22'
             - !ImportValue
-                "Fn::Sub": "${NetworkStackName}-BastionGroupID"
+                "Fn::Sub": ${NetworkStackName}-BastionGroupID
 
       - Namespace: aws:autoscaling:launchconfiguration
         OptionName: InstanceType
@@ -209,7 +209,7 @@ Resources:
       - Namespace: aws:ec2:vpc
         OptionName: VPCId
         Value:
-          Fn::ImportValue: !Sub "${NetworkStackName}-VpcID"
+          Fn::ImportValue: !Sub ${NetworkStackName}-VpcID
 
       - Namespace: aws:ec2:vpc
         OptionName: Subnets
@@ -217,9 +217,9 @@ Resources:
           "Fn::Join":
           - ','
           - - !ImportValue
-                "Fn::Sub": "${NetworkStackName}-PrivateSubnet1ID"
+                "Fn::Sub": ${NetworkStackName}-PrivateSubnet1ID
             - !ImportValue
-                "Fn::Sub": "${NetworkStackName}-PrivateSubnet2ID"
+                "Fn::Sub": ${NetworkStackName}-PrivateSubnet2ID
 
       - Namespace: aws:ec2:vpc
         OptionName: ELBSubnets
@@ -227,9 +227,9 @@ Resources:
           "Fn::Join":
           - ','
           - - !ImportValue
-                "Fn::Sub": "${NetworkStackName}-PublicSubnet1ID"
+                "Fn::Sub": ${NetworkStackName}-PublicSubnet1ID
             - !ImportValue
-                "Fn::Sub": "${NetworkStackName}-PublicSubnet2ID"
+                "Fn::Sub": ${NetworkStackName}-PublicSubnet2ID
 
       - Namespace: aws:elbv2:listener:default
         OptionName: ListenerEnabled
@@ -238,12 +238,12 @@ Resources:
       - Namespace: aws:elbv2:loadbalancer
         OptionName: SecurityGroups
         Value:
-          Fn::ImportValue: !Sub "${NetworkStackName}-ELBSecurityGroupID"
+          Fn::ImportValue: !Sub ${NetworkStackName}-ELBSecurityGroupID
 
       - Namespace: aws:elbv2:loadbalancer
         OptionName: ManagedSecurityGroup
         Value:
-           Fn::ImportValue: !Sub "${NetworkStackName}-ELBSecurityGroupID"
+           Fn::ImportValue: !Sub ${NetworkStackName}-ELBSecurityGroupID
 
       - Namespace: aws:elbv2:listenerrule:default
         OptionName: PathPatterns
@@ -252,21 +252,21 @@ Resources:
       - Namespace: !Sub
         - "aws:elbv2:listener:${ListenPort}"
         - ListenPort:
-            "Fn::ImportValue": !Sub "${NetworkStackName}-ELBIngressPort"
+            "Fn::ImportValue": !Sub ${NetworkStackName}-ELBIngressPort
         OptionName: Protocol
         Value: !If [ TlsEnabled, HTTPS, HTTP ]
 
       - Namespace: !Sub
         - "aws:elbv2:listener:${ListenPort}"
         - ListenPort:
-            "Fn::ImportValue": !Sub "${NetworkStackName}-ELBIngressPort"
+            "Fn::ImportValue": !Sub ${NetworkStackName}-ELBIngressPort
         OptionName: Rules
         Value: default
 
       - Namespace: !Sub
         - "aws:elbv2:listener:${ListenPort}"
         - ListenPort:
-            "Fn::ImportValue": !Sub "${NetworkStackName}-ELBIngressPort"
+            "Fn::ImportValue": !Sub ${NetworkStackName}-ELBIngressPort
         OptionName: SSLCertificateArns
         Value: !Ref SSLCertificateArn
 

@@ -41,11 +41,8 @@ Parameters:
 
   ELBIngressPort:
     Description: The ELB ingress port used by security groups
-    Type: Number
-    MinValue: 0
-    MaxValue: 65535
+    Type: String
     ConstraintDescription: TCP ports must be between 0 - 65535
-    Default: 80
 
   AppIngressPort:
     Description: The application ingress port used by security groups
@@ -91,7 +88,7 @@ Parameters:
   EbInstanceType:
     Description: The instance type for Elastic Beanstalk
     Type: String
-    Default: t3.small
+    Default: t3.nano
     ConstraintDescription: Instance type not supported
     AllowedValues:
       - t3.nano
@@ -268,6 +265,10 @@ Conditions:
 
   IsProd: !Equals [ !Ref EnvironmentName, prod ]
 
+  TlsEnabled: !Not [ !Equals [ !Ref SSLCertificateArn, "" ] ]
+
+  IsCustomELBIngress: !Not [ !Equals [ !Ref ELBIngressPort, "" ] ]
+
 Resources:
 
   VpcStack:
@@ -278,7 +279,7 @@ Resources:
         AvailabilityZone1: !Ref AvailabilityZone1
         AvailabilityZone2: !Ref AvailabilityZone2
         SSHFrom: !Ref SSHFrom
-        ELBIngressPort: !Ref ELBIngressPort
+        ELBIngressPort: !If [ IsCustomELBIngress, !Ref ELBIngressPort, !If [ TlsEnabled, 443, 80 ] ]
         AppIngressPort: !Ref AppIngressPort
         SingleNatGateway: !If [ IsProd, false, true ]
 

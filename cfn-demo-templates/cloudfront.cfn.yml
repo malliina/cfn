@@ -69,7 +69,7 @@ Resources:
                 Forward: none
             TrustedSigners: []
             # allow-all, redirect-to-https, or https-only
-            ViewerProtocolPolicy: redirect-to-https
+            ViewerProtocolPolicy: !If [ HasCustomCertificate, redirect-to-https, allow-all ]
         DefaultCacheBehavior:
           AllowedMethods:
             - DELETE
@@ -90,7 +90,7 @@ Resources:
               Forward: all
           TrustedSigners: []
           # allow-all, redirect-to-https, or https-only
-          ViewerProtocolPolicy: redirect-to-https
+          ViewerProtocolPolicy: !If [ HasCustomCertificate, redirect-to-https, allow-all ]
         Origins:
           - DomainName: !Ref OriginDomainName
             Id: !Ref AWS::StackName
@@ -111,10 +111,10 @@ Outputs:
     Description: CloudFront Distribution ID
     Value: !Ref CloudFront
     Export:
-      Name: !Sub ${AWS::StackName}-CloudFrontDistributionID
+      Name: !Sub ${AWS::StackName}-DistributionID
 
-  OriginDomainName:
-    Description: CloudFront Origin Domain Name
+  DistributionDomainName:
+    Description: CloudFront Distribution Domain Name
     Value: !GetAtt CloudFront.DomainName
     Export:
-      Name: !Sub ${AWS::StackName}-CloudFrontOriginDomainName
+      Name: !Sub ${AWS::StackName}-DomainName
