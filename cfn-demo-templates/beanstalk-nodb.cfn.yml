@@ -13,15 +13,6 @@ Parameters:
     MaxLength: 255
     AllowedPattern: "^[a-zA-Z][-a-zA-Z0-9]*$"
 
-  StackType:
-    Description: only docker
-    Type: String
-    MinLength: 1
-    MaxLength: 255
-    AllowedValues:
-      - docker
-    ConstraintDescription: Specify app platform
-
   EnvironmentName:
     Description: Environment name, either dev or prod.
     Type: String
@@ -31,6 +22,13 @@ Parameters:
       - dev
       - prod
     ConstraintDescription: Specify either dev or prod
+
+  CNAMEPrefix:
+    Description: CNAME prefix for Beanstalk URL
+    Type: String
+    MinLength: 0
+    MaxLength: 512
+    Default: ""
 
   NetworkStackName:
     Description: Name of an active CloudFormation stack of networking resources
@@ -86,6 +84,8 @@ Conditions:
 
   TlsEnabled: !Not [ !Equals [ !Ref SSLCertificateArn, "" ] ]
 
+  HasCNAMEPrefix: !Not [ !Equals [ !Ref CNAMEPrefix, "" ] ]
+
 Mappings:
   # Maps stack type parameter to solution stack name string
   StackMap:
@@ -120,6 +120,7 @@ Resources:
     Properties:
       EnvironmentName: !Sub ${ApplicationName}-${EnvironmentName}
       ApplicationName: !Ref Application
+      CNAMEPrefix: !If [ HasCNAMEPrefix, !Ref CNAMEPrefix, !Ref "AWS::NoValue" ]
       TemplateName: !Ref ConfigurationTemplate
     DependsOn:
       - ConfigurationTemplate
@@ -131,7 +132,7 @@ Resources:
     Type: AWS::ElasticBeanstalk::ConfigurationTemplate
     Properties:
       ApplicationName: !Ref Application
-      SolutionStackName: !FindInMap [ StackMap, !Ref StackType, stackName ]
+      SolutionStackName: !FindInMap [ StackMap, docker, stackName ]
       OptionSettings:
 
       - Namespace: aws:elasticbeanstalk:environment
@@ -335,6 +336,16 @@ Outputs:
     Export:
       Name: !Sub ${AWS::StackName}-EnvironmentURL
 
+  BeanstalkURL:
+    Condition: HasCNAMEPrefix
+    Description: Beanstalk environment elasticbeanstalk.com URL
+    Value: !Join
+      - ''
+      - - !Ref CNAMEPrefix
+        - !Sub '.${AWS::Region}.elasticbeanstalk.com'
+    Export:
+      Name: !Sub ${AWS::StackName}-BeanstalkURL
+
   ApplicationName:
     Description: Application Name
     Value: !Ref ApplicationName
@@ -346,9 +357,3 @@ Outputs:
     Value: !Sub ${ApplicationName}-${EnvironmentName}
     Export:
       Name: !Sub ${AWS::StackName}-EnvironmentName
-
-  TypeOfStack:
-    Description: Stack type
-    Value: !Ref StackType
-    Export:
-      Name: !Sub ${AWS::StackName}-TypeOfStack

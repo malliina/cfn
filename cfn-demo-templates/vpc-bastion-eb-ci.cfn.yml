@@ -73,14 +73,6 @@ Parameters:
       - false
 
   # elastic-beanstalk.cfn.yml parameters
-  StackType:
-    Description: docker
-    Type: String
-    Default: docker
-    AllowedValues:
-      - docker
-    ConstraintDescription: Specify app platform
-
   EC2KeyPairName:
     Description: EC2 key pair name for SSH access
     Type: AWS::EC2::KeyPair::KeyName
@@ -215,7 +207,6 @@ Metadata:
     - Label:
         default: Elastic Beanstalk
       Parameters:
-        - StackType
         - EbInstanceType
         - EC2KeyPairName
         - AutoScalingMinInstanceCount
@@ -250,8 +241,6 @@ Metadata:
         default: Environment
       SSLCertificateArn:
         default: SSL Certificate
-      StackType:
-        default: Stack Type
       EbInstanceType:
         default: Instance Type
       EC2KeyPairName:
@@ -297,10 +286,9 @@ Resources:
   ElasticBeanstalkStack:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: !Sub https://s3.amazonaws.com/${TemplateBucket}/elastic-docker-nodb.cfn.yml
+      TemplateURL: !Sub https://s3.amazonaws.com/${TemplateBucket}/beanstalk-nodb.cfn.yml
       Parameters:
         ApplicationName: !Ref AWS::StackName
-        StackType: !Ref StackType
         EnvironmentName: !Ref EnvironmentName
         NetworkStackName: !GetAtt VpcStack.Outputs.Name
         EC2KeyPairName: !Ref EC2KeyPairName

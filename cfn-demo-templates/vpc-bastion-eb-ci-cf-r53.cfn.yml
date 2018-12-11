@@ -40,7 +40,7 @@ Parameters:
     Default: 0.0.0.0/0
 
   ELBIngressPort:
-    Description: The ELB ingress port used by security groups
+    Description: Optional ELB ingress port used by security groups, defaults to 443 or 80 if unspecified
     Type: String
     ConstraintDescription: TCP ports must be between 0 - 65535
 
@@ -73,6 +73,13 @@ Parameters:
       - false
 
   # elastic-beanstalk.cfn.yml parameters
+  CNAMEPrefix:
+    Description: CNAME prefix for Beanstalk URL
+    Type: String
+    MinLength: 0
+    MaxLength: 512
+    Default: ""
+
   EC2KeyPairName:
     Description: EC2 key pair name for SSH access
     Type: AWS::EC2::KeyPair::KeyName
@@ -104,7 +111,7 @@ Parameters:
       - r4.16xlarge
 
   BeanstalkCertificateArn:
-    Description: The optional SSL/TLS certificate ARN for Elastic Beanstalk
+    Description: Optional SSL/TLS certificate ARN for Elastic Beanstalk
     Type: String
     MinLength: 0
     MaxLength: 2048
@@ -187,11 +194,11 @@ Parameters:
     Default: ""
 
   CloudFrontCertificateArn:
-    Description: CloudFront SSL/TLS certificate ARN, must be in us-east-1 region
+    Description: Optional CloudFront SSL/TLS certificate ARN, must be in us-east-1 region if specified
     Type: String
     MinLength: 0
     MaxLength: 2048
-    Default: "[a-zA-Z0-9:/.]*us-east-1[a-zA-Z0-9:/.]*"
+    AllowedPattern: ".*us-east-1.*"
 
   # route53.cfn.yml parameters
   HostedZoneId:
@@ -224,6 +231,15 @@ Metadata:
         - MFA
         - SSHFrom
     - Label:
+        default: CodePipeline CI
+      Parameters:
+        - BuildImageRepoName
+        - BuildImageTag
+        - GitHubOwner
+        - GitHubRepository
+        - GitHubAccessToken
+        - GitHubWebhookSecret
+    - Label:
         default: Application Global
       Parameters:
         - AppIngressPort
@@ -231,6 +247,7 @@ Metadata:
     - Label:
         default: Elastic Beanstalk
       Parameters:
+        - CNAMEPrefix
         - EbInstanceType
         - EC2KeyPairName
         - AutoScalingMinInstanceCount
@@ -240,15 +257,6 @@ Metadata:
       Parameters:
         - ELBIngressPort
         - BeanstalkCertificateArn
-    - Label:
-        default: CodePipeline CI
-      Parameters:
-        - GitHubOwner
-        - GitHubRepository
-        - GitHubAccessToken
-        - GitHubWebhookSecret
-        - BuildImageRepoName
-        - BuildImageTag
     - Label:
         default: CloudFront CDN
       Parameters:
@@ -333,11 +341,11 @@ Resources:
   ElasticBeanstalkStack:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: !Sub https://s3.amazonaws.com/${TemplateBucket}/elastic-docker-nodb.cfn.yml
+      TemplateURL: !Sub https://s3.amazonaws.com/${TemplateBucket}/beanstalk-nodb.cfn.yml
       Parameters:
         ApplicationName: !Ref AWS::StackName
-        StackType: docker
         EnvironmentName: !Ref EnvironmentName
+        CNAMEPrefix: !Ref CNAMEPrefix
         NetworkStackName: !GetAtt VpcStack.Outputs.Name
         EC2KeyPairName: !Ref EC2KeyPairName
         DevInstanceType: !Ref EbInstanceType
@@ -369,6 +377,7 @@ Resources:
         OriginDomainName: !GetAtt ElasticBeanstalkStack.Outputs.EnvironmentURL
         CustomDomainNames: !Ref CustomDomainNames
         SSLCertificateArn: !Ref CloudFrontCertificateArn
+        OriginProtocolPolicy: !If [ TlsEnabled, https-only, match-viewer ]
     DependsOn: ElasticBeanstalkStack
 
   Route53Stack:

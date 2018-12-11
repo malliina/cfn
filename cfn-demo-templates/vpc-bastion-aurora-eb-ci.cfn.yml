@@ -72,15 +72,7 @@ Parameters:
       - true
       - false
 
-  # elastic-beanstalk.cfn.yml parameters
-  StackType:
-    Description: docker
-    Type: String
-    Default: docker
-    AllowedValues:
-      - docker
-    ConstraintDescription: Specify app platform
-
+  # beanstalk-*.cfn.yml parameters
   EC2KeyPairName:
     Description: EC2 key pair name for SSH access
     Type: AWS::EC2::KeyPair::KeyName
@@ -372,7 +364,6 @@ Metadata:
     - Label:
         default: Elastic Beanstalk
       Parameters:
-        - StackType
         - EbInstanceType
         - EC2KeyPairName
         - AutoScalingMinInstanceCount
@@ -419,8 +410,6 @@ Metadata:
         default: Encryption at Rest
       DatabaseInstanceClass:
         default: Instance Type
-      StackType:
-        default: Stack Type
       EbInstanceType:
         default: Instance Type
       EC2KeyPairName:
@@ -506,10 +495,9 @@ Resources:
   ElasticBeanstalkStack:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: !Sub https://s3.amazonaws.com/${TemplateBucket}/elastic-docker-aurora.cfn.yml
+      TemplateURL: !Sub https://s3.amazonaws.com/${TemplateBucket}/beanstalk-aurora.cfn.yml
       Parameters:
         ApplicationName: !Ref AWS::StackName
-        StackType: !Ref StackType
         EnvironmentName: !Ref EnvironmentName
         NetworkStackName: !GetAtt VpcStack.Outputs.Name
         DatabaseStackName: !GetAtt AuroraStack.Outputs.Name

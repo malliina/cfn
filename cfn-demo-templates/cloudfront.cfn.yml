@@ -19,16 +19,25 @@ Parameters:
     Type: CommaDelimitedList
     Description: Optional custom domain names as a comma-separated string (from e.g. Route 53)
 
-  CloudFrontCertificateArn:
+  SSLCertificateArn:
     Description: CloudFront SSL/TLS certificate ARN, must be in us-east-1 region
     Type: String
     MinLength: 0
     MaxLength: 2048
-    Default: "[a-zA-Z0-9:/.]*us-east-1[a-zA-Z0-9:/.]*"
+    AllowedPattern: ".*us-east-1.*"
+    ConstraintDescription: CloudFront certificates must be in region us-east-1
+
+  OriginProtocolPolicy:
+    Type: String
+    Description: Protocol policy for communications between CloudFront and the origin
+    AllowedValues:
+      - http-only
+      - match-viewer
+      - https-only
 
 Conditions:
 
-  HasCustomCertificate: !Not [ !Equals [ !Ref CloudFrontCertificateArn, "" ] ]
+  HasCustomCertificate: !Not [ !Equals [ !Ref SSLCertificateArn, "" ] ]
 
   # True if CustomDomainNames is non-empty, false otherwise
   HasCustomDomains:
@@ -98,10 +107,10 @@ Resources:
               HTTPPort: 80
               HTTPSPort: 443
               # http-only, match-viewer, or https-only
-              OriginProtocolPolicy: !If [ HasCustomCertificate, https-only, match-viewer ]
+              OriginProtocolPolicy: !Ref OriginProtocolPolicy
         PriceClass: PriceClass_100
         ViewerCertificate:
-          AcmCertificateArn: !If [ HasCustomCertificate, !Ref CloudFrontCertificateArn, !Ref "AWS::NoValue" ]
+          AcmCertificateArn: !If [ HasCustomCertificate, !Ref SSLCertificateArn, !Ref "AWS::NoValue" ]
           CloudFrontDefaultCertificate: !If [ HasCustomCertificate, !Ref "AWS::NoValue", true ]
           SslSupportMethod: !If [ HasCustomCertificate, sni-only, !Ref "AWS::NoValue" ]
       Tags: []
@@ -114,7 +123,7 @@ Outputs:
     Export:
       Name: !Sub ${AWS::StackName}-DistributionID
 
-  DistributionDomainName:
+  DomainName:
     Description: CloudFront Distribution Domain Name
     Value: !GetAtt CloudFront.DomainName
     Export:

@@ -38,7 +38,7 @@ Resources:
 
 Outputs:
 
-  DistributionID:
+  DomainName:
     Description: Route 53 Domain Name
     Value: !Ref Route53
     Export:
