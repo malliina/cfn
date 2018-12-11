@@ -1,9 +1,10 @@
 # cfn
 
-This repo contains [AWS CloudFormation](https://aws.amazon.com/cloudformation/) templates.
+This repo contains [AWS CloudFormation](https://aws.amazon.com/cloudformation/) templates. They help you get started
+with application development on AWS.
 
-Based on [startup-kit-templates](https://github.com/aws-samples/startup-kit-templates). I used those templates as a 
-starting point and modified them to my needs.
+I used [startup-kit-templates](https://github.com/aws-samples/startup-kit-templates) as a starting point and modified 
+them to my needs.
 
 ## Infrastructure
 
@@ -22,8 +23,8 @@ The ECR repository contains build images used by CodeBuild to build applications
 from [GitHub](https://github.com/), then builds and deploys the app to Elastic Beanstalk. Route 53 routes incoming 
 requests to the Beanstalk app via CloudFront.
 
-This [small web app](https://github.com/malliina/play-docka) is used as the default application to build unless 
-otherwise specified.
+This [small web app](https://github.com/malliina/play-docka) is used as the default application to build and deploy 
+unless otherwise specified.
 
 ## Creation
 
