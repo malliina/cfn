@@ -22,10 +22,13 @@ The ECR repository contains build images used by CodeBuild to build applications
 from [GitHub](https://github.com/), then builds and deploys the app to Elastic Beanstalk. Route 53 routes incoming 
 requests to the Beanstalk app via CloudFront.
 
+This [small web app](https://github.com/malliina/play-docka) is used as the default application to build unless 
+otherwise specified.
+
 ## Creation
 
-Create everything in one nested stack, or create the resources separately. Add `.cfn.yml` to the below names to find the
-relevant files.
+Create multiple resources from one nested stack, or create the resources separately. Add `.cfn.yml` to the below names 
+to find the relevant files.
 
 ### Nested
 
@@ -44,19 +47,21 @@ Create
 1. vpc
 1. bastion
 1. aurora
-1. elastic-docker-aurora
+1. beanstalk-aurora
 1. codepipeline-eb
 1. cloudfront
 1. route53
+1. redis
 
 or without a database
 
 1. vpc
 1. bastion
-1. elastic-docker-nodb
+1. beanstalk-nodb
 1. codepipeline-eb
 1. cloudfront
 1. route53
+1. redis
 
 You may want to create the resources sequentially due to dependencies. However, you can omit e.g. Route 53 if you don't 
 use it.

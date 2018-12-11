@@ -337,6 +337,38 @@ Resources:
       FromPort: 3306
       SourceSecurityGroupId: !Ref AppSecurityGroup
 
+  RedisSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enable access to ElastiCache (Redis)
+      VpcId: !Ref VPC
+      SecurityGroupEgress:
+        - CidrIp: 0.0.0.0/0
+          IpProtocol: tcp
+          ToPort: 6379
+          FromPort: 6379
+      Tags:
+        - Key: Name
+          Value: !Sub "${AWS::StackName}-RedisSecurityGroup"
+
+  RedisSecurityGroupFromBastionIngress:
+    Type: AWS::EC2::SecurityGroupIngress  # prevent security group circular references
+    Properties:
+      GroupId: !Ref RedisSecurityGroup
+      IpProtocol: tcp
+      ToPort: 6379
+      FromPort: 6379
+      SourceSecurityGroupId: !Ref BastionSecurityGroup
+
+  RedisSecurityGroupFromAppIngress:
+    Type: AWS::EC2::SecurityGroupIngress  # prevent security group circular references
+    Properties:
+      GroupId: !Ref RedisSecurityGroup
+      IpProtocol: tcp
+      ToPort: 6379
+      FromPort: 6379
+      SourceSecurityGroupId: !Ref AppSecurityGroup
+
   # NAT-related resources
   #
   # NAT is used to allow instances in private subnets to communicate with AWS
@@ -492,6 +524,12 @@ Outputs:
     Export:
       Name: !Sub "${AWS::StackName}-DatabaseGroupID"
 
+  RedisSecurityGroup:
+    Description: Security group ID for Redis
+    Value: !GetAtt RedisSecurityGroup.GroupId
+    Export:
+      Name: !Sub "${AWS::StackName}-RedisGroupID"
+
   ELBIngressPort:
     Description: ELB ingress port
     Value: !Ref ELBIngressPort
@@ -503,4 +541,3 @@ Outputs:
     Value: !Ref AppIngressPort
     Export:
       Name: !Sub "${AWS::StackName}-AppIngressPort"
-
