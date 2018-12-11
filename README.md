@@ -34,34 +34,24 @@ to find the relevant files.
 
 Create
 
-1. vpc-bastion-aurora-eb-ci-cf-r53
+1. [vpc-bastion-aurora-eb-ci-cf-r53](cfn-demo-templates/vpc-bastion-aurora-eb-ci.cfn.yml)
 
-or without a database
+or without any Aurora database
 
-1. vpc-bastion-eb-ci-cf-r53
+1. [vpc-bastion-eb-ci-cf-r53](cfn-demo-templates/vpc-bastion-eb-ci-cf-r53.cfn.yml)
 
 ### Standalone
 
 Create
 
-1. vpc
-1. bastion
-1. aurora
-1. beanstalk-aurora
-1. codepipeline-eb
-1. cloudfront
-1. route53
-1. redis
-
-or without a database
-
-1. vpc
-1. bastion
-1. beanstalk-nodb
-1. codepipeline-eb
-1. cloudfront
-1. route53
-1. redis
+1. [vpc](cfn-demo-templates/vpc.cfn.yml)
+1. [bastion](cfn-demo-templates/bastion.cfn.yml)
+1. [aurora](cfn-demo-templates/aurora.cfn.yml) (optionally)
+1. [beanstalk-aurora](cfn-demo-templates/beanstalk-aurora.cfn.yml) or without a database [beanstalk-nodb](cfn-demo-templates/beanstalk-nodb.cfn.yml)
+1. [codepipeline-eb](cfn-demo-templates/codepipeline-eb.cfn.yml)
+1. [cloudfront](cfn-demo-templates/cloudfront.cfn.yml)
+1. [route53](cfn-demo-templates/route53.cfn.yml)
+1. [redis](cfn-demo-templates/redis.cfn.yml)
 
 You may want to create the resources sequentially due to dependencies. However, you can omit e.g. Route 53 if you don't 
 use it.
