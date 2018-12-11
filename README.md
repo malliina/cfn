@@ -7,10 +7,10 @@ starting point and modified them to my needs.
 
 ## Infrastructure
 
-The templates create the following stack:
+The templates define the following components:
 
 - [VPC](https://aws.amazon.com/documentation/vpc/) for networking
-- [Bastion host](https://docs.aws.amazon.com/quickstart/latest/linux-bastion/architecture.html)
+- [Bastion host](https://docs.aws.amazon.com/quickstart/latest/linux-bastion/architecture.html) for SSH access
 - [ECR](https://aws.amazon.com/ecr/) repository for Docker images
 - [Aurora database](https://aws.amazon.com/rds/aurora/) for persistence
 - Single-container [Elastic Beanstalk](https://aws.amazon.com/elasticbeanstalk/) with [Docker](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/docker-basics.html) for applications

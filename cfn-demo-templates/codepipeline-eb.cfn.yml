@@ -23,7 +23,7 @@ Parameters:
     ConstraintDescription: must contain only alphanumeric characters.
 
   GitHubAccessToken:
-    NoEcho: 'true'
+    NoEcho: true
     Type: String
     Description: GitHub access token
     MinLength: 1
@@ -32,7 +32,7 @@ Parameters:
     ConstraintDescription: must contain only alphanumeric characters.
 
   GitHubWebhookSecret:
-    NoEcho: 'true'
+    NoEcho: true
     Type: String
     Description: GitHub webhook secret for the repo
     MinLength: 0
@@ -73,11 +73,22 @@ Parameters:
     AllowedPattern: '[a-zA-Z0-9][-a-zA-Z0-9]*'
     ConstraintDescription: must contain only alphanumeric characters.
 
+  CodeBuildEnvironment:
+    Type: String
+    Description: CodeBuild environment size
+    Default: BUILD_GENERAL1_SMALL
+    # https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-compute-types.html
+    AllowedValues:
+      - BUILD_GENERAL1_SMALL
+      - BUILD_GENERAL1_MEDIUM
+      - BUILD_GENERAL1_LARGE
+
 Conditions:
 
   WebhookEnabled: !Not [ !Equals [ !Ref GitHubWebhookSecret, "" ] ]
 
 Resources:
+
   AppCodeBuild:
     Type: AWS::CodeBuild::Project
     Properties:
@@ -88,7 +99,7 @@ Resources:
         Type: CODEPIPELINE
       Environment:
         Type: LINUX_CONTAINER
-        ComputeType: BUILD_GENERAL1_SMALL
+        ComputeType: !Ref CodeBuildEnvironment
         Image: !Join
         - ''
         - - !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/'
@@ -98,6 +109,7 @@ Resources:
       Source:
         Type: CODEPIPELINE
       TimeoutInMinutes: 30
+
   AppPipeline:
     Type: AWS::CodePipeline::Pipeline
     # DependsOn: BeanstalkEnvironment
@@ -155,6 +167,7 @@ Resources:
       ArtifactStore:
         Type: S3
         Location: !Ref ArtifactStoreS3Bucket
+
   Webhook:
     Type: AWS::CodePipeline::Webhook
     Condition: WebhookEnabled
@@ -169,10 +182,12 @@ Resources:
       TargetPipeline: !Ref AppPipeline
       TargetAction: Source
       TargetPipelineVersion: !GetAtt AppPipeline.Version
-      RegisterWithThirdParty: 'true'
+      RegisterWithThirdParty: true
+
   ArtifactStoreS3Bucket:
     Type: AWS::S3::Bucket
     DeletionPolicy: Retain
+
   CodeBuildServiceRole:
     Type: AWS::IAM::Role
     Properties:
@@ -215,6 +230,7 @@ Resources:
             - ecr:InitiateLayerUpload
             - ecr:UploadLayerPart
             - ecr:CompleteLayerUpload
+
   CodePipelineServiceRole:
     Type: AWS::IAM::Role
     Properties:
@@ -252,6 +268,7 @@ Resources:
             - s3:PutObject
           - Resource: '*'
             Effect: Allow
+            # Might be excessive?
             Action:
             - elasticbeanstalk:*
             - ecs:DescribeServices

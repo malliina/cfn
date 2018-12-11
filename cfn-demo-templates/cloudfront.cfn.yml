@@ -19,16 +19,16 @@ Parameters:
     Type: CommaDelimitedList
     Description: Optional custom domain names as a comma-separated string (from e.g. Route 53)
 
-  SSLCertificateArn:
-    Description: The SSL/TLS certificate ARN
+  CloudFrontCertificateArn:
+    Description: CloudFront SSL/TLS certificate ARN, must be in us-east-1 region
     Type: String
     MinLength: 0
     MaxLength: 2048
-    Default: ""
+    Default: "[a-zA-Z0-9:/.]*us-east-1[a-zA-Z0-9:/.]*"
 
 Conditions:
 
-  HasCustomCertificate: !Not [ !Equals [ !Ref SSLCertificateArn, "" ] ]
+  HasCustomCertificate: !Not [ !Equals [ !Ref CloudFrontCertificateArn, "" ] ]
 
   # True if CustomDomainNames is non-empty, false otherwise
   HasCustomDomains:
@@ -101,8 +101,9 @@ Resources:
               OriginProtocolPolicy: !If [ HasCustomCertificate, https-only, match-viewer ]
         PriceClass: PriceClass_100
         ViewerCertificate:
-          AcmCertificateArn: !If [ HasCustomCertificate, !Ref SSLCertificateArn, !Ref "AWS::NoValue" ]
+          AcmCertificateArn: !If [ HasCustomCertificate, !Ref CloudFrontCertificateArn, !Ref "AWS::NoValue" ]
           CloudFrontDefaultCertificate: !If [ HasCustomCertificate, !Ref "AWS::NoValue", true ]
+          SslSupportMethod: !If [ HasCustomCertificate, sni-only, !Ref "AWS::NoValue" ]
       Tags: []
 
 Outputs:

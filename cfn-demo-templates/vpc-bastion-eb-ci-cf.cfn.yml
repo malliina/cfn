@@ -114,7 +114,7 @@ Parameters:
       - r4.8xlarge
       - r4.16xlarge
 
-  SSLCertificateArn:
+  BeanstalkCertificateArn:
     Description: The optional SSL/TLS certificate ARN
     Type: String
     MinLength: 0
@@ -197,6 +197,13 @@ Parameters:
     Description: Optional custom domain names as a comma-separated string (from e.g. Route 53)
     Default: ""
 
+  CloudFrontCertificateArn:
+    Description: CloudFront SSL/TLS certificate ARN, must be in us-east-1 region
+    Type: String
+    MinLength: 0
+    MaxLength: 2048
+    Default: "[a-zA-Z0-9:/.]*us-east-1[a-zA-Z0-9:/.]*"
+
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
@@ -233,7 +240,7 @@ Metadata:
         default: Load Balancer
       Parameters:
         - ELBIngressPort
-        - SSLCertificateArn
+        - BeanstalkCertificateArn
     - Label:
         default: CodePipeline CI
       Parameters:
@@ -270,7 +277,7 @@ Metadata:
         default: CloudFormation Bucket
       EnvironmentName:
         default: Environment
-      SSLCertificateArn:
+      BeanstalkCertificateArn:
         default: SSL Certificate
       StackType:
         default: Stack Type
@@ -324,7 +331,7 @@ Resources:
         EC2KeyPairName: !Ref EC2KeyPairName
         DevInstanceType: !Ref EbInstanceType
         ProdInstanceType: !Ref EbInstanceType
-        SSLCertificateArn: !Ref SSLCertificateArn
+        SSLCertificateArn: !Ref BeanstalkCertificateArn
         AutoScalingMinInstanceCount: !Ref AutoScalingMinInstanceCount
         AutoScalingMaxInstanceCount: !Ref AutoScalingMaxInstanceCount
 
@@ -350,7 +357,7 @@ Resources:
       Parameters:
         OriginDomainName: !GetAtt ElasticBeanstalkStack.Outputs.EnvironmentURL
         CustomDomainNames: !Ref CustomDomainNames
-        SSLCertificateArn: !Ref SSLCertificateArn
+        SSLCertificateArn: !Ref CloudFrontCertificateArn
     DependsOn: ElasticBeanstalkStack
 
 Outputs:

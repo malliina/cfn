@@ -73,14 +73,6 @@ Parameters:
       - false
 
   # elastic-beanstalk.cfn.yml parameters
-  StackType:
-    Description: docker
-    Type: String
-    Default: docker
-    AllowedValues:
-      - docker
-    ConstraintDescription: Specify app platform
-
   EC2KeyPairName:
     Description: EC2 key pair name for SSH access
     Type: AWS::EC2::KeyPair::KeyName
@@ -88,7 +80,7 @@ Parameters:
   EbInstanceType:
     Description: The instance type for Elastic Beanstalk
     Type: String
-    Default: t3.small
+    Default: t3.nano
     ConstraintDescription: Instance type not supported
     AllowedValues:
       - t3.nano
@@ -111,8 +103,8 @@ Parameters:
       - r4.8xlarge
       - r4.16xlarge
 
-  SSLCertificateArn:
-    Description: The optional SSL/TLS certificate ARN
+  BeanstalkCertificateArn:
+    Description: The optional SSL/TLS certificate ARN for Elastic Beanstalk
     Type: String
     MinLength: 0
     MaxLength: 2048
@@ -194,10 +186,22 @@ Parameters:
     Description: Optional custom domain names as a comma-separated string (from e.g. Route 53)
     Default: ""
 
+  CloudFrontCertificateArn:
+    Description: CloudFront SSL/TLS certificate ARN, must be in us-east-1 region
+    Type: String
+    MinLength: 0
+    MaxLength: 2048
+    Default: "[a-zA-Z0-9:/.]*us-east-1[a-zA-Z0-9:/.]*"
+
   # route53.cfn.yml parameters
   HostedZoneId:
     Type: String
     Description: Optional Route 53 hosted zone ID
+    Default: ""
+
+  DomainName:
+    Type: String
+    Description: Fully qualified domain name in Route 53 (if other than CustomDomainNames)
     Default: ""
 
 Metadata:
@@ -227,7 +231,6 @@ Metadata:
     - Label:
         default: Elastic Beanstalk
       Parameters:
-        - StackType
         - EbInstanceType
         - EC2KeyPairName
         - AutoScalingMinInstanceCount
@@ -236,7 +239,7 @@ Metadata:
         default: Load Balancer
       Parameters:
         - ELBIngressPort
-        - SSLCertificateArn
+        - BeanstalkCertificateArn
     - Label:
         default: CodePipeline CI
       Parameters:
@@ -250,17 +253,19 @@ Metadata:
         default: CloudFront CDN
       Parameters:
         - CustomDomainNames
+        - CloudFrontCertificateArn
     - Label:
         default: Route 53
       Parameters:
         - HostedZoneId
+        - DomainName
     ParameterLabels:
       AvailabilityZone1:
         default: Availability Zone 1
       AvailabilityZone2:
         default: Availability Zone 2
       ELBIngressPort:
-        default: Port
+        default: Load balancer port (optional)
       AppIngressPort:
         default: Port
       AppProtocol:
@@ -277,10 +282,8 @@ Metadata:
         default: CloudFormation Bucket
       EnvironmentName:
         default: Environment
-      SSLCertificateArn:
+      BeanstalkCertificateArn:
         default: SSL Certificate
-      StackType:
-        default: Stack Type
       EbInstanceType:
         default: Instance Type
       EC2KeyPairName:
@@ -295,6 +298,12 @@ Conditions:
   IsProd: !Equals [ !Ref EnvironmentName, prod ]
 
   IsCustomELBIngress: !Not [ !Equals [ !Ref ELBIngressPort, "" ] ]
+
+  TlsEnabled: !Not [ !Equals [ !Ref BeanstalkCertificateArn, "" ] ]
+
+  HasDomainName: !Not [ !Equals [ !Ref DomainName, "" ] ]
+
+  HasHostedZone: !Not [ !Equals [ !Ref HostedZoneId, "" ] ]
 
 Resources:
 
@@ -327,13 +336,13 @@ Resources:
       TemplateURL: !Sub https://s3.amazonaws.com/${TemplateBucket}/elastic-docker-nodb.cfn.yml
       Parameters:
         ApplicationName: !Ref AWS::StackName
-        StackType: !Ref StackType
+        StackType: docker
         EnvironmentName: !Ref EnvironmentName
         NetworkStackName: !GetAtt VpcStack.Outputs.Name
         EC2KeyPairName: !Ref EC2KeyPairName
         DevInstanceType: !Ref EbInstanceType
         ProdInstanceType: !Ref EbInstanceType
-        SSLCertificateArn: !Ref SSLCertificateArn
+        SSLCertificateArn: !Ref BeanstalkCertificateArn
         AutoScalingMinInstanceCount: !Ref AutoScalingMinInstanceCount
         AutoScalingMaxInstanceCount: !Ref AutoScalingMaxInstanceCount
 
@@ -359,17 +368,19 @@ Resources:
       Parameters:
         OriginDomainName: !GetAtt ElasticBeanstalkStack.Outputs.EnvironmentURL
         CustomDomainNames: !Ref CustomDomainNames
-        SSLCertificateArn: !Ref SSLCertificateArn
+        SSLCertificateArn: !Ref CloudFrontCertificateArn
     DependsOn: ElasticBeanstalkStack
 
   Route53Stack:
     Type: AWS::CloudFormation::Stack
+    Condition: HasHostedZone
     Properties:
       TemplateURL: !Sub https://s3.amazonaws.com/${TemplateBucket}/route53.cfn.yml
       Parameters:
         HostedZoneId: !Ref HostedZoneId
-        DomainName: !Ref CustomDomainNames
+        DomainName: !If [ HasDomainName, !Ref DomainName, !Ref CustomDomainNames ]
         CloudFrontDomainName: !GetAtt CloudFrontStack.Outputs.DomainName
+    DependsOn: CloudFrontStack
 
 Outputs:
 
