@@ -19,7 +19,7 @@ The templates define the following components:
 - [CloudFront](https://aws.amazon.com/cloudfront/) CDN for HTTP requests and assets
 - [Route 53](https://aws.amazon.com/route53/) for DNS
 
-The ECR repository contains build images used by CodeBuild to build applications. CodePipeline fetches application code 
+The ECR repository stores build images used by CodeBuild to build applications. CodePipeline fetches application code 
 from [GitHub](https://github.com/), then builds and deploys the app to Elastic Beanstalk. Route 53 routes incoming 
 requests to the Beanstalk app via CloudFront.
 
@@ -27,6 +27,9 @@ This [small web app](https://github.com/malliina/play-docka) is used as the defa
 unless otherwise specified.
 
 ## Creation
+
+Create an ECR repository and CodeBuild project for build images using [ecr](build-images/ecr.cfn.yml). Push an image
+to the repo by running the created CodeBuild project, then proceed with creating more CloudFormation stacks below.
 
 Create multiple resources from one nested stack, or create the resources separately. Add `.cfn.yml` to the below names 
 to find the relevant files.
