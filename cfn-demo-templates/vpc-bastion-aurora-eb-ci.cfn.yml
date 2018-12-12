@@ -445,6 +445,8 @@ Conditions:
 
   IsCustomELBIngress: !Not [ !Equals [ !Ref ELBIngressPort, "" ] ]
 
+  TlsEnabled: !Not [ !Equals [ !Ref SSLCertificateArn, "" ] ]
+
 Resources:
 
   VpcStack:
