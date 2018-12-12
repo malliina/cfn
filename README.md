@@ -41,6 +41,8 @@ or without any Aurora database
 
 1. [vpc-bastion-eb-ci-cf-r53](cfn-demo-templates/vpc-bastion-eb-ci-cf-r53.cfn.yml)
 
+The nested templates must be available in an S3 bucket, for example `cfn-demo-templates`.
+
 ### Standalone
 
 Create
