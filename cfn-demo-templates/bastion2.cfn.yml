@@ -19,8 +19,7 @@ Parameters:
 
   KeyName:
     Description: EC2 key pair name for bastion host SSH access
-    Type: AWS::SSM::Parameter::Value<AWS::EC2::KeyPair::KeyName>
-    Default: /dev/keypairs/bastion
+    Type: AWS::EC2::KeyPair::KeyName
 
   LogRetentionInDays:
     Description: Number of days you would like your CloudWatch Logs to be retained
@@ -37,41 +36,10 @@ Parameters:
       - true
       - false
 
-Mappings:
-
-  # Amazon Linux AMI - https://aws.amazon.com/amazon-linux-ami/
-  # Note: This has not been tested with Amazon Linux 2
-  AMIMap:
-    ap-northeast-1:
-      AMI: ami-ceafcba8
-    ap-northeast-2:
-      AMI: ami-863090e8
-    ap-south-1:
-      AMI: ami-531a4c3c
-    ap-southeast-1:
-      AMI: ami-68097514
-    ap-southeast-2:
-      AMI: ami-942dd1f6
-    eu-west-1:
-      AMI: ami-d834aba1
-    eu-west-2:
-      AMI: ami-403e2524
-    eu-west-3:
-      AMI: ami-8ee056f3
-    eu-central-1:
-      AMI: ami-5652ce39
-    sa-east-1:
-      AMI: ami-84175ae8
-    us-east-1:
-      AMI: ami-97785bed
-    us-east-2:
-      AMI: ami-f63b1193
-    us-west-1:
-      AMI: ami-824c4ee2
-    us-west-2:
-      AMI: ami-f2d3638a
-    ca-central-1:
-      AMI: ami-a954d1cd
+  AMI:
+    # The latest AMI from Parameter Store
+    Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
+    Default: '/aws/service/ami-amazon-linux-latest/amzn-ami-hvm-x86_64-gp2'
 
 Resources:
 
@@ -212,7 +180,7 @@ Resources:
       NetworkInterfaces:
         - NetworkInterfaceId: !Ref BastionNetworkInterface
           DeviceIndex: 0
-      ImageId: !FindInMap [ AMIMap, !Ref "AWS::Region", AMI ]
+      ImageId: !Ref AMI
       UserData:
         Fn::Base64: !Sub |
           #!/bin/bash -xe
@@ -333,5 +301,3 @@ Outputs:
     Value: !GetAtt BastionEip.AllocationId
     Export:
       Name: !Sub "${AWS::StackName}-BastionEIP-AllocationId"
-
-

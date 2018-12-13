@@ -39,7 +39,8 @@ Parameters:
 
   EC2KeyPairName:
     Description: EC2 key pair name for SSH access
-    Type: AWS::EC2::KeyPair::KeyName
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::KeyPair::KeyName>
+    Default: /dev/keypairs/bastion
 
   DevInstanceType:
     Description: The instance type for the dev environment

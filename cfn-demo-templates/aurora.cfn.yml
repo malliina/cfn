@@ -60,20 +60,9 @@ Parameters:
       - false
 
   DatabaseInstanceClass:
-    Default: db.t2.small
-    Type: String
-    Description: "Database instance class, e.g. db.t2.micro (free tier) - Engine support: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.DBInstanceClass.html"
-    ConstraintDescription: DB instance class not supported
-    AllowedValues:
-      - db.t2.small
-      - db.t2.medium
-      - db.t2.xlarge
-      - db.r4.large
-      - db.r4.xlarge
-      - db.r4.2xlarge
-      - db.r4.4xlarge
-      - db.r4.8xlarge
-      - db.r4.16xlarge
+    Description: Database instance class
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /dev/db/instanceClass
 
   EnvironmentName:
     Description: Environment name - dev or prod

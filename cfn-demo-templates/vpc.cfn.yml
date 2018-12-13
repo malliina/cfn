@@ -468,76 +468,76 @@ Outputs:
     Description: VPC ID
     Value: !Ref VPC
     Export:
-      Name: !Sub "${AWS::StackName}-VpcID"
+      Name: !Sub ${AWS::StackName}-VpcID
 
   VpcCidr:
     Description: Vpc cidr block
     Value: !FindInMap [ CIDRMap, VPC, CIDR ]
     Export:
-      Name: !Sub "${AWS::StackName}-vpc-cidr"
+      Name: !Sub ${AWS::StackName}-vpc-cidr
 
   PublicSubnet1:
     Description: Public subnet 1 ID
     Value: !Ref PublicSubnet1
     Export:
-      Name: !Sub "${AWS::StackName}-PublicSubnet1ID"
+      Name: !Sub ${AWS::StackName}-PublicSubnet1ID
 
   PublicSubnet2:
     Description: Public subnet 2 ID
     Value: !Ref PublicSubnet2
     Export:
-      Name: !Sub "${AWS::StackName}-PublicSubnet2ID"
+      Name: !Sub ${AWS::StackName}-PublicSubnet2ID
 
   PrivateSubnet1:
     Description: Private subnet 1 ID
     Value: !Ref PrivateSubnet1
     Export:
-      Name: !Sub "${AWS::StackName}-PrivateSubnet1ID"
+      Name: !Sub ${AWS::StackName}-PrivateSubnet1ID
 
   PrivateSubnet2:
     Description: Private subnet 2 ID
     Value: !Ref PrivateSubnet2
     Export:
-      Name: !Sub "${AWS::StackName}-PrivateSubnet2ID"
+      Name: !Sub ${AWS::StackName}-PrivateSubnet2ID
 
   ELBSecurityGroup:
     Description: Security group ID for Internet-facing ELB
     Value: !GetAtt ELBSecurityGroup.GroupId
     Export:
-      Name: !Sub "${AWS::StackName}-ELBSecurityGroupID"
+      Name: !Sub ${AWS::StackName}-ELBSecurityGroupID
 
   AppSecurityGroup:
     Description: Security group ID for app behind ELB
     Value: !GetAtt AppSecurityGroup.GroupId
     Export:
-      Name: !Sub "${AWS::StackName}-AppSecurityGroupID"
+      Name: !Sub ${AWS::StackName}-AppSecurityGroupID
 
   BastionSecurityGroup:
     Description: Security group ID for bastion host
     Value: !GetAtt BastionSecurityGroup.GroupId
     Export:
-      Name: !Sub "${AWS::StackName}-BastionGroupID"
+      Name: !Sub ${AWS::StackName}-BastionGroupID
 
   DatabaseSecurityGroup:
     Description: Security group ID for RDS database
     Value: !GetAtt DbSecurityGroup.GroupId
     Export:
-      Name: !Sub "${AWS::StackName}-DatabaseGroupID"
+      Name: !Sub ${AWS::StackName}-DatabaseGroupID
 
   RedisSecurityGroup:
     Description: Security group ID for Redis
     Value: !GetAtt RedisSecurityGroup.GroupId
     Export:
-      Name: !Sub "${AWS::StackName}-RedisGroupID"
+      Name: !Sub ${AWS::StackName}-RedisGroupID
 
   ELBIngressPort:
     Description: ELB ingress port
     Value: !Ref ELBIngressPort
     Export:
-      Name: !Sub "${AWS::StackName}-ELBIngressPort"
+      Name: !Sub ${AWS::StackName}-ELBIngressPort
 
   AppIngressPort:
     Description: App ingress port
     Value: !Ref AppIngressPort
     Export:
-      Name: !Sub "${AWS::StackName}-AppIngressPort"
+      Name: !Sub ${AWS::StackName}-AppIngressPort

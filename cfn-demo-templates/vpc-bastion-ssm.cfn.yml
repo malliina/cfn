@@ -59,7 +59,7 @@ Parameters:
   KeyName:
     Description: EC2 key pair name for bastion host SSH access
     Type: AWS::SSM::Parameter::Value<AWS::EC2::KeyPair::KeyName>
-    Default: defaultEC2Key
+    Default: /dev/keypairs/bastion
 
   LogRetentionInDays:
     Description: Number of days you would like your CloudWatch Logs to be retained

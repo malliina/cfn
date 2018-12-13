@@ -1,43 +1,10 @@
 AWSTemplateFormatVersion: '2010-09-09'
 
-Description: 'AWS CloudFormation CodePipeline'
+# Prerequisites: Have your GitHub access token in Secrets Manager with name dev/github/token and key GitHubAccessToken
+
+Description: CodePipeline with Secrets Manager
 
 Parameters:
-
-  GitHubOwner:
-    Type: String
-    Description: GitHub Owner or User
-    Default: malliina
-    MinLength: 1
-    MaxLength: 256
-    AllowedPattern: '[a-zA-Z0-9][-a-zA-Z0-9]*'
-    ConstraintDescription: must contain only alphanumeric characters.
-
-  GitHubRepository:
-    Type: String
-    Description: GitHub repository
-    Default: play-docka
-    MinLength: 1
-    MaxLength: 256
-    AllowedPattern: '[a-zA-Z0-9][-a-zA-Z0-9]*'
-    ConstraintDescription: must contain only alphanumeric characters.
-
-  GitHubAccessToken:
-    NoEcho: true
-    Type: String
-    Description: GitHub access token
-    MinLength: 1
-    MaxLength: 256
-    AllowedPattern: '[a-zA-Z0-9][-a-zA-Z0-9]*'
-    ConstraintDescription: must contain only alphanumeric characters.
-
-  GitHubWebhookSecret:
-    NoEcho: true
-    Type: String
-    Description: GitHub webhook secret for the repo
-    MinLength: 0
-    MaxLength: 256
-    Default: ""
 
   BuildImageRepoName:
     Type: String
@@ -57,6 +24,49 @@ Parameters:
     AllowedPattern: '[a-zA-Z0-9][-a-zA-Z0-9]*'
     ConstraintDescription: must contain only alphanumeric characters.
 
+  CodeBuildEnvironment:
+    Type: String
+    Description: CodeBuild environment size
+    Default: BUILD_GENERAL1_SMALL
+    # https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-compute-types.html
+    AllowedValues:
+      - BUILD_GENERAL1_SMALL
+      - BUILD_GENERAL1_MEDIUM
+      - BUILD_GENERAL1_LARGE
+
+  GitHubOwner:
+    Type: String
+    Description: GitHub owner or user
+    Default: malliina
+    MinLength: 1
+    MaxLength: 256
+    AllowedPattern: '[a-zA-Z0-9][-a-zA-Z0-9]*'
+    ConstraintDescription: must contain only alphanumeric characters.
+
+  GitHubRepository:
+    Type: String
+    Description: GitHub repository
+    Default: play-docka
+    MinLength: 1
+    MaxLength: 256
+    AllowedPattern: '[a-zA-Z0-9][-a-zA-Z0-9]*'
+    ConstraintDescription: must contain only alphanumeric characters.
+
+  Branch:
+    Type: String
+    Description: GitHub branch to build
+    MinLength: 1
+    MaxLength: 256
+    Default: master
+
+  GitHubWebhookSecret:
+    NoEcho: true
+    Type: String
+    Description: Optional GitHub webhook secret for the repo
+    MinLength: 0
+    MaxLength: 256
+    Default: ""
+
   ApplicationName:
     Type: String
     Description: Beanstalk application name
@@ -73,15 +83,27 @@ Parameters:
     AllowedPattern: '[a-zA-Z0-9][-a-zA-Z0-9]*'
     ConstraintDescription: must contain only alphanumeric characters.
 
-  CodeBuildEnvironment:
-    Type: String
-    Description: CodeBuild environment size
-    Default: BUILD_GENERAL1_SMALL
-    # https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-compute-types.html
-    AllowedValues:
-      - BUILD_GENERAL1_SMALL
-      - BUILD_GENERAL1_MEDIUM
-      - BUILD_GENERAL1_LARGE
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: Build Image
+        Parameters:
+          - BuildImageRepoName
+          - BuildImageTag
+          - CodeBuildEnvironment
+      - Label:
+          default: Application Source
+        Parameters:
+          - GitHubOwner
+          - GitHubRepository
+          - Branch
+          - GitHubWebhookSecret
+      - Label:
+          default: Deployment Target
+        Parameters:
+          - ApplicationName
+          - BeanstalkEnvironment
 
 Conditions:
 
@@ -131,8 +153,9 @@ Resources:
             Owner: !Ref GitHubOwner
             Repo: !Ref GitHubRepository
             PollForSourceChanges: !If [ WebhookEnabled, false, true ]
-            Branch: master
-            OAuthToken: !Ref GitHubAccessToken
+            Branch: !Ref Branch
+            # Reads the token from Secrets Manager
+            OAuthToken: '{{resolve:secretsmanager:dev/github/token:SecretString:GitHubAccessToken}}'
           RunOrder: 1
       - Name: Build
         Actions:

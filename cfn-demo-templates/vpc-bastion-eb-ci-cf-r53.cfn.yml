@@ -81,8 +81,9 @@ Parameters:
     Default: ""
 
   EC2KeyPairName:
-    Description: EC2 key pair name for SSH access
-    Type: AWS::EC2::KeyPair::KeyName
+    Description: EC2 key pair name for bastion host SSH access
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::KeyPair::KeyName>
+    Default: /dev/keypairs/bastion
 
   EbInstanceType:
     Description: The instance type for Elastic Beanstalk
@@ -133,7 +134,7 @@ Parameters:
     Default: 6
     ConstraintDescription: Specify a number between 1 - 20
 
-  # codepipeline-eb.cfn.yml parameters
+  # codepipeline.cfn.yml parameters
   GitHubOwner:
     Type: String
     Description: GitHub Owner or User
@@ -147,15 +148,6 @@ Parameters:
     Type: String
     Description: GitHub repository
     Default: play-docka
-    MinLength: 1
-    MaxLength: 256
-    AllowedPattern: '[a-zA-Z0-9][-a-zA-Z0-9]*'
-    ConstraintDescription: must contain only alphanumeric characters.
-
-  GitHubAccessToken:
-    NoEcho: true
-    Type: String
-    Description: GitHub access token
     MinLength: 1
     MaxLength: 256
     AllowedPattern: '[a-zA-Z0-9][-a-zA-Z0-9]*'
@@ -237,7 +229,6 @@ Metadata:
         - BuildImageTag
         - GitHubOwner
         - GitHubRepository
-        - GitHubAccessToken
         - GitHubWebhookSecret
     - Label:
         default: Application Global
@@ -357,11 +348,10 @@ Resources:
   CodePipelineStack:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: !Sub https://s3.amazonaws.com/${TemplateBucket}/codepipeline-eb.cfn.yml
+      TemplateURL: !Sub https://s3.amazonaws.com/${TemplateBucket}/codepipeline.cfn.yml
       Parameters:
         GitHubOwner: !Ref GitHubOwner
         GitHubRepository: !Ref GitHubRepository
-        GitHubAccessToken: !Ref GitHubAccessToken
         GitHubWebhookSecret: !Ref GitHubWebhookSecret
         BuildImageRepoName: !Ref BuildImageRepoName
         BuildImageTag: !Ref BuildImageTag

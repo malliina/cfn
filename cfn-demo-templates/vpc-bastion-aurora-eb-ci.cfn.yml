@@ -55,7 +55,8 @@ Parameters:
   # bastion.cfn.yml parameters
   KeyName:
     Description: EC2 key pair name for bastion host SSH access
-    Type: AWS::EC2::KeyPair::KeyName
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::KeyPair::KeyName>
+    Default: /dev/keypairs/bastion
 
   LogRetentionInDays:
     Description: Number of days you would like your CloudWatch Logs to be retained
@@ -74,8 +75,9 @@ Parameters:
 
   # beanstalk-*.cfn.yml parameters
   EC2KeyPairName:
-    Description: EC2 key pair name for SSH access
-    Type: AWS::EC2::KeyPair::KeyName
+    Description: EC2 key pair name for bastion host SSH access
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::KeyPair::KeyName>
+    Default: /dev/keypairs/bastion
 
   EbInstanceType:
     Description: The instance type for Elastic Beanstalk
@@ -265,7 +267,7 @@ Parameters:
     MinValue: 1
     ConstraintDescription: A value of one byte or more
 
-  # codepipeline-eb.cfn.yml parameters
+  # codepipeline.cfn.yml parameters
   GitHubOwner:
     Type: String
     Description: GitHub owner or user
@@ -279,15 +281,6 @@ Parameters:
     Type: String
     Description: GitHub repository
     Default: play-docka
-    MinLength: 1
-    MaxLength: 256
-    AllowedPattern: '[a-zA-Z0-9][-a-zA-Z0-9]*'
-    ConstraintDescription: must contain only alphanumeric characters.
-
-  GitHubAccessToken:
-    NoEcho: true
-    Type: String
-    Description: GitHub access token
     MinLength: 1
     MaxLength: 256
     AllowedPattern: '[a-zA-Z0-9][-a-zA-Z0-9]*'
@@ -515,11 +508,10 @@ Resources:
   CodePipelineStack:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: !Sub https://s3.amazonaws.com/${TemplateBucket}/codepipeline-eb.cfn.yml
+      TemplateURL: !Sub https://s3.amazonaws.com/${TemplateBucket}/codepipeline.cfn.yml
       Parameters:
         GitHubOwner: !Ref GitHubOwner
         GitHubRepository: !Ref GitHubRepository
-        GitHubAccessToken: !Ref GitHubAccessToken
         GitHubWebhookSecret: !Ref GitHubWebhookSecret
         BuildImageRepoName: !Ref BuildImageRepoName
         BuildImageTag: !Ref BuildImageTag

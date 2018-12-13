@@ -58,7 +58,8 @@ Parameters:
   # bastion.cfn.yml parameters
   KeyName:
     Description: EC2 key pair name for bastion host SSH access
-    Type: AWS::EC2::KeyPair::KeyName
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::KeyPair::KeyName>
+    Default: /dev/keypairs/bastion
 
   LogRetentionInDays:
     Description: Number of days you would like your CloudWatch Logs to be retained

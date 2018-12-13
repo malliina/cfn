@@ -60,23 +60,32 @@ Parameters:
     AllowedPattern: "[a-zA-Z0-9]*"
     ConstraintDescription: Password must contain only alphanumeric characters
 
+  RedisStackName:
+    Description: Name of an active Redis stack
+    Type: String
+    MinLength: 0
+    MaxLength: 255
+    AllowedPattern: "^[-a-zA-Z0-9]*$"
+    Default: ""
+
   EC2KeyPairName:
     Description: EC2 key pair name for SSH access
-    Type: AWS::EC2::KeyPair::KeyName
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::KeyPair::KeyName>
+    Default: /dev/keypairs/bastion
 
   DevInstanceType:
     Description: The instance type for the dev environment
-    Type: String
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /dev/beanstalk/instanceClass
     MinLength: 1
     MaxLength: 255
-    Default: t3.micro
 
   ProdInstanceType:
     Description: The instance type for the prod environment
-    Type: String
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /prod/beanstalk/instanceClass
     MinLength: 1
     MaxLength: 255
-    Default: t3.large
 
   SSLCertificateArn:
     Description: The SSL/TLS certificate ARN
@@ -103,11 +112,13 @@ Parameters:
 
 Conditions:
 
-  CreateProdEnv: !Equals [ !Ref EnvironmentName, prod ]
+  IsProd: !Equals [ !Ref EnvironmentName, prod ]
 
   TlsEnabled: !Not [ !Equals [ !Ref SSLCertificateArn, "" ] ]
 
   HasCNAMEPrefix: !Not [ !Equals [ !Ref CNAMEPrefix, "" ] ]
+
+  HasRedis: !Not [ !Equals [ !Ref RedisStackName, "" ] ]
 
 Mappings:
   # Maps stack type parameter to solution stack name string
@@ -195,7 +206,7 @@ Resources:
 
       - Namespace: aws:autoscaling:launchconfiguration
         OptionName: InstanceType
-        Value: !If [ CreateProdEnv, !Ref ProdInstanceType, !Ref DevInstanceType ]
+        Value: !If [ IsProd, !Ref ProdInstanceType, !Ref DevInstanceType ]
 
       - Namespace: aws:autoscaling:launchconfiguration
         OptionName: IamInstanceProfile
@@ -336,6 +347,22 @@ Resources:
                 "Fn::Sub": "${DatabaseStackName}-DatabaseURL"
             - ':3306/'
             - Ref: DatabaseName
+
+      - Namespace: aws:elasticbeanstalk:application:environment
+        OptionName: REDIS_HOST
+        Value:
+          "Fn::If":
+            - HasRedis
+            - "Fn::ImportValue": !Sub "${RedisStackName}-Address"
+            - ''
+
+      - Namespace: aws:elasticbeanstalk:application:environment
+        OptionName: REDIS_PORT
+        Value:
+          "Fn::If":
+            - HasRedis
+            - "Fn::ImportValue": !Sub "${RedisStackName}-Port"
+            - ''
 
   # IAM resources
   AppRole:
