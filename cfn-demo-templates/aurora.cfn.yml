@@ -27,7 +27,7 @@ Parameters:
     NoEcho: true
     Type: String
     Description: Database admin account password
-    MinLength: 6
+    MinLength: 0
     MaxLength: 41
     AllowedPattern: "[a-zA-Z0-9]*"
     ConstraintDescription: Password must contain only alphanumeric characters
@@ -50,10 +50,19 @@ Parameters:
       - aurora
       - aurora-postgresql
 
+  EngineMode:
+    # provisioned or serverless
+    Default: provisioned
+    Type: String
+    Description: Select provisioned for old-school Aurora, serverless for Aurora Serverless
+    AllowedValues:
+      - provisioned
+      - serverless
+
   EncryptionAtRest:
     Default: false
     Type: String
-    Description: The optional flag for encryption at rest (db.t2.small and above)
+    Description: The optional flag for encryption at rest (serverless is always encrypted)
     ConstraintDescription: Only true or false are allowed
     AllowedValues:
       - true
@@ -133,12 +142,95 @@ Parameters:
       - true
       - false
 
+  MinCapacity:
+    Type: Number
+    Default: 2
+    AllowedValues:
+      - 2
+      - 4
+      - 8
+      - 16
+      - 32
+      - 64
+      - 128
+      - 256
+
+  MaxCapacity:
+    Type: Number
+    Default: 64
+    AllowedValues:
+      - 2
+      - 4
+      - 8
+      - 16
+      - 32
+      - 64
+      - 128
+      - 256
+
+  AutoPause:
+    Type: String
+    ConstraintDescription: Pause compute capacity after consecutive minutes of inactivity
+    Default: true
+    AllowedValues:
+      - true
+      - false
+
+  SecondsUntilAutoPause:
+    Type: Number
+    Default: 300
+    Description: Seconds of inactivity until compute capacity is paused
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: Network
+        Parameters:
+          - NetworkStackName
+      - Label:
+          default: General
+        Parameters:
+          - DatabaseName
+          - DatabaseUser
+          - DatabasePassword
+          - EncryptionAtRest
+          - EnvironmentName
+          - DatabaseInstanceClass
+          - DatabaseEngine
+          - EngineMode
+      - Label:
+          default: Serverless (if selected)
+        Parameters:
+          - MinCapacity
+          - MaxCapacity
+          - AutoPause
+          - SecondsUntilAutoPause
+      - Label:
+          default: Alarms
+        Parameters:
+          - EnableAlarms
+          - DatabaseAlarmMaxCpuPercent
+          - DatabaseAlarmReadLatencyMaxSeconds
+          - DatabaseAlarmWriteLatencyMaxSeconds
+          - DatabaseAlarmEvaluationPeriods
+          - DatabaseAlarmEvaluationPeriodSeconds
+          - DatabaseAlarmSwapUsageInBytes
+          - EnhancedMonitoring
 
 Conditions:
 
   IsProd: !Equals [ !Ref EnvironmentName, prod ]
 
+  IsProvisioned: !Equals [ !Ref EngineMode, provisioned ]
+
+  IsProvisionedAndProd: !And [ !Condition IsProvisioned, !Condition IsProd ]
+
+  IsServerless: !Equals [ !Ref EngineMode, serverless ]
+
   IsAuroraMySQL: !Equals [ !Ref DatabaseEngine, aurora ]
+
+  HasCustomPassword: !Not [ !Equals [ !Ref DatabasePassword, "" ] ]
 
   AlarmsEnabled: !And
     - !Condition IsAuroraMySQL
@@ -187,12 +279,22 @@ Resources:
     Type: AWS::RDS::DBCluster
     Properties:
       Engine: !Ref DatabaseEngine
+      EngineMode: !Ref EngineMode
+      ScalingConfiguration:
+        !If
+        - IsServerless
+        -
+          AutoPause: !Ref AutoPause
+          MinCapacity: !Ref MinCapacity
+          MaxCapacity: !Ref MaxCapacity
+          SecondsUntilAutoPause: !Ref SecondsUntilAutoPause
+        - !Ref "AWS::NoValue"
       MasterUsername: !Ref DatabaseUser
-      MasterUserPassword: !Ref DatabasePassword
+      MasterUserPassword: !If [ HasCustomPassword, !Ref DatabasePassword, !If [ IsProd, "{{resolve:ssm-secure:/prod/db/password:1}}", "{{resolve:ssm-secure:/dev/db/password:1}}" ] ]
       DBSubnetGroupName: !Ref DatabaseSubnetGroup
-      StorageEncrypted: !Ref EncryptionAtRest
+      StorageEncrypted: !If [ IsServerless, true, !Ref EncryptionAtRest ]
       DatabaseName: !Ref DatabaseName
-      DBClusterParameterGroupName: !If [ IsAuroraMySQL,  default.aurora5.6, default.aurora-postgresql9.6 ]
+      DBClusterParameterGroupName: !If [ IsAuroraMySQL, default.aurora5.6, default.aurora-postgresql9.6 ]
       Port: !If [ IsAuroraMySQL,  3306, 5432 ]
       VpcSecurityGroupIds:
         - Fn::ImportValue: !Sub ${NetworkStackName}-DatabaseGroupID
@@ -200,6 +302,7 @@ Resources:
 
   AuroraInstance0:
     Type: AWS::RDS::DBInstance
+    Condition: IsProvisioned
     Properties:
       Engine: !Ref DatabaseEngine
       DBClusterIdentifier: !Ref AuroraCluster
@@ -217,7 +320,7 @@ Resources:
 
   AuroraInstance1:
     Type: AWS::RDS::DBInstance
-    Condition: IsProd
+    Condition: IsProvisionedAndProd
     Properties:
       Engine: !Ref DatabaseEngine
       DBClusterIdentifier: !Ref AuroraCluster
@@ -370,6 +473,7 @@ Outputs:
       Name: !Sub ${AWS::StackName}-DatabaseURL
 
   AuroraReadDbURL:
+    Condition: IsProvisioned
     Description: Aurora Database Read URL
     Value: !GetAtt AuroraCluster.ReadEndpoint.Address
     Export:
