@@ -1,0 +1,185 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description: Fargate
+
+Parameters:
+  NetworkStackName:
+    Description: Name of an active CloudFormation stack of networking resources
+    Type: String
+    MinLength: 1
+    MaxLength: 255
+    AllowedPattern: "^[a-zA-Z][-a-zA-Z0-9]*$"
+
+  EcsClusterName:
+    Type: String
+    Description: ECS Cluster Name
+    Default: default
+
+  EcsPort:
+    Type: String
+    Description: Optional - Security Group port to open on ECS instances - defaults to port 80
+    Default: 80
+
+  ElbPort:
+    Type: String
+    Description: Optional - Security Group port to open on ELB - port 80 will be open by default
+    Default: 80
+
+  ElbHealthCheckTarget:
+    Type: String
+    Description: Optional - Health Check Target for ELB - defaults to HTTP:80/
+    Default: HTTP:80/
+
+  TargetGroupName:
+    Type: String
+    Description: The target group name should be shorter than 32 characters because AWS uses the target group name to create the name of the load balancer
+    Default: fargate-target
+
+  SourceCidr:
+    Type: String
+    Description: Optional - CIDR/IP range for EcsPort and ElbPort - defaults to 0.0.0.0/0
+    Default: 0.0.0.0/0
+
+  CreateElasticLoadBalancer:
+    Type: String
+    Description: Optional - When set to true, creates a ELB for ECS Service
+    Default: true
+    AllowedValues:
+      - true
+      - false
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: Network
+        Parameters:
+          - NetworkStackName
+      - Label:
+          default: ECS
+        Parameters:
+          - EcsClusterName
+          - EcsPort
+          - SourceCidr
+      - Label:
+          default: Optional Load Balancer
+        Parameters:
+          - CreateElasticLoadBalancer
+          - ElbPort
+          - ElbHealthCheckTarget
+          - TargetGroupName
+
+Conditions:
+  CreateELB: !Equals [!Ref CreateElasticLoadBalancer, 'true']
+  HasCustomTargetGroup: !Not [ !Equals [ !Ref TargetGroupName, '' ] ]
+
+Resources:
+  EcsSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: ECS Allowed Ports
+      VpcId:
+        Fn::ImportValue: !Sub ${NetworkStackName}-VpcID
+      SecurityGroupIngress: !If
+        - CreateELB
+        -
+          -
+            IpProtocol: tcp
+            FromPort: !Ref EcsPort
+            ToPort: !Ref EcsPort
+            CidrIp: !Ref SourceCidr
+          -
+            IpProtocol: tcp
+            FromPort: 1
+            ToPort: 65535
+            SourceSecurityGroupId: !Ref AlbSecurityGroup
+        -
+          -
+            IpProtocol: tcp
+            FromPort: !Ref EcsPort
+            ToPort: !Ref EcsPort
+            CidrIp: !Ref SourceCidr
+      Tags:
+        -
+          Key: 'Name'
+          Value: !Join [' ', ['ECS', !Ref EcsClusterName, '-', ECS SecurityGroup]]
+        -
+          Key: 'Description'
+          Value: !Join [' ', ['Created for ECS cluster', !Ref EcsClusterName]]
+
+  AlbSecurityGroup:
+    Condition: CreateELB
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: ELB Allowed Ports
+      VpcId:
+        Fn::ImportValue: !Sub ${NetworkStackName}-VpcID
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: !Ref ElbPort
+          ToPort: !Ref ElbPort
+          CidrIp: !Ref SourceCidr
+      Tags:
+        -
+          Key: 'Name'
+          Value: !Join [' ', ['ECS', !Ref EcsClusterName, '-', 'ALB SecurityGroup']]
+        -
+          Key: 'Description'
+          Value: !Join [' ', ['Created for ECS cluster', !Ref EcsClusterName]]
+
+  DefaultTargetGroup:
+    Condition: CreateELB
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: !If [ HasCustomTargetGroup, !Ref TargetGroupName, !Ref "AWS::NoValue" ]
+      VpcId:
+        Fn::ImportValue: !Sub ${NetworkStackName}-VpcID
+      Port: !Ref ElbPort
+      TargetType: ip
+      Protocol: HTTP
+      Tags:
+        -
+          Key: 'Name'
+          Value: !Join [' ', ['ECS', !Ref EcsClusterName, '-', 'TargetGroup']]
+        -
+          Key: 'Description'
+          Value: !Join [' ', ['Created for ECS cluster', !Ref EcsClusterName]]
+
+  EcsElasticLoadBalancer:
+    Condition: CreateELB
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      SecurityGroups:
+        - !Ref AlbSecurityGroup
+      Subnets:
+        - Fn::ImportValue: !Sub ${NetworkStackName}-PublicSubnet1ID
+        - Fn::ImportValue: !Sub ${NetworkStackName}-PublicSubnet2ID
+      Scheme: internet-facing
+      Tags:
+        -
+          Key: 'Name'
+          Value: !Join [' ', ['ECS', !Ref EcsClusterName, '-', 'ALB']]
+        -
+          Key: 'Description'
+          Value: !Join [' ', ['Created for ECS cluster', !Ref EcsClusterName]]
+
+  LoadBalancerListener:
+    Condition: CreateELB
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref EcsElasticLoadBalancer
+      Port: !Ref ElbPort
+      Protocol: HTTP
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref DefaultTargetGroup
+
+Outputs:
+
+  EcsElbName:
+    Description: Load Balancer for ECS Service
+    Value: !If [CreateELB, !Ref EcsElasticLoadBalancer, '']
+
+  Version:
+    Description: ECS Cloudformation template version
+    Value: 3.0.0
