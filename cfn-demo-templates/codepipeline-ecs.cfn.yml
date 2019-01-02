@@ -1,28 +1,10 @@
 AWSTemplateFormatVersion: '2010-09-09'
 
-# Prerequisites: Have your GitHub access token in Secrets Manager with name dev/github/token and key GitHubAccessToken
-
+# Prerequisites: Have your GitHub access token in Secrets Manager with name dev/github/token and key GitHubAccessToken.
+# Builds can read the ECR repo and target container from environment variables REPOSITORY_URI and CONTAINER_NAME.
 Description: CodePipeline with Secrets Manager
 
 Parameters:
-
-  BuildImageRepoName:
-    Type: String
-    Description: ECR repo name with build images
-    Default: build-images
-    MinLength: 1
-    MaxLength: 256
-    AllowedPattern: '[a-zA-Z0-9][-a-zA-Z0-9]*'
-    ConstraintDescription: must contain only alphanumeric characters.
-
-  BuildImageTag:
-    Type: String
-    Description: ECR image tag of build image
-    Default: 2d22396
-    MinLength: 1
-    MaxLength: 256
-    AllowedPattern: '[a-zA-Z0-9][-a-zA-Z0-9]*'
-    ConstraintDescription: must contain only alphanumeric characters.
 
   CodeBuildEnvironment:
     Type: String
@@ -59,25 +41,47 @@ Parameters:
     MaxLength: 256
     Default: master
 
+  BuildSpec:
+    Type: String
+    Description: Buildspec file
+    MinLength: 1
+    MaxLength: 512
+    Default: buildspec.yml
+
+  RepositoryUri:
+    Type: String
+    Description: Target ECR repository URI for app images
+    MinLength: 1
+    MaxLength: 1024
+
   GitHubWebhookSecret:
     NoEcho: true
     Type: String
-    Description: Optional GitHub webhook secret for the repo
+    Description: Optional - GitHub webhook secret for the repo
     MinLength: 0
     MaxLength: 256
     Default: ""
 
-  ApplicationName:
+  ClusterName:
     Type: String
-    Description: Beanstalk application name
+    Description: ECS cluster name
+    MinLength: 1
+    MaxLength: 256
+    AllowedPattern: '[a-zA-Z0-9][-a-zA-Z0-9]*'
+    ConstraintDescription: must contain only alphanumeric characters.
+    Default: default
+
+  ServiceName:
+    Type: String
+    Description: ECS service name
     MinLength: 1
     MaxLength: 256
     AllowedPattern: '[a-zA-Z0-9][-a-zA-Z0-9]*'
     ConstraintDescription: must contain only alphanumeric characters.
 
-  BeanstalkEnvironment:
+  ContainerName:
     Type: String
-    Description: Beanstalk environment
+    Description: ECS target container name
     MinLength: 1
     MaxLength: 256
     AllowedPattern: '[a-zA-Z0-9][-a-zA-Z0-9]*'
@@ -87,23 +91,24 @@ Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
       - Label:
-          default: Build Image
-        Parameters:
-          - BuildImageRepoName
-          - BuildImageTag
-          - CodeBuildEnvironment
-      - Label:
-          default: Application Source
+          default: Source
         Parameters:
           - GitHubOwner
           - GitHubRepository
           - Branch
+          - BuildSpec
           - GitHubWebhookSecret
       - Label:
-          default: Deployment Target
+          default: Build
         Parameters:
-          - ApplicationName
-          - BeanstalkEnvironment
+          - CodeBuildEnvironment
+          - RepositoryUri
+      - Label:
+          default: Deploy
+        Parameters:
+          - ClusterName
+          - ServiceName
+          - ContainerName
 
 Conditions:
 
@@ -122,19 +127,20 @@ Resources:
       Environment:
         Type: LINUX_CONTAINER
         ComputeType: !Ref CodeBuildEnvironment
-        Image: !Join
-        - ''
-        - - !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/'
-          - !Ref BuildImageRepoName
-          - ':'
-          - !Ref BuildImageTag
+        Image: aws/codebuild/java:openjdk-8-1.6.0
+        PrivilegedMode: true
+        EnvironmentVariables:
+          - Name: REPOSITORY_URI
+            Value: !Ref RepositoryUri
+          - Name: CONTAINER_NAME
+            Value: !Ref ContainerName
       Source:
         Type: CODEPIPELINE
+        BuildSpec: !Ref BuildSpec
       TimeoutInMinutes: 30
 
   AppPipeline:
     Type: AWS::CodePipeline::Pipeline
-    # DependsOn: BeanstalkEnvironment
     Properties:
       RoleArn: !GetAtt CodePipelineServiceRole.Arn
       Stages:
@@ -176,16 +182,17 @@ Resources:
         Actions:
         - InputArtifacts:
           - Name: MyAppBuild
-          Name: !Ref BeanstalkEnvironment
+          Name: 'ECS'
           ActionTypeId:
             Category: Deploy
             Owner: AWS
             Version: '1'
-            Provider: ElasticBeanstalk
+            Provider: ECS
           OutputArtifacts: []
           Configuration:
-            ApplicationName: !Ref ApplicationName
-            EnvironmentName: !Ref BeanstalkEnvironment
+            ClusterName: !Ref ClusterName
+            ServiceName: !Ref ServiceName
+            FileName: imagedefinitions.json
           RunOrder: 1
       ArtifactStore:
         Type: S3
@@ -240,8 +247,8 @@ Resources:
           Action: sts:AssumeRole
       ManagedPolicyArns:
         - 'arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser'
+        - 'arn:aws:iam::aws:policy/AmazonECS_FullAccess'
         - 'arn:aws:iam::aws:policy/AmazonS3FullAccess'
         - 'arn:aws:iam::aws:policy/AWSCodeBuildDeveloperAccess'
         - 'arn:aws:iam::aws:policy/AWSCodePipelineFullAccess'
-        - 'arn:aws:iam::aws:policy/AWSElasticBeanstalkFullAccess'
         - 'arn:aws:iam::aws:policy/CloudWatchLogsFullAccess'

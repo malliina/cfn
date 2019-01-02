@@ -54,7 +54,7 @@ Create
 1. [bastion](cfn-demo-templates/bastion.cfn.yml)
 1. [aurora](cfn-demo-templates/aurora.cfn.yml) (optionally)
 1. [beanstalk-aurora](cfn-demo-templates/beanstalk-aurora.cfn.yml) or without a database [beanstalk-nodb](cfn-demo-templates/beanstalk-nodb.cfn.yml)
-1. [codepipeline-eb](cfn-demo-templates/codepipeline-eb.cfn.yml)
+1. [codepipeline](cfn-demo-templates/codepipeline.cfn.yml)
 1. [cloudfront](cfn-demo-templates/cloudfront.cfn.yml)
 1. [route53](cfn-demo-templates/route53.cfn.yml)
 1. [redis](cfn-demo-templates/redis.cfn.yml)
