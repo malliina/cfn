@@ -1,0 +1,204 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+# See https://github.com/aws-samples/ecs-refarch-cloudformation for inspiration.
+# Adds one service to a pre-existing ECS cluster.
+
+Description: ECS with EC2
+
+Parameters:
+  NetworkStackName:
+    Description: Name of an active CloudFormation stack of networking resources
+    Type: String
+    MinLength: 1
+    MaxLength: 255
+    AllowedPattern: "^[a-zA-Z][-a-zA-Z0-9]*$"
+
+  EcsClusterName:
+    Type: String
+    Description: ECS Cluster Name
+    MinLength: 1
+
+  TargetGroupName:
+    Type: String
+    Description: Optional - The target group name should be shorter than 32 characters because AWS uses the target group name to create the name of the load balancer
+
+  # Task definition
+  ContainerName:
+    Type: String
+    Description: Container name
+    Default: othercontainer
+
+  ContainerImage:
+    Type: String
+    Description: ECR image URL for container
+    Default: 297686094835.dkr.ecr.eu-west-1.amazonaws.com/play-docka-two:latest
+
+  ContainerMemory:
+    Type: Number
+    Description: The hard limit (in MiB) of memory to present to the container
+    Default: 500
+
+  ContainerPort:
+    Type: Number
+    Description: Container port
+    Default: 9001
+
+  HealthCheckGracePeriodSeconds:
+    Type: Number
+    Description: Health check grace period in seconds
+    Default: 300
+
+  Path:
+    Description: The path to register with the Application Load Balancer
+    Type: String
+    Default: /other
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: Network
+        Parameters:
+          - NetworkStackName
+      - Label:
+          default: ECS
+        Parameters:
+          - EcsClusterName
+      - Label:
+          default: Target group
+        Parameters:
+          - TargetGroupName
+      - Label:
+          default: Web app
+        Parameters:
+          - ContainerName
+          - ContainerImage
+          - ContainerPort
+          - HealthCheckGracePeriodSeconds
+
+Conditions:
+  HasCustomTargetGroup: !Not [ !Equals [ !Ref TargetGroupName, '' ] ]
+
+Resources:
+  Service:
+    Type: AWS::ECS::Service
+    Properties:
+      ServiceName: !Join ['-', [ !Ref ContainerName, 'service']]
+      Cluster:
+        Fn::ImportValue: !Sub ${EcsClusterName}-ClusterId
+      Role: !Ref ServiceRole
+      DeploymentConfiguration:
+        MaximumPercent: 200
+        MinimumHealthyPercent: 100
+      DesiredCount: 1
+      HealthCheckGracePeriodSeconds: !Ref HealthCheckGracePeriodSeconds
+      LoadBalancers:
+        - ContainerName: !Ref ContainerName
+          ContainerPort: !Ref ContainerPort
+          TargetGroupArn: !Ref TargetGroup
+      TaskDefinition: !Ref TaskDefinition
+
+  TaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      RequiresCompatibilities: [ EC2 ]
+      ExecutionRoleArn: !GetAtt TaskRole.Arn
+      ContainerDefinitions:
+        - Name: !Ref ContainerName
+          Image: !Ref ContainerImage
+          Memory: !Ref ContainerMemory
+          PortMappings:
+            - ContainerPort: !Ref ContainerPort
+          Essential: true
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-region: !Ref AWS::Region
+              awslogs-group: !Ref CloudWatchLogsGroup
+              # Circular reference if !GetAtt Service.Name
+              awslogs-stream-prefix: !Join ['-', [ !Ref ContainerName, 'service']]
+
+  TargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      VpcId:
+        Fn::ImportValue: !Sub ${NetworkStackName}-VpcID
+      Port: 80
+      Protocol: HTTP
+      Matcher:
+        HttpCode: 200-404
+      HealthCheckIntervalSeconds: 10
+      HealthCheckPath: !Join ['/', [ !Ref Path, 'health']]
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 2
+
+  ListenerRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      ListenerArn:
+        Fn::ImportValue: !Sub ${EcsClusterName}-LoadBalancerListener
+      Priority: 1
+      Conditions:
+        - Field: path-pattern
+          Values:
+            - !Join ['', [ !Ref Path, '*']]
+      Actions:
+        - TargetGroupArn: !Ref TargetGroup
+          Type: forward
+
+  CloudWatchLogsGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Ref AWS::StackName
+      RetentionInDays: 365
+
+  ServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2008-10-17
+        Statement:
+          - Sid: ''
+            Effect: Allow
+            Principal:
+              Service: ecs.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: ServicePolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'ec2:*'
+                  - 'elasticloadbalancing:*'
+                Resource: '*'
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceRole
+
+  TaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2008-10-17
+        Statement:
+          - Sid: ''
+            Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+        - arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role
+
+Outputs:
+  TaskDefArn:
+    Description: Task Definition ARN
+    Value: !Ref TaskDefinition
+    Export:
+      Name: !Sub ${AWS::StackName}-TaskDefId
+
+  Version:
+    Description: ECS Cloudformation template version
+    Value: 3.0.0
