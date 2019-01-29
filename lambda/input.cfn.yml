@@ -10,7 +10,7 @@ Resources:
     Properties:
       Handler: index.handler
       Runtime: nodejs6.10
-      CodeUri: ./
+      CodeUri: ./lambda/
       Events:
         MyTimeApi:
           Type: Api
