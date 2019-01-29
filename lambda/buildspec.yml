@@ -3,11 +3,12 @@
 version: 0.2
 env:
   variables:
-    INPUT: "lambda/input.cfn.yml"
-    OUTPUT: "lambda/output.cfn.yml"
+    INPUT: "input.cfn.yml"
+    OUTPUT: "output.cfn.yml"
 phases:
   install:
     commands:
+      - cd lambda
       - echo `pwd`
       - npm install time
       - aws cloudformation package --template-file $INPUT --kms-key-id $KMS_KEY_ID --s3-bucket $BUCKET_NAME
@@ -15,6 +16,5 @@ phases:
 artifacts:
   type: zip
   files:
-    - $INPUT
-    - $OUTPUT
-    - node_modules/**/*
+    - '**/*'
+  base-directory: lambda
