@@ -5,7 +5,6 @@ env:
   variables:
     INPUT: "lambda/input.cfn.yml"
     OUTPUT: "lambda/output.cfn.yml"
-    KMS_KEY_ID: "dev/serverless"
 phases:
   install:
     commands:
