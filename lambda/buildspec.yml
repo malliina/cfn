@@ -8,6 +8,7 @@ env:
 phases:
   install:
     commands:
+      - echo `pwd`
       - npm install time
       - aws cloudformation package --template-file $INPUT --kms-key-id $KMS_KEY_ID --s3-bucket $BUCKET_NAME
         --output-template-file $OUTPUT
@@ -16,3 +17,4 @@ artifacts:
   files:
     - $INPUT
     - $OUTPUT
+    - node_modules/**/*
