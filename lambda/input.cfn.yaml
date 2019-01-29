@@ -1,0 +1,33 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Transform: AWS::Serverless-2016-10-31
+
+Description: Outputs the time
+
+Resources:
+  TimeFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.handler
+      Runtime: nodejs6.10
+      CodeUri: ./
+      Events:
+        MyTimeApi:
+          Type: Api
+          Properties:
+            Path: /TimeResource
+            Method: GET
+
+#  CfnRole:
+#    Type: AWS::IAM::Role
+#    Properties:
+#      AssumeRolePolicyDocument:
+#        Version: 2008-10-17
+#        Statement:
+#          - Sid: ''
+#            Effect: Allow
+#            Principal:
+#              Service: cloudformation.amazonaws.com
+#            Action: sts:AssumeRole
+#      ManagedPolicyArns:
+#        - arn:aws:iam::aws:policy/AWSLambdaExecute

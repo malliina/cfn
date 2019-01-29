@@ -1,0 +1,19 @@
+# https://docs.aws.amazon.com/lambda/latest/dg/build-pipeline.html
+# Set the KMS_KEY_ID and BUCKET_NAME parameters.
+version: 0.2
+env:
+  variables:
+    INPUT: "input.cfn.yaml"
+    OUTPUT: "output.cfn.yaml"
+    KMS_KEY_ID: "dev/serverless"
+phases:
+  install:
+    commands:
+      - npm install time
+      - aws cloudformation package --template-file $INPUT --kms-key-id $KMS_KEY_ID --s3-bucket $BUCKET_NAME
+        --output-template-file $OUTPUT
+artifacts:
+  type: zip
+  files:
+    - $INPUT
+    - $OUTPUT
