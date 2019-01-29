@@ -3,8 +3,8 @@
 version: 0.2
 env:
   variables:
-    INPUT: "input.cfn.yaml"
-    OUTPUT: "output.cfn.yaml"
+    INPUT: "input.cfn.yml"
+    OUTPUT: "output.cfn.yml"
     KMS_KEY_ID: "dev/serverless"
 phases:
   install:
