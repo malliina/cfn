@@ -13,6 +13,7 @@ phases:
       - npm install time
       - aws cloudformation package --template-file $INPUT --kms-key-id $KMS_KEY_ID --s3-bucket $BUCKET_NAME
         --output-template-file $OUTPUT
+      # Consider adding '--kms-key-id $KMS_KEY_ID' if I figure out how to give use-rights to the key in CloudFormation
 artifacts:
   type: zip
   files:
