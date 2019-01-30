@@ -18,6 +18,7 @@ The templates define the following components:
 - [CodePipeline](https://aws.amazon.com/codepipeline/) with [CodeBuild](https://aws.amazon.com/codebuild/) for CI
 - [CloudFront](https://aws.amazon.com/cloudfront/) CDN for HTTP requests and assets
 - [Route 53](https://aws.amazon.com/route53/) for DNS
+- [AWS Lambda](https://aws.amazon.com/lambda/) for serverless computing
 
 The ECR repository stores build images used by CodeBuild to build applications. CodePipeline fetches application code 
 from [GitHub](https://github.com/), then builds and deploys the app to Elastic Beanstalk. Route 53 routes incoming 
@@ -61,3 +62,15 @@ Create
 
 You may want to create the resources sequentially due to dependencies. However, you can omit e.g. Route 53 if you don't 
 use it.
+
+#### Lambda
+
+Template [lambda/codepipeline.cfn.yml](lambda/codepipeline.cfn.yml) sets up a CI workflow for AWS Lambda functions:
+
+1. CodeBuild fetches the code for your Lambda from GitHub
+1. A Lambda [deployment package](https://docs.aws.amazon.com/lambda/latest/dg/deployment-package-v2.html) is created and
+uploaded to S3
+1. CodePipeline deploys the package by updating (or creating) a CloudFormation stack
+
+See the [Building a Pipeline for Your Serverless Application](https://docs.aws.amazon.com/lambda/latest/dg/build-pipeline.html) 
+on the AWS website for details.

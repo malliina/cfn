@@ -1,5 +1,6 @@
 # https://docs.aws.amazon.com/lambda/latest/dg/build-pipeline.html
 # Set the KMS_KEY_ID and BUCKET_NAME parameters.
+# Use input.cfn.yml (instead of -slim) to create an AWS API Gateway API proxy to your Lambda.
 version: 0.2
 env:
   variables:

@@ -2,6 +2,8 @@ AWSTemplateFormatVersion: '2010-09-09'
 
 Transform: AWS::Serverless-2016-10-31
 
+# Creates a Lambda function and an AWS API Gateway API to the lambda, which makes it accessible over HTTP.
+
 Description: Outputs the time
 
 Resources:
