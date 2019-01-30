@@ -3,7 +3,7 @@
 version: 0.2
 env:
   variables:
-    INPUT: "input.cfn.yml"
+    INPUT: "input-slim.cfn.yml"
     OUTPUT: "output.cfn.yml"
 phases:
   install:

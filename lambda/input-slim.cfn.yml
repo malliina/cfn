@@ -11,9 +11,3 @@ Resources:
       Handler: index.handler
       Runtime: nodejs8.10
       CodeUri: ./
-      Events:
-        MyTimeApi:
-          Type: Api
-          Properties:
-            Path: /TimeResource
-            Method: GET

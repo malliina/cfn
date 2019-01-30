@@ -48,10 +48,6 @@ Parameters:
     MaxLength: 1024
     Default: lambda/buildspec.yml
 
-  KmsKeyId:
-    Type: String
-    Description: KMS key ID used for packaging
-
   OutputTemplate:
     Type: String
     Description: Output template produced by build
@@ -86,7 +82,6 @@ Metadata:
         default: Build
       Parameters:
         - BuildSpec
-        - KmsKeyId
         - CodeBuildEnvironment
     - Label:
         default: Deploy
@@ -114,8 +109,6 @@ Resources:
         EnvironmentVariables:
           - Name: BUCKET_NAME
             Value: !Ref FunctionsS3Bucket
-          - Name: KMS_KEY_ID
-            Value: !Ref KmsKeyId
       Source:
         BuildSpec: !Ref BuildSpec
         Type: CODEPIPELINE
@@ -177,7 +170,7 @@ Resources:
                 ChangeSetName: MyChangeSet
                 StackName: !Ref CfnStack
                 Capabilities: CAPABILITY_IAM
-                RoleArn: !GetAtt CodePipelineServiceRole.Arn
+                RoleArn: !GetAtt CloudFormationLambdaExecutionRole.Arn
                 TemplatePath: !Join ['::', [ MyAppBuild, !Ref OutputTemplate]]
               RunOrder: 1
         - Name: Deploy
@@ -229,7 +222,7 @@ Resources:
     Properties:
       Path: /
       AssumeRolePolicyDocument:
-        Version: '2012-10-17'
+        Version: 2012-10-17
         Statement:
           - Effect: Allow
             Principal:
@@ -245,7 +238,7 @@ Resources:
     Properties:
       Path: /
       AssumeRolePolicyDocument:
-        Version: '2012-10-17'
+        Version: 2012-10-17
         Statement:
           - Effect: Allow
             Principal:
@@ -257,4 +250,49 @@ Resources:
         - 'arn:aws:iam::aws:policy/AWSCodeBuildDeveloperAccess'
         - 'arn:aws:iam::aws:policy/AWSCodePipelineFullAccess'
         - 'arn:aws:iam::aws:policy/AWSElasticBeanstalkFullAccess'
+        - 'arn:aws:iam::aws:policy/CloudWatchLogsFullAccess'
+
+  CloudFormationLambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Path: /
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: cloudformation.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: CloudFormationPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - cloudformation:CreateChangeSet
+                Resource: 'arn:aws:cloudformation:*:aws:transform/Serverless-2016-10-31'
+              - Effect: Allow
+                Action:
+                  - iam:GetRole
+                  - iam:CreateRole
+                  - iam:DeleteRole
+                  - iam:PutRolePolicy
+                  - iam:AttachRolePolicy
+                  - iam:DeleteRolePolicy
+                  - iam:DetachRolePolicy
+                Resource: 'arn:aws:iam::*:role/*'
+              - Effect: Allow
+                Action:
+                  - apigateway:*
+                Resource: 'arn:aws:apigateway:*::*'
+              - Effect: Allow
+                Action:
+                  - iam:PassRole
+                Resource: '*'
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/AmazonS3FullAccess'
+        - 'arn:aws:iam::aws:policy/AWSCodePipelineFullAccess'
+        - 'arn:aws:iam::aws:policy/AWSLambdaExecute'
+        - 'arn:aws:iam::aws:policy/AWSLambdaFullAccess'
         - 'arn:aws:iam::aws:policy/CloudWatchLogsFullAccess'
