@@ -62,12 +62,6 @@ Parameters:
     MaxLength: 256
     Default: ""
 
-  CfnStack:
-    Type: String
-    Description: CloudFormation stack to update
-    MinLength: 1
-    MaxLength: 256
-
   KmsKeyAdmin:
     Type: String
     Description: Optional - KMS key administrator ARN
@@ -88,10 +82,6 @@ Metadata:
         - BuildSpec
         - KmsKeyAdmin
         - CodeBuildEnvironment
-    - Label:
-        default: Deploy
-      Parameters:
-        - CfnStack
 
 Conditions:
 
@@ -177,7 +167,7 @@ Resources:
               Configuration:
                 ActionMode: CHANGE_SET_REPLACE
                 ChangeSetName: MyChangeSet
-                StackName: !Ref CfnStack
+                StackName: !Sub ${AWS::StackName}-lambda
                 Capabilities: CAPABILITY_IAM
                 RoleArn: !GetAtt CloudFormationLambdaExecutionRole.Arn
                 TemplatePath: !Join ['::', [ MyAppBuild, !Ref OutputTemplate]]
