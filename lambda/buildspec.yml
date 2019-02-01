@@ -12,9 +12,12 @@ phases:
       - cd lambda
       - echo `pwd`
       - npm install time
-      - aws cloudformation package --template-file $INPUT --s3-bucket $BUCKET_NAME
-        --output-template-file $OUTPUT
-      # Consider adding '--kms-key-id $KMS_KEY_ID' if I figure out how to give use-rights to the key in CloudFormation
+      - |
+        if [ "X$KMS_KEY_ID" = "X" ]; then
+          aws cloudformation package --template-file $INPUT --s3-bucket $BUCKET_NAME --output-template-file $OUTPUT
+        else
+          aws cloudformation package --template-file $INPUT --s3-bucket $BUCKET_NAME --kms-key-id $KMS_KEY_ID --output-template-file $OUTPUT
+        fi
 artifacts:
   type: zip
   files:

@@ -68,6 +68,10 @@ Parameters:
     MinLength: 1
     MaxLength: 256
 
+  KmsKeyAdmin:
+    Type: String
+    Description: Optional - KMS key administrator ARN
+
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
@@ -82,6 +86,7 @@ Metadata:
         default: Build
       Parameters:
         - BuildSpec
+        - KmsKeyAdmin
         - CodeBuildEnvironment
     - Label:
         default: Deploy
@@ -91,6 +96,8 @@ Metadata:
 Conditions:
 
   WebhookEnabled: !Not [ !Equals [ !Ref GitHubWebhookSecret, "" ] ]
+
+  UseKms: !Not [ !Equals [ !Ref KmsKeyAdmin, "" ] ]
 
 Resources:
 
@@ -109,6 +116,8 @@ Resources:
         EnvironmentVariables:
           - Name: BUCKET_NAME
             Value: !Ref FunctionsS3Bucket
+          - Name: KMS_KEY_ID
+            Value: !If [ UseKms, !Ref KmsKey, '' ]
       Source:
         BuildSpec: !Ref BuildSpec
         Type: CODEPIPELINE
@@ -187,7 +196,7 @@ Resources:
               Configuration:
                 ActionMode: CHANGE_SET_EXECUTE
                 ChangeSetName: MyChangeSet
-                StackName: !Ref CfnStack
+                StackName: !Sub ${AWS::StackName}-lambda
               RunOrder: 1
       ArtifactStore:
         Type: S3
@@ -201,7 +210,7 @@ Resources:
       AuthenticationConfiguration:
         SecretToken: !Ref GitHubWebhookSecret
       Filters:
-        - JsonPath: "$.ref"
+        - JsonPath: '$.ref'
           MatchEquals: refs/heads/{Branch}
       Authentication: GITHUB_HMAC
       TargetPipeline: !Ref AppPipeline
@@ -211,11 +220,11 @@ Resources:
 
   ArtifactStoreS3Bucket:
     Type: AWS::S3::Bucket
-    DeletionPolicy: Delete
+    DeletionPolicy: Retain
 
   FunctionsS3Bucket:
     Type: AWS::S3::Bucket
-    DeletionPolicy: Delete
+    DeletionPolicy: Retain
 
   CodeBuildServiceRole:
     Type: AWS::IAM::Role
@@ -296,3 +305,43 @@ Resources:
         - 'arn:aws:iam::aws:policy/AWSLambdaExecute'
         - 'arn:aws:iam::aws:policy/AWSLambdaFullAccess'
         - 'arn:aws:iam::aws:policy/CloudWatchLogsFullAccess'
+
+  KmsKey:
+    Type: AWS::KMS::Key
+    Condition: UseKms
+    Properties:
+      Description: 'KMS key for S3 encryption'
+      KeyPolicy:
+        Version: '2012-10-17'
+        Id: 'dev/lambda-s3-key'
+        Statement:
+          - Sid: 'Allow administration of the key'
+            Effect: Allow
+            Principal:
+              AWS: !Ref KmsKeyAdmin
+            Action:
+              - 'kms:Create*'
+              - 'kms:Describe*'
+              - 'kms:Enable*'
+              - 'kms:List*'
+              - 'kms:Put*'
+              - 'kms:Update*'
+              - 'kms:Revoke*'
+              - 'kms:Disable*'
+              - 'kms:Get*'
+              - 'kms:Delete*'
+              - 'kms:ScheduleKeyDeletion'
+              - 'kms:CancelKeyDeletion'
+            Resource: '*'
+          - Sid: 'Allow use of the key'
+            Effect: Allow
+            Principal:
+              AWS:
+                - !GetAtt CodeBuildServiceRole.Arn
+            Action:
+              - 'kms:Encrypt'
+              - 'kms:Decrypt'
+              - 'kms:ReEncrypt*'
+              - 'kms:GenerateDataKey*'
+              - 'kms:DescribeKey'
+            Resource: '*'
