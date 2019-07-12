@@ -102,7 +102,7 @@ Resources:
       Environment:
         Type: LINUX_CONTAINER
         ComputeType: !Ref CodeBuildEnvironment
-        Image: 'aws/codebuild/nodejs:8.11.0'
+        Image: 'aws/codebuild/standard:2.0'
         EnvironmentVariables:
           - Name: BUCKET_NAME
             Value: !Ref FunctionsS3Bucket

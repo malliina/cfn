@@ -65,12 +65,22 @@ use it.
 
 #### Lambda
 
-Template [lambda/codepipeline.cfn.yml](lambda/codepipeline.cfn.yml) sets up a CI workflow for AWS Lambda functions:
+Suppose you have code for a Lambda function in [lambda/index.js](lambda/codepipeline.cfn.yml).
+Template [lambda/codepipeline.cfn.yml](lambda/codepipeline.cfn.yml) sets up a CI workflow for your function:
 
 1. CodeBuild fetches the code for your Lambda from GitHub
 1. A Lambda [deployment package](https://docs.aws.amazon.com/lambda/latest/dg/deployment-package-v2.html) is created and
 uploaded to S3
-1. CodePipeline deploys the package by updating (or creating) a CloudFormation stack
+1. CodePipeline deploys the package by updating (or creating) a CloudFormation stack, creating the
+Lambda function in the process
+
+Instructions:
+
+1. Obtain and set a [GitHub access token](https://help.github.com/en/articles/creating-a-personal-access-token-for-the-command-line) 
+as a SecretString under key `dev/github/token` in [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/)
+1. Deploy template [lambda/codepipeline.cfn.yml](lambda/codepipeline.cfn.yml)
+1. The default parameters use the function in [lambda/index.js](lambda/codepipeline.cfn.yml) as the
+source code
 
 See the [Building a Pipeline for Your Serverless Application](https://docs.aws.amazon.com/lambda/latest/dg/build-pipeline.html) 
 on the AWS website for details.

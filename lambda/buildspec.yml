@@ -8,6 +8,8 @@ env:
     OUTPUT: "output.cfn.yml"
 phases:
   install:
+    runtime-versions:
+      nodejs: 10
     commands:
       - cd lambda
       - echo `pwd`
