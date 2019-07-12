@@ -2,11 +2,21 @@ AWSTemplateFormatVersion: '2010-09-09'
 
 Transform: AWS::Serverless-2016-10-31
 
-# Creates a Lambda function.
+Description: A Lambda function conditionally triggered by a schedule.
 
-Description: Outputs the time
+Parameters:
+
+  ScheduleExpression:
+    Type: String
+    Description: Schedule expression (empty for no schedule)
+    Default: "rate(10 minutes)"
+
+Conditions:
+
+  IsScheduled: !Not [ !Equals [ !Ref ScheduleExpression, "" ] ]
 
 Resources:
+
   TimeFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -16,9 +26,10 @@ Resources:
 
   ScheduledRule:
     Type: AWS::Events::Rule
+    Condition: IsScheduled
     Properties:
       Description: "Invokes the Lambda function according to schedule"
-      ScheduleExpression: "rate(10 minutes)"
+      ScheduleExpression: !Ref ScheduleExpression
       State: "ENABLED"
       Targets:
         - Arn: !GetAtt TimeFunction.Arn
@@ -26,6 +37,7 @@ Resources:
 
   PermissionForEventsToInvokeLambda:
     Type: AWS::Lambda::Permission
+    Condition: IsScheduled
     Properties:
       FunctionName:
         Ref: TimeFunction

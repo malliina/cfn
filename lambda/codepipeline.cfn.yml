@@ -48,6 +48,11 @@ Parameters:
     MaxLength: 1024
     Default: lambda/buildspec.yml
 
+  ScheduleExpression:
+    Type: String
+    Description: Schedule expression (empty for no schedule)
+    Default: "rate(10 minutes)"
+
   OutputTemplate:
     Type: String
     Description: Output template produced by build
@@ -108,6 +113,8 @@ Resources:
             Value: !Ref FunctionsS3Bucket
           - Name: KMS_KEY_ID
             Value: !If [ UseKms, !Ref KmsKey, '' ]
+          - Name: SCHEDULE_EXPRESSION
+            Value: !Ref ScheduleExpression
       Source:
         BuildSpec: !Ref BuildSpec
         Type: CODEPIPELINE
