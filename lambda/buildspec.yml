@@ -14,7 +14,6 @@ phases:
     commands:
       - cd lambda
       - echo `pwd`
-      - npm rebuild
       - npm install time
       - |
         if [ "X$KMS_KEY_ID" = "X" ]; then
