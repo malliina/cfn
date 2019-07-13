@@ -18,7 +18,7 @@ Resources:
     Properties:
       Description: "Invokes the Lambda function according to schedule"
       ScheduleExpression: "rate(10 minutes)"
-      State: "ENABLED"
+      State: "DISABLED"
       Targets:
         - Arn: !GetAtt TimeFunction.Arn
           Id: "TimeFunctionV1"
