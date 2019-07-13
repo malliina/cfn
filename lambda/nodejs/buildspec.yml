@@ -12,7 +12,7 @@ phases:
     runtime-versions:
       nodejs: 10
     commands:
-      - cd lambda
+      - cd lambda/nodejs
       - echo `pwd`
       - npm install time
       - |
@@ -25,4 +25,4 @@ artifacts:
   type: zip
   files:
     - $OUTPUT
-  base-directory: lambda
+  base-directory: lambda/nodejs

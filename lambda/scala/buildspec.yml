@@ -5,7 +5,7 @@
 version: 0.2
 env:
   variables:
-    INPUT: "input-scala.cfn.yml"
+    INPUT: "input.cfn.yml"
     OUTPUT: "output.cfn.yml"
     SBT_VERSION: "1.2.8"
 phases:
@@ -17,7 +17,7 @@ phases:
       - echo `pwd`
       - curl -L -o sbt-$SBT_VERSION.deb https://dl.bintray.com/sbt/debian/sbt-$SBT_VERSION.deb
       - dpkg -i sbt-$SBT_VERSION.deb
-      - cd scala-function
+      - cd scala
       - sbt sbtVersion
       - sbt assembly
       - |
@@ -30,4 +30,4 @@ artifacts:
   type: zip
   files:
     - $OUTPUT
-  base-directory: lambda/scala-function
+  base-directory: lambda/scala

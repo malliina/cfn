@@ -46,7 +46,7 @@ Parameters:
     Description: Path to build spec file relative to repo root
     MinLength: 1
     MaxLength: 1024
-    Default: lambda/buildspec.yml
+    Default: lambda/scala/buildspec.yml
 
   OutputTemplate:
     Type: String
