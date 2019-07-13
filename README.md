@@ -65,15 +65,18 @@ use it.
 
 ### Lambda
 
-Suppose you have source code for a Lambda function, such as [index.js](lambda/nodejs/index.js) or 
-[LambdaHandler.scala](lambda/scala/src/main/scala/com/malliina/lambda/LambdaHandler.scala).
-Template [lambda/lambda-pipeline.cfn.yml](lambda/lambda-pipeline.cfn.yml) sets up a CI workflow for your function:
+Template [lambda/lambda-pipeline.cfn.yml](lambda/lambda-pipeline.cfn.yml) sets up a CI workflow for Lambda functions:
 
 1. CodeBuild fetches the code for your Lambda from GitHub.
 1. CodeBuild builds a Lambda [deployment package](https://docs.aws.amazon.com/lambda/latest/dg/deployment-package-v2.html) 
 and uploads it to S3.
 1. CodePipeline deploys the package by updating (or creating) a CloudFormation stack, creating the
 Lambda function in the process.
+
+Example Lambda functions are available for testing purposes:
+ 
+- [index.js](lambda/nodejs/index.js) (Node.js) 
+- [LambdaHandler.scala](lambda/scala/src/main/scala/com/malliina/lambda/LambdaHandler.scala) (Scala)
 
 Instructions:
 
