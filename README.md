@@ -63,14 +63,15 @@ Create
 You may want to create the resources sequentially due to dependencies. However, you can omit e.g. Route 53 if you don't 
 use it.
 
-#### Lambda
+### Lambda
 
-Suppose you have code for a Lambda function in [lambda/nodejs/index.js](lambda/nodejs/index.js).
+Suppose you have source code for a Lambda function, such as [index.js](lambda/nodejs/index.js) or 
+[LambdaHandler.scala](lambda/scala/src/main/scala/com/malliina/lambda/LambdaHandler.scala).
 Template [lambda/lambda-pipeline.cfn.yml](lambda/lambda-pipeline.cfn.yml) sets up a CI workflow for your function:
 
 1. CodeBuild fetches the code for your Lambda from GitHub.
-1. A Lambda [deployment package](https://docs.aws.amazon.com/lambda/latest/dg/deployment-package-v2.html) is created and
-uploaded to S3.
+1. CodeBuild builds a Lambda [deployment package](https://docs.aws.amazon.com/lambda/latest/dg/deployment-package-v2.html) 
+and uploads it to S3.
 1. CodePipeline deploys the package by updating (or creating) a CloudFormation stack, creating the
 Lambda function in the process.
 
@@ -78,9 +79,10 @@ Instructions:
 
 1. Obtain and set a [GitHub access token](https://help.github.com/en/articles/creating-a-personal-access-token-for-the-command-line) 
 as a SecretString under key `dev/github/token` in [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/).
-1. Deploy template [lambda/lambda-pipeline.cfn.yml](lambda/lambda-pipeline.cfn.yml).
+1. Deploy CloudFormation template [lambda-pipeline.cfn.yml](lambda/lambda-pipeline.cfn.yml). Set
+parameter BuildSpec as either *lambda/scala/buildspec.yml* (Scala) or *lambda/nodejs/buildspec.yml* (Node.js).
 1. Admire your new Lambda function in the AWS Console.
-1. Push code changes to version control and watch CodePipeline update your Lambda.
+1. Push changes to version control and watch CodePipeline update your Lambda.
 
 See the [Building a Pipeline for Your Serverless Application](https://docs.aws.amazon.com/lambda/latest/dg/build-pipeline.html) 
 on the AWS website for details.
