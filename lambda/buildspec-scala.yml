@@ -17,7 +17,7 @@ phases:
       - echo `pwd`
       - curl -L -o sbt-$SBT_VERSION.deb https://dl.bintray.com/sbt/debian/sbt-$SBT_VERSION.deb
       - dpkg -i sbt-$SBT_VERSION.deb
-      - cd lambda-function
+      - cd scala-function
       - sbt sbtVersion
       - sbt assembly
       - |
