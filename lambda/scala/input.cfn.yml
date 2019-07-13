@@ -12,6 +12,8 @@ Resources:
       Handler: com.malliina.lambda.LambdaHandler
       Runtime: java8
       CodeUri: ./function.jar
+      Timeout: 60
+      MemorySize: 256
 
   ScheduledRule:
     Type: AWS::Events::Rule
