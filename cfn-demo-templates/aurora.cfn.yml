@@ -15,7 +15,7 @@ Parameters:
     AllowedPattern: "^[a-zA-Z][-a-zA-Z0-9]*$"
 
   DatabaseUser:
-    Default: startupadmin
+    Default: mydbuser
     Type: String
     Description: Database admin account name
     MinLength: 5
@@ -27,13 +27,13 @@ Parameters:
     NoEcho: true
     Type: String
     Description: Database admin account password
-    MinLength: 0
+    MinLength: 8
     MaxLength: 41
     AllowedPattern: "[a-zA-Z0-9]*"
-    ConstraintDescription: Password must contain only alphanumeric characters
+    ConstraintDescription: Only alphanumeric characters, minimum length 8
 
   DatabaseName:
-    Default: StartupDB
+    Default: mydb
     Type: String
     Description: Database name
     MinLength: 1
@@ -454,7 +454,7 @@ Resources:
 
 Outputs:
 
-  Name:
+  StackName:
     Description: Aurora Stack Name
     Value: !Ref AWS::StackName
     Export:
@@ -479,8 +479,14 @@ Outputs:
     Export:
       Name: !Sub ${AWS::StackName}-DatabaseReadURL
 
+  DbName:
+    Description: Database Name
+    Value: !Ref DatabaseName
+    Export:
+      Name: !Sub ${AWS::StackName}-DatabaseName
+
   DbUser:
-    Description: RDS Database admin account user
+    Description: Database User
     Value: !Ref DatabaseUser
     Export:
       Name: !Sub ${AWS::StackName}-DatabaseUser
@@ -498,4 +504,3 @@ Outputs:
     Value: !GetAtt DatabaseAlarmTopic.TopicName
     Export:
       Name: !Sub ${AWS::StackName}-DatabaseAlarmTopicName
-

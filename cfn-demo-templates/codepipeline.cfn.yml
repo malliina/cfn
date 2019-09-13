@@ -5,25 +5,6 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: CodePipeline with Secrets Manager
 
 Parameters:
-
-  BuildImageRepoName:
-    Type: String
-    Description: ECR repo name with build images
-    Default: build-images
-    MinLength: 1
-    MaxLength: 256
-    AllowedPattern: '[a-zA-Z0-9][-a-zA-Z0-9]*'
-    ConstraintDescription: must contain only alphanumeric characters.
-
-  BuildImageTag:
-    Type: String
-    Description: ECR image tag of build image
-    Default: 2d22396
-    MinLength: 1
-    MaxLength: 256
-    AllowedPattern: '[a-zA-Z0-9][-a-zA-Z0-9]*'
-    ConstraintDescription: must contain only alphanumeric characters.
-
   CodeBuildEnvironment:
     Type: String
     Description: CodeBuild environment size
@@ -87,18 +68,16 @@ Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
       - Label:
-          default: Build Image
-        Parameters:
-          - BuildImageRepoName
-          - BuildImageTag
-          - CodeBuildEnvironment
-      - Label:
           default: Application Source
         Parameters:
           - GitHubOwner
           - GitHubRepository
           - Branch
           - GitHubWebhookSecret
+      - Label:
+          default: Build Image
+        Parameters:
+          - CodeBuildEnvironment
       - Label:
           default: Deployment Target
         Parameters:
@@ -122,12 +101,7 @@ Resources:
       Environment:
         Type: LINUX_CONTAINER
         ComputeType: !Ref CodeBuildEnvironment
-        Image: !Join
-        - ''
-        - - !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/'
-          - !Ref BuildImageRepoName
-          - ':'
-          - !Ref BuildImageTag
+        Image: 'aws/codebuild/standard:2.0'
       Source:
         Type: CODEPIPELINE
       TimeoutInMinutes: 30
@@ -209,7 +183,8 @@ Resources:
 
   ArtifactStoreS3Bucket:
     Type: AWS::S3::Bucket
-    DeletionPolicy: Delete
+    # For Amazon S3 buckets, you must delete all objects in the bucket for deletion to succeed
+    DeletionPolicy: Retain
 
   CodeBuildServiceRole:
     Type: AWS::IAM::Role

@@ -18,13 +18,14 @@ Parameters:
     Type: String
     MinLength: 1
     MaxLength: 255
+    Default: dev
     AllowedValues:
       - dev
       - prod
     ConstraintDescription: Specify either dev or prod
 
   CNAMEPrefix:
-    Description: CNAME prefix for Beanstalk URL
+    Description: CNAME prefix for Beanstalk URL (optional)
     Type: String
     MinLength: 0
     MaxLength: 512
@@ -61,7 +62,7 @@ Parameters:
     ConstraintDescription: Password must contain only alphanumeric characters
 
   RedisStackName:
-    Description: Name of an active Redis stack
+    Description: Name of an active Redis stack (optional)
     Type: String
     MinLength: 0
     MaxLength: 255
@@ -74,21 +75,21 @@ Parameters:
     Default: /dev/keypairs/bastion
 
   DevInstanceType:
-    Description: The instance type for the dev environment
+    Description: The instance type for the dev environment (SSM parameter)
     Type: AWS::SSM::Parameter::Value<String>
     Default: /dev/beanstalk/instanceClass
     MinLength: 1
     MaxLength: 255
 
   ProdInstanceType:
-    Description: The instance type for the prod environment
+    Description: The instance type for the prod environment (SSM parameter)
     Type: AWS::SSM::Parameter::Value<String>
     Default: /prod/beanstalk/instanceClass
     MinLength: 1
     MaxLength: 255
 
   SSLCertificateArn:
-    Description: The SSL/TLS certificate ARN
+    Description: The SSL/TLS certificate ARN (optional)
     Type: String
     MinLength: 0
     MaxLength: 2048
@@ -113,18 +114,15 @@ Parameters:
 Conditions:
 
   IsProd: !Equals [ !Ref EnvironmentName, prod ]
-
   TlsEnabled: !Not [ !Equals [ !Ref SSLCertificateArn, "" ] ]
-
   HasCNAMEPrefix: !Not [ !Equals [ !Ref CNAMEPrefix, "" ] ]
-
   HasRedis: !Not [ !Equals [ !Ref RedisStackName, "" ] ]
 
 Mappings:
   # Maps stack type parameter to solution stack name string
   StackMap:
     docker:
-      stackName: 64bit Amazon Linux 2018.03 v2.12.5 running Docker 18.06.1-ce
+      stackName: 64bit Amazon Linux 2018.03 v2.12.17 running Docker 18.06.1-ce
 
 Resources:
 

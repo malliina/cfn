@@ -14,14 +14,11 @@ Parameters:
     AllowedPattern: "^[a-zA-Z][-a-zA-Z0-9]*$"
 
   EnvironmentName:
-    Description: Environment name, either dev or prod.
+    Description: Environment suffix
     Type: String
     MinLength: 1
     MaxLength: 255
-    AllowedValues:
-      - dev
-      - prod
-    ConstraintDescription: Specify either dev or prod
+    Default: env
 
   CNAMEPrefix:
     Description: CNAME prefix for Beanstalk URL
@@ -42,19 +39,12 @@ Parameters:
     Type: AWS::SSM::Parameter::Value<AWS::EC2::KeyPair::KeyName>
     Default: /dev/keypairs/bastion
 
-  DevInstanceType:
-    Description: The instance type for the dev environment
+  InstanceType:
+    Description: The instance type for the environment
     Type: String
     MinLength: 1
     MaxLength: 255
     Default: t3.micro
-
-  ProdInstanceType:
-    Description: The instance type for the prod environment
-    Type: String
-    MinLength: 1
-    MaxLength: 255
-    Default: t3.large
 
   SSLCertificateArn:
     Description: The SSL/TLS certificate ARN
@@ -81,17 +71,14 @@ Parameters:
 
 Conditions:
 
-  CreateProdEnv: !Equals [ !Ref EnvironmentName, prod ]
-
   TlsEnabled: !Not [ !Equals [ !Ref SSLCertificateArn, "" ] ]
-
   HasCNAMEPrefix: !Not [ !Equals [ !Ref CNAMEPrefix, "" ] ]
 
 Mappings:
   # Maps stack type parameter to solution stack name string
   StackMap:
     docker:
-      stackName: 64bit Amazon Linux 2018.03 v2.12.5 running Docker 18.06.1-ce
+      stackName: 64bit Amazon Linux 2018.03 v2.12.16 running Docker 18.06.1-ce
 
 Resources:
 
@@ -173,7 +160,7 @@ Resources:
 
       - Namespace: aws:autoscaling:launchconfiguration
         OptionName: InstanceType
-        Value: !If [ CreateProdEnv, !Ref ProdInstanceType, !Ref DevInstanceType ]
+        Value: !Ref InstanceType
 
       - Namespace: aws:autoscaling:launchconfiguration
         OptionName: IamInstanceProfile
