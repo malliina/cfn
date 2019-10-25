@@ -158,24 +158,6 @@ Parameters:
     MaxLength: 256
     Default: ""
 
-  BuildImageRepoName:
-    Type: String
-    Description: ECR repo name with build images
-    Default: build-images
-    MinLength: 1
-    MaxLength: 256
-    AllowedPattern: '[a-zA-Z0-9][-a-zA-Z0-9]*'
-    ConstraintDescription: must contain only alphanumeric characters.
-
-  BuildImageTag:
-    Type: String
-    Description: ECR image tag of build image
-    Default: 2d22396
-    MinLength: 1
-    MaxLength: 256
-    AllowedPattern: '[a-zA-Z0-9][-a-zA-Z0-9]*'
-    ConstraintDescription: must contain only alphanumeric characters.
-
   # cloudfront.cfn.yml parameters
   CustomDomainNames:
     Type: String
@@ -231,8 +213,6 @@ Metadata:
         - GitHubOwner
         - GitHubRepository
         - GitHubWebhookSecret
-        - BuildImageRepoName
-        - BuildImageTag
     - Label:
         default: CloudFront CDN
       Parameters:
@@ -327,8 +307,6 @@ Resources:
         GitHubOwner: !Ref GitHubOwner
         GitHubRepository: !Ref GitHubRepository
         GitHubWebhookSecret: !Ref GitHubWebhookSecret
-        BuildImageRepoName: !Ref BuildImageRepoName
-        BuildImageTag: !Ref BuildImageTag
         ApplicationName: !Ref AWS::StackName
         BeanstalkEnvironment: !GetAtt ElasticBeanstalkStack.Outputs.EnvironmentName
     DependsOn: ElasticBeanstalkStack

@@ -78,7 +78,7 @@ Mappings:
   # Maps stack type parameter to solution stack name string
   StackMap:
     docker:
-      stackName: 64bit Amazon Linux 2018.03 v2.12.16 running Docker 18.06.1-ce
+      stackName: 64bit Amazon Linux 2018.03 v2.12.17 running Docker 18.06.1-ce
 
 Resources:
 
