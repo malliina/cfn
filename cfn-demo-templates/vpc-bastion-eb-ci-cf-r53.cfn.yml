@@ -15,10 +15,10 @@ Parameters:
   EnvironmentName:
     Type: String
     Description: Environment name - dev or prod
-    Default: dev
+    Default: myapp
     AllowedValues:
-      - dev
-      - prod
+      - mydev
+      - myprod
     ConstraintDescription: Specify either dev or prod
 
   # vpc.cfn.yml parameters

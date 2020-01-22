@@ -275,13 +275,13 @@ Resources:
         MetricTransformations:
         - MetricValue: 1
           MetricNamespace: SSH
-          MetricName: sshInvalidUser
+          MetricName: !Sub ${NetworkStackName}-sshInvalidUser
 
   SshInvalidhUserAlarm:
       Type: AWS::CloudWatch::Alarm
       Properties:
         AlarmDescription: SSH connections attempted with invalid username is greater than 3 over 1 minutes
-        MetricName: sshInvalidUser
+        MetricName: !Sub ${NetworkStackName}-sshInvalidUser
         Namespace: SSH
         Statistic: Sum
         Period: 60
@@ -299,13 +299,13 @@ Resources:
         MetricTransformations:
         - MetricValue: 1
           MetricNamespace: SSH
-          MetricName: sshClosedConnection
+          MetricName: !Sub ${NetworkStackName}-sshClosedConnection
 
   SshClosedConnectionAlarm:
       Type: AWS::CloudWatch::Alarm
       Properties:
         AlarmDescription: SSH connections closed due to invalid SSH key or username is greater than 5 in 5 minutes
-        MetricName: sshClosedConnection
+        MetricName: !Sub ${NetworkStackName}-sshClosedConnection
         Namespace: SSH
         Statistic: Sum
         Period: 300

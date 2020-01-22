@@ -15,7 +15,7 @@ Parameters:
   EnvironmentName:
     Type: String
     Description: Environment name - dev or prod
-    Default: dev
+    Default: myenv
     AllowedValues:
       - dev
       - prod
@@ -157,12 +157,12 @@ Parameters:
     ConstraintDescription: Name must begin with a letter and contain only alphanumeric characters
 
   DatabaseEngine:
-    Default: aurora
     Type: String
     Description: Database engines - Aurora MySQL, Aurora PostgreSQL, PostgreSQL, MariaDB and MySQL
     ConstraintDescription: Choose an engine from the drop down
+    Default: aurora-mysql
     AllowedValues:
-      - aurora
+      - aurora-mysql
       - aurora-postgresql
 
   EncryptionAtRest:
@@ -416,7 +416,7 @@ Conditions:
 
   IsProd: !Equals [ !Ref EnvironmentName, prod ]
 
-  IsAurora: !Or [ !Equals [ !Ref DatabaseEngine, aurora ], !Equals [ !Ref DatabaseEngine, aurora-postgresql ] ]
+  IsAurora: !Or [ !Equals [ !Ref DatabaseEngine, aurora-mysql ], !Equals [ !Ref DatabaseEngine, aurora-postgresql ] ]
 
   IsCustomELBIngress: !Not [ !Equals [ !Ref ELBIngressPort, "" ] ]
 

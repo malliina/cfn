@@ -15,7 +15,7 @@ Parameters:
     AllowedPattern: "^[a-zA-Z][-a-zA-Z0-9]*$"
 
   DatabaseUser:
-    Default: mydbuser
+    Default: refapp
     Type: String
     Description: Database admin account name
     MinLength: 5
@@ -33,7 +33,7 @@ Parameters:
     ConstraintDescription: Only alphanumeric characters, minimum length 8
 
   DatabaseName:
-    Default: mydb
+    Default: refapp
     Type: String
     Description: Database name
     MinLength: 1
@@ -42,12 +42,13 @@ Parameters:
     ConstraintDescription: Name must begin with a letter and contain only alphanumeric characters
 
   DatabaseEngine:
-    Default: aurora
     Type: String
     Description: Database engines - Aurora MySQL or Aurora PostgreSQL
-    ConstraintDescription: Choose an engine from the drop down
+    ConstraintDescription: Choose an engine from the drop down. Use aurora for serverless.
+    Default: aurora-mysql
     AllowedValues:
       - aurora
+      - aurora-mysql
       - aurora-postgresql
 
   EngineMode:
@@ -146,6 +147,7 @@ Parameters:
     Type: Number
     Default: 2
     AllowedValues:
+      - 1
       - 2
       - 4
       - 8
@@ -159,6 +161,7 @@ Parameters:
     Type: Number
     Default: 64
     AllowedValues:
+      - 1
       - 2
       - 4
       - 8
@@ -228,7 +231,7 @@ Conditions:
 
   IsServerless: !Equals [ !Ref EngineMode, serverless ]
 
-  IsAuroraMySQL: !Equals [ !Ref DatabaseEngine, aurora ]
+  IsAuroraMySQL: !Equals [ !Ref DatabaseEngine, aurora-mysql ]
 
   HasCustomPassword: !Not [ !Equals [ !Ref DatabasePassword, "" ] ]
 
@@ -278,7 +281,7 @@ Resources:
   AuroraCluster:
     Type: AWS::RDS::DBCluster
     Properties:
-      Engine: !Ref DatabaseEngine
+      Engine: !If [ IsServerless, aurora, !Ref DatabaseEngine ]
       EngineMode: !Ref EngineMode
       ScalingConfiguration:
         !If
@@ -294,8 +297,8 @@ Resources:
       DBSubnetGroupName: !Ref DatabaseSubnetGroup
       StorageEncrypted: !If [ IsServerless, true, !Ref EncryptionAtRest ]
       DatabaseName: !Ref DatabaseName
-      DBClusterParameterGroupName: !If [ IsAuroraMySQL, default.aurora5.6, default.aurora-postgresql9.6 ]
-      Port: !If [ IsAuroraMySQL,  3306, 5432 ]
+      DBClusterParameterGroupName: !If [ IsServerless, !Ref "AWS::NoValue", !If [ IsAuroraMySQL, default.aurora-mysql5.7, default.aurora-postgresql9.6 ] ]
+      Port: !If [ IsServerless, 3306, !If [ IsAuroraMySQL,  3306, 5432 ] ]
       VpcSecurityGroupIds:
         - Fn::ImportValue: !Sub ${NetworkStackName}-DatabaseGroupID
     DependsOn: DatabaseSubnetGroup
@@ -309,7 +312,7 @@ Resources:
       DBInstanceClass: !Ref DatabaseInstanceClass
       DBSubnetGroupName: !Ref DatabaseSubnetGroup
       StorageEncrypted: !Ref EncryptionAtRest
-      DBParameterGroupName: !If [ IsAuroraMySQL,  default.aurora5.6, default.aurora-postgresql9.6 ]
+      DBParameterGroupName: !If [ IsAuroraMySQL, default.aurora-mysql5.7, default.aurora-postgresql9.6 ]
       MonitoringInterval: !If [ EnhancedMonitoringSupprtedAndEnabled, 60, 0 ]
       MonitoringRoleArn: !If [ EnhancedMonitoringSupprtedAndEnabled, !GetAtt EnhancedMonitoringRole.Arn, !Ref "AWS::NoValue" ]
       CopyTagsToSnapshot: true
@@ -327,7 +330,7 @@ Resources:
       DBInstanceClass: !Ref DatabaseInstanceClass
       DBSubnetGroupName: !Ref DatabaseSubnetGroup
       StorageEncrypted: !Ref EncryptionAtRest
-      DBParameterGroupName: !If [ IsAuroraMySQL,  default.aurora5.6, default.aurora-postgresql9.6 ]
+      DBParameterGroupName: !If [ IsAuroraMySQL, default.aurora-mysql5.7, default.aurora-postgresql9.6 ]
       MonitoringInterval: !If [ EnhancedMonitoringSupprtedAndEnabled, 60, 0 ]
       MonitoringRoleArn: !If [ EnhancedMonitoringSupprtedAndEnabled, !GetAtt EnhancedMonitoringRole.Arn, !Ref "AWS::NoValue" ]
       CopyTagsToSnapshot: true
@@ -458,7 +461,7 @@ Outputs:
     Description: Aurora Stack Name
     Value: !Ref AWS::StackName
     Export:
-      Name: !Sub ${AWS::StackName}-Name
+      Name: !Sub ${AWS::StackName}-StackName
 
   AuroraClusterId:
     Description: Aurora Cluster ID
