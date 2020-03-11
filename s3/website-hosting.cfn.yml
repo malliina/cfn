@@ -1,0 +1,187 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+
+  DomainName:
+    Type: String
+    Description: Custom domain name for Route 53
+
+  SSLCertificateArn:
+    Description: CloudFront SSL/TLS certificate ARN, must be in us-east-1 region (SSM paramater)
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /global/certificates/arn
+    ConstraintDescription: CloudFront certificates must be in region us-east-1
+
+  HostedZoneId:
+    Description: Hosted Zone ID (SSM parameter)
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /global/route53/zone
+    MinLength: 1
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: Route 53
+        Parameters:
+          - DomainName
+          - HostedZoneId
+      - Label:
+          default: CloudFront
+        Parameters:
+          - SSLCertificateArn
+
+
+Conditions:
+
+  HasCustomCertificate: !Not [ !Equals [ !Ref SSLCertificateArn, "" ] ]
+
+
+Resources:
+
+  S3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: error.html
+    DeletionPolicy: Retain
+
+  BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      PolicyDocument:
+        Id: MyPolicy
+        Version: 2012-10-17
+        Statement:
+          - Sid: PublicReadForGetBucketObjects
+            Effect: Allow
+            Principal: '*'
+            Action: 's3:GetObject'
+            Resource: !Join
+              - ''
+              - - 'arn:aws:s3:::'
+                - !Ref S3Bucket
+                - /*
+            Condition:
+              StringEquals:
+                aws:Referer:
+                  - '{{resolve:secretsmanager:dev/refapp/secrets:SecretString:headersecret}}'
+      Bucket: !Ref S3Bucket
+
+  CloudFront:
+    Type: AWS::CloudFront::Distribution
+    DependsOn: S3Bucket
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        Comment: Website hosting
+        DefaultRootObject: index.html
+        Aliases:
+          - !Ref DomainName
+        CacheBehaviors:
+          - AllowedMethods:
+              - DELETE
+              - GET
+              - HEAD
+              - OPTIONS
+              - PATCH
+              - POST
+              - PUT
+            PathPattern: assets/*
+            TargetOriginId: !Ref AWS::StackName
+            ForwardedValues:
+              QueryString: true
+              Cookies:
+                # none, all, or whitelist
+                Forward: none
+            TrustedSigners: []
+            # allow-all, redirect-to-https, or https-only
+            ViewerProtocolPolicy: !If [ HasCustomCertificate, redirect-to-https, allow-all ]
+        DefaultCacheBehavior:
+          AllowedMethods:
+            - DELETE
+            - GET
+            - HEAD
+            - OPTIONS
+            - PATCH
+            - POST
+            - PUT
+          TargetOriginId: !Ref AWS::StackName
+          ForwardedValues:
+            QueryString: true
+            Headers:
+              - Authorization
+            Cookies:
+              # none, all, or whitelist
+              Forward: all
+          TrustedSigners: []
+          # allow-all, redirect-to-https, or https-only
+          ViewerProtocolPolicy: !If [ HasCustomCertificate, redirect-to-https, allow-all ]
+        Origins:
+          - DomainName: !Select [1, !Split ["http://", !GetAtt S3Bucket.WebsiteURL]]
+            Id: !Ref AWS::StackName
+            CustomOriginConfig:
+              HTTPPort: 80
+              HTTPSPort: 443
+              # http-only, match-viewer, or https-only
+              OriginProtocolPolicy: http-only
+            OriginCustomHeaders:
+              -
+                HeaderName: Referer
+                HeaderValue: '{{resolve:secretsmanager:dev/refapp/secrets:SecretString:headersecret}}'
+        PriceClass: PriceClass_100
+        ViewerCertificate:
+          AcmCertificateArn: !If [ HasCustomCertificate, !Ref SSLCertificateArn, !Ref "AWS::NoValue" ]
+          CloudFrontDefaultCertificate: !If [ HasCustomCertificate, !Ref "AWS::NoValue", true ]
+          SslSupportMethod: !If [ HasCustomCertificate, sni-only, !Ref "AWS::NoValue" ]
+      Tags: []
+
+  Route53:
+    Type: AWS::Route53::RecordSet
+    DependsOn: CloudFront
+    Properties:
+      Name: !Ref DomainName
+      AliasTarget:
+        DNSName: !GetAtt CloudFront.DomainName
+        # Always this string when using CloudFront
+        # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-route53-aliastarget.html
+        HostedZoneId: Z2FDTNDATAQYW2
+      HostedZoneId: !Ref HostedZoneId
+      Type: A
+
+
+Outputs:
+
+  WebsiteURL:
+    Value: !GetAtt
+      - S3Bucket
+      - WebsiteURL
+    Description: URL for website hosted on S3
+
+  S3BucketSecureURL:
+    Value: !Join
+      - ''
+      - - 'https://'
+        - !GetAtt
+          - S3Bucket
+          - DomainName
+    Description: Name of S3 bucket to hold website content
+
+  DistributionID:
+    Description: CloudFront Distribution ID
+    Value: !Ref CloudFront
+    Export:
+      Name: !Sub ${AWS::StackName}-DistributionID
+
+  CloudFrontDomainName:
+    Description: CloudFront Distribution Domain Name
+    Value: !GetAtt CloudFront.DomainName
+    Export:
+      Name: !Sub ${AWS::StackName}-CloudFrontDomainName
+
+  DomainName:
+    Description: Route 53 Domain Name
+    Value: !Ref Route53
+    Export:
+      Name: !Sub ${AWS::StackName}-DomainName
