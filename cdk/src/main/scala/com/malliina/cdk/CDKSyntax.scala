@@ -1,12 +1,14 @@
 package com.malliina.cdk
 
 import software.amazon.awscdk.core.{CfnOutput, Stack}
+import software.amazon.awscdk.services.codebuild.{BuildEnvironmentVariable, BuildEnvironmentVariableType}
+import software.amazon.awscdk.services.codepipeline.{IAction, StageProps}
 import software.amazon.awscdk.services.elasticbeanstalk.CfnConfigurationTemplate.ConfigurationOptionSettingProperty
 import software.amazon.awscdk.services.iam.ServicePrincipal
 
 import scala.jdk.CollectionConverters.{MapHasAsJava, SeqHasAsJava}
 
-trait CDKBuilders {
+trait CDKSyntax {
   def principal(service: String) = ServicePrincipal.Builder.create(service).build()
   def list[T](xs: T*) = xs.asJava
   def map[T](kvs: (String, T)*) = Map(kvs: _*).asJava
@@ -25,6 +27,18 @@ trait CDKBuilders {
         .value(v)
         .build()
   }
-}
 
-trait CDKSyntax extends CDKBuilders
+  def buildEnv(value: String) =
+    BuildEnvironmentVariable
+      .builder()
+      .`type`(BuildEnvironmentVariableType.PLAINTEXT)
+      .value(value)
+      .build()
+
+  def stage(name: String)(actions: IAction*) =
+    StageProps
+      .builder()
+      .stageName(name)
+      .actions(list(actions: _*))
+      .build()
+}

@@ -18,8 +18,8 @@ object S3WebsiteStack {
     new S3WebsiteStack(conf, scope, name)
 }
 
-class S3WebsiteStack(conf: WebsiteConf, scope: Construct, id: String)
-  extends Stack(scope, id, CDK.stackProps)
+class S3WebsiteStack(conf: WebsiteConf, scope: Construct, stackName: String)
+  extends Stack(scope, stackName, CDK.stackProps)
   with CDKSyntax {
   val stack = this
   val indexDocument = "index.html"
