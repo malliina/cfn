@@ -3,11 +3,11 @@ package com.malliina.cdk
 import com.malliina.cdk.Lambda.LambdaConf
 import software.amazon.awscdk.core.Stack
 import software.amazon.awscdk.services.cloudformation.CloudFormationCapabilities
-import software.amazon.awscdk.services.codebuild.{BuildEnvironment, BuildSpec, LinuxBuildImage, PipelineProject}
+import software.amazon.awscdk.services.codebuild.{BuildEnvironment, BuildSpec, ComputeType, LinuxBuildImage, PipelineProject}
 import software.amazon.awscdk.services.codecommit.Repository
 import software.amazon.awscdk.services.codepipeline.actions.{CloudFormationCreateReplaceChangeSetAction, CloudFormationExecuteChangeSetAction, CodeBuildAction, CodeCommitSourceAction}
 import software.amazon.awscdk.services.codepipeline.{Artifact, Pipeline}
-import software.amazon.awscdk.services.iam.Role
+import software.amazon.awscdk.services.iam.{ManagedPolicy, PolicyStatement, Role}
 import software.amazon.awscdk.services.s3.Bucket
 import software.constructs.Construct
 
@@ -23,27 +23,43 @@ class Lambda(conf: LambdaConf, scope: Construct, stackName: String)
   val stack = this
   val source = Repository.Builder.create(stack, "Source").repositoryName(getStackName).build()
   val functionsBucket = Bucket.Builder.create(stack, "Functions").build()
-  val pipelineRole = Role.Builder
-    .create(stack, "CodePipelineRole")
-    .assumedBy(principal("codepipeline.amazonaws.com"))
-    .managedPolicies(
-      list(
-//        ManagedPolicy.fromAwsManagedPolicyName("AmazonS3FullAccess")
-      )
-    )
-    .build()
-  functionsBucket.grantReadWrite(pipelineRole)
+//  val buildRole = Role.Builder
+//    .create(stack, "BuildRole")
+//    .assumedBy(principal("codebuild.amazonaws.com"))
+//    .managedPolicies(
+//      list(
+//        ManagedPolicy.fromAwsManagedPolicyName("CloudWatchLogsFullAccess")
+//      )
+//    )
+//    .build()
   val build = PipelineProject.Builder
     .create(stack, "CodeBuild")
     .projectName(getStackName)
-    .environment(BuildEnvironment.builder().buildImage(LinuxBuildImage.STANDARD_2_0).build())
+    //    .role(buildRole)
+    .environment(
+      BuildEnvironment
+        .builder()
+        .buildImage(LinuxBuildImage.STANDARD_2_0)
+        .computeType(ComputeType.MEDIUM)
+        .build()
+    )
     .environmentVariables(
       map(
         "BUCKET_NAME" -> buildEnv(functionsBucket.getBucketName)
       )
     )
-    .buildSpec(BuildSpec.fromSourceFilename("lambda/buildspec.yml"))
+    .buildSpec(BuildSpec.fromSourceFilename("lambda/scala/buildspec.yml"))
     .build()
+  val pipelineRole = Role.Builder
+    .create(stack, "CodePipelineRole")
+    .assumedBy(principal("codepipeline.amazonaws.com"))
+    .managedPolicies(
+      list(
+        //        ManagedPolicy.fromAwsManagedPolicyName("AmazonS3FullAccess")
+      )
+    )
+    .build()
+  functionsBucket.grantReadWrite(pipelineRole)
   val sourceOut = new Artifact()
   val buildOut = new Artifact()
   val changeSetName = "LambdaChangeSet"
@@ -76,7 +92,7 @@ class Lambda(conf: LambdaConf, scope: Construct, stackName: String)
             .create()
             .actionName("StageAction")
             .changeSetName(changeSetName)
-            .templatePath(sourceOut.atPath("output.cfn.yml"))
+            .templatePath(buildOut.atPath("output.cfn.yml"))
             .stackName(lambdaStackName)
             .adminPermissions(true)
             .capabilities(
