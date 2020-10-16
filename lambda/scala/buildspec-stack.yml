@@ -12,7 +12,7 @@ phases:
       java: openjdk11
     commands:
       - echo `pwd`
-      - npm install aws-cdk
+      - npm install -g aws-cdk
   build:
     commands:
       - cdk synth -o target
