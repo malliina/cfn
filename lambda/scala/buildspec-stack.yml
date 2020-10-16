@@ -15,7 +15,7 @@ phases:
       - npm install -g aws-cdk
   build:
     commands:
-      - cdk synth -o target
+      - cdk synth LambdaStack -o target
 artifacts:
   files:
     - $OUTPUT
