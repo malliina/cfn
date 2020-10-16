@@ -1,6 +1,6 @@
 package com.malliina.cdk
 
-import com.malliina.cdk.Lambda.LambdaConf
+import com.malliina.cdk.LambdaPipeline.LambdaConf
 import com.malliina.cdk.S3Redirect.RedirectConf
 import com.malliina.cdk.S3WebsiteStack.WebsiteConf
 import software.amazon.awscdk.core.{Environment, StackProps, App => AWSApp}
@@ -28,7 +28,8 @@ object CDK {
       app,
       "cdk-redirect"
     )
-    val lambda = Lambda(LambdaConf("todo"), app, "lambda")
+    val lambda = LambdaStack(app, "LambdaStack")
+    val lambdaPipeline = LambdaPipeline(LambdaConf(lambda.getStackId, lambda.code), app, "lambda")
 
     val assembly = app.synth()
   }
