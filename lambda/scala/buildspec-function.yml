@@ -19,7 +19,8 @@ phases:
       - cd scala
       - sbt sbtVersion
       - sbt assembly
+      - unzip function.jar -d jartarget
 artifacts:
   files:
-    - $OUTPUT
-  base-directory: lambda/scala
+    - '**/*'
+  base-directory: lambda/scala/jartarget
