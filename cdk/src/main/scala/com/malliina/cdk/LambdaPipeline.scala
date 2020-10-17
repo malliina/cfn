@@ -8,7 +8,6 @@ import software.amazon.awscdk.services.codecommit.Repository
 import software.amazon.awscdk.services.codepipeline.actions.{CloudFormationCreateReplaceChangeSetAction, CloudFormationExecuteChangeSetAction, CodeBuildAction, CodeCommitSourceAction}
 import software.amazon.awscdk.services.codepipeline.{Artifact, Pipeline}
 import software.amazon.awscdk.services.lambda.CfnParametersCode
-import software.amazon.awscdk.services.s3.{Bucket, BucketAccessControl}
 import software.constructs.Construct
 
 object LambdaPipeline {
@@ -45,12 +44,9 @@ class LambdaPipeline(conf: LambdaConf, scope: Construct, stackName: String)
   val stackBuildOut = new Artifact()
   val changeSetName = "LambdaChangeSet"
   val lambdaStackName = s"$getStackName-lambda"
-  val artifactsBucket =
-    Bucket.Builder.create(stack, "Artifacts").accessControl(BucketAccessControl.PUBLIC_READ).build()
   val pipeline = Pipeline.Builder
     .create(stack, "Pipeline")
     .pipelineName(getStackName)
-    .artifactBucket(artifactsBucket)
     .stages(
       list(
         stage("Source")(
