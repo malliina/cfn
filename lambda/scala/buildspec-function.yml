@@ -20,7 +20,6 @@ phases:
       - sbt sbtVersion
       - sbt assembly
 artifacts:
-  type: zip
   files:
     - $OUTPUT
   base-directory: lambda/scala

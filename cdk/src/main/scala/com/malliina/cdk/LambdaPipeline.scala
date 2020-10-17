@@ -8,7 +8,7 @@ import software.amazon.awscdk.services.codecommit.Repository
 import software.amazon.awscdk.services.codepipeline.actions.{CloudFormationCreateReplaceChangeSetAction, CloudFormationExecuteChangeSetAction, CodeBuildAction, CodeCommitSourceAction}
 import software.amazon.awscdk.services.codepipeline.{Artifact, Pipeline}
 import software.amazon.awscdk.services.lambda.CfnParametersCode
-import software.amazon.awscdk.services.s3.Bucket
+import software.amazon.awscdk.services.s3.{Bucket, BucketAccessControl}
 import software.constructs.Construct
 
 object LambdaPipeline {
@@ -23,45 +23,34 @@ class LambdaPipeline(conf: LambdaConf, scope: Construct, stackName: String)
   with CDKSyntax {
   val stack = this
   val source = Repository.Builder.create(stack, "Source").repositoryName(getStackName).build()
-  val functionsBucket = Bucket.Builder.create(stack, "Functions").build()
+  val buildEnv = BuildEnvironment
+    .builder()
+    .buildImage(LinuxBuildImage.STANDARD_2_0)
+    .computeType(ComputeType.MEDIUM)
+    .build()
   val build = PipelineProject.Builder
     .create(stack, "Build")
     .projectName(getStackName)
-    .environment(
-      BuildEnvironment
-        .builder()
-        .buildImage(LinuxBuildImage.STANDARD_2_0)
-        .computeType(ComputeType.MEDIUM)
-        .build()
-    )
-    .environmentVariables(
-      map(
-        "BUCKET_NAME" -> buildEnv(functionsBucket.getBucketName)
-      )
-    )
+    .environment(buildEnv)
     .buildSpec(BuildSpec.fromSourceFilename("lambda/scala/buildspec-function.yml"))
     .build()
   val stackBuild = PipelineProject.Builder
     .create(stack, "StackBuild")
     .projectName(s"$getStackName-stack")
-    .environment(
-      BuildEnvironment
-        .builder()
-        .buildImage(LinuxBuildImage.STANDARD_2_0)
-        .computeType(ComputeType.MEDIUM)
-        .build()
-    )
+    .environment(buildEnv)
     .buildSpec(BuildSpec.fromSourceFilename("lambda/scala/buildspec-stack.yml"))
     .build()
-  functionsBucket.grantReadWrite(build.getRole)
   val sourceOut = new Artifact()
   val buildOut = new Artifact()
   val stackBuildOut = new Artifact()
   val changeSetName = "LambdaChangeSet"
   val lambdaStackName = s"$getStackName-lambda"
+  val artifactsBucket =
+    Bucket.Builder.create(stack, "Artifacts").accessControl(BucketAccessControl.PUBLIC_READ).build()
   val pipeline = Pipeline.Builder
     .create(stack, "Pipeline")
     .pipelineName(getStackName)
+    .artifactBucket(artifactsBucket)
     .stages(
       list(
         stage("Source")(
@@ -120,5 +109,4 @@ class LambdaPipeline(conf: LambdaConf, scope: Construct, stackName: String)
       )
     )
     .build()
-  functionsBucket.grantReadWrite(pipeline.getRole)
 }
