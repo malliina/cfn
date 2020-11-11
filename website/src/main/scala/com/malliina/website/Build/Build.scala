@@ -1,6 +1,5 @@
 package com.malliina.website.Build
 
-import java.io.Closeable
 import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Path, Paths}
 
@@ -21,8 +20,4 @@ object Build {
   }
 
   def index = html(body(p("Hello, world!")))
-
-  def using[T <: Closeable, U](t: T)(code: T => U): U =
-    try code(t)
-    finally t.close()
 }

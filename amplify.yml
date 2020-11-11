@@ -9,12 +9,12 @@ frontend:
       commands:
         - curl -s "https://get.sdkman.io" | bash
         - source "/root/.sdkman/bin/sdkman-init.sh"
-        - sdk install java
+        - sdk install java 11.0.9.hs-adpt
         - sdk install sbt 1.4.2
     build:
       commands:
         - sbt website/run
   artifacts:
-    baseDirectory: $WEBSITE_TARGET
+    baseDirectory: target/site
     files:
       - "**/*"
