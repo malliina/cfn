@@ -26,7 +26,6 @@ class AmplifyStack(scope: Construct, stackName: String)
     .sourceCodeProvider(
       CodeCommitSourceCodeProvider.Builder.create().repository(codeCommit).build()
     )
-    //    .buildSpec(BuildSpec.fromSourceFilename("buildspec-amplify.yml"))
     .build()
   app.addBranch("master")
 
