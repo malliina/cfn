@@ -2,7 +2,7 @@ package com.malliina.cdk
 
 import software.amazon.awscdk.core.{Construct, Stack}
 import software.amazon.awscdk.services.amplify
-import software.amazon.awscdk.services.amplify.{CodeCommitSourceCodeProvider, CustomRule}
+import software.amazon.awscdk.services.amplify.{AutoBranchCreation, CodeCommitSourceCodeProvider}
 import software.amazon.awscdk.services.codecommit.Repository
 
 object AmplifyStack {
@@ -26,6 +26,10 @@ class AmplifyStack(scope: Construct, stackName: String)
     .sourceCodeProvider(
       CodeCommitSourceCodeProvider.Builder.create().repository(codeCommit).build()
     )
+    .autoBranchCreation(
+      AutoBranchCreation.builder().autoBuild(true).pullRequestPreview(true).build()
+    )
+    .autoBranchDeletion(true)
     .build()
   app.addBranch("master")
 
