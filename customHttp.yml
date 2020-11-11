@@ -1,0 +1,5 @@
+customHeaders:
+  - pattern: '*.html'
+    headers:
+      - key: 'cache-control'
+        value: 'max-age=60'
