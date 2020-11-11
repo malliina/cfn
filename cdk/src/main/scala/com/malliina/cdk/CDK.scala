@@ -1,5 +1,6 @@
 package com.malliina.cdk
 
+import com.malliina.cdk.AmplifyStack.AmplifyConf
 import com.malliina.cdk.S3Redirect.RedirectConf
 import com.malliina.cdk.S3WebsiteStack.WebsiteConf
 import software.amazon.awscdk.core.{Environment, StackProps, App => AWSApp}
@@ -27,6 +28,7 @@ object CDK {
       app,
       "cdk-redirect"
     )
+    val amplifyApp = AmplifyStack(AmplifyConf(42), app, "amplify")
 
     val assembly = app.synth()
   }
