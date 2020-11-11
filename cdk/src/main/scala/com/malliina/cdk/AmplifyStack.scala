@@ -2,8 +2,7 @@ package com.malliina.cdk
 
 import software.amazon.awscdk.core.{Construct, Stack}
 import software.amazon.awscdk.services.amplify
-import software.amazon.awscdk.services.amplify.{CodeCommitSourceCodeProvider}
-import software.amazon.awscdk.services.codebuild.BuildSpec
+import software.amazon.awscdk.services.amplify.CodeCommitSourceCodeProvider
 import software.amazon.awscdk.services.codecommit.Repository
 
 object AmplifyStack {
