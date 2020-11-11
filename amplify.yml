@@ -9,6 +9,7 @@ frontend:
       commands:
         - curl -s "https://get.sdkman.io" | bash
         - source "/root/.sdkman/bin/sdkman-init.sh"
+        - sdk install java
         - sdk install sbt 1.4.2
     build:
       commands:
