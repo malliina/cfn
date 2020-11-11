@@ -1,7 +1,8 @@
 package com.malliina.cdk
 
 import software.amazon.awscdk.core.{Construct, Stack}
-import software.amazon.awscdk.services.amplify.{CodeCommitSourceCodeProvider, App => AmplifyApp}
+import software.amazon.awscdk.services.amplify
+import software.amazon.awscdk.services.amplify.{CodeCommitSourceCodeProvider}
 import software.amazon.awscdk.services.codebuild.BuildSpec
 import software.amazon.awscdk.services.codecommit.Repository
 
@@ -18,14 +19,15 @@ class AmplifyStack(scope: Construct, stackName: String)
   val stack = this
 
   val codeCommit = Repository.Builder.create(stack, "Repo").repositoryName(stackName).build()
-  val app = AmplifyApp.Builder
+
+  val app = amplify.App.Builder
     .create(stack, "AmplifyApp")
     .appName(stackName)
     .description(s"Amplify app of $stackName")
     .sourceCodeProvider(
       CodeCommitSourceCodeProvider.Builder.create().repository(codeCommit).build()
     )
-    .buildSpec(BuildSpec.fromSourceFilename("buildspec-amplify.yml"))
+    //    .buildSpec(BuildSpec.fromSourceFilename("buildspec-amplify.yml"))
     .build()
   app.addBranch("master")
 
