@@ -19,6 +19,6 @@ applications:
           commands:
             - sbt website/run
       artifacts:
-        baseDirectory: target/site
+        baseDirectory: ../target/site
         files:
           - "**/*"
