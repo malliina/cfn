@@ -1,20 +1,22 @@
 version: 1
-env:
-  variables:
-    SBT_VERSION: "1.4.0"
-    WEBSITE_TARGET: "target/site"
-frontend:
-  phases:
-    preBuild:
-      commands:
-        - curl -s "https://get.sdkman.io" | bash
-        - source "/root/.sdkman/bin/sdkman-init.sh"
-        - sdk install java 11.0.9.hs-adpt
-        - sdk install sbt 1.4.2
-    build:
-      commands:
-        - sbt website/run
-  artifacts:
-    baseDirectory: target/site
-    files:
-      - "**/*"
+applications:
+  - appRoot: /website
+    env:
+      variables:
+        SBT_VERSION: "1.4.2"
+        WEBSITE_TARGET: "target/site"
+    frontend:
+      phases:
+        preBuild:
+          commands:
+            - curl -s "https://get.sdkman.io" | bash
+            - source "/root/.sdkman/bin/sdkman-init.sh"
+            - sdk install java 11.0.9.hs-adpt
+            - sdk install sbt $SBT_VERSION
+        build:
+          commands:
+            - sbt website/run
+      artifacts:
+        baseDirectory: target/site
+        files:
+          - "**/*"
