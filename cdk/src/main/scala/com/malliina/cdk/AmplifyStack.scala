@@ -2,7 +2,8 @@ package com.malliina.cdk
 
 import software.amazon.awscdk.core.{Construct, Stack}
 import software.amazon.awscdk.services.amplify
-import software.amazon.awscdk.services.amplify.{AutoBranchCreation, CodeCommitSourceCodeProvider, DomainOptions, SubDomain}
+import software.amazon.awscdk.services.amplify.CfnDomain.SubDomainSettingProperty
+import software.amazon.awscdk.services.amplify.{AutoBranchCreation, CfnBranch, CfnDomain, CodeCommitSourceCodeProvider}
 import software.amazon.awscdk.services.codecommit.Repository
 
 object AmplifyStack {
@@ -31,10 +32,29 @@ class AmplifyStack(scope: Construct, stackName: String)
     )
     .autoBranchDeletion(true)
     .build()
-  val master = app.addBranch("master")
-  val domain =
-    app.addDomain("Domain", DomainOptions.builder().domainName("malliina.site").build())
-  domain.mapSubDomain(master, "amplify")
+  val master = CfnBranch.Builder
+    .create(stack, "MasterBranch")
+    .appId(app.getAppId)
+    .branchName("master")
+    .stage("PRODUCTION")
+    .build()
+  val domain = CfnDomain.Builder
+    .create(stack, "Domain")
+    .appId(app.getAppId)
+    .domainName("malliina.site")
+    .subDomainSettings(
+      list(
+        SubDomainSettingProperty
+          .builder()
+          .branchName(master.getBranchName)
+          .prefix("amplify")
+          .build()
+      )
+    )
+    .enableAutoSubDomain(true)
+    .autoSubDomainCreationPatterns(list("*"))
+    .build()
+  domain.addDependsOn(master)
   outputs(stack)(
     "CodeCommitHttpsUrl" -> codeCommit.getRepositoryCloneUrlHttp,
     "AmplifyDefaultDomain" -> app.getDefaultDomain
