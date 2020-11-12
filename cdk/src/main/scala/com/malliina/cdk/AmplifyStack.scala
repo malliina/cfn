@@ -52,7 +52,7 @@ class AmplifyStack(scope: Construct, stackName: String)
       )
     )
     .enableAutoSubDomain(true)
-    .autoSubDomainCreationPatterns(list("*"))
+    .autoSubDomainCreationPatterns(list("*", "feature/*"))
     .build()
   domain.addDependsOn(master)
   outputs(stack)(
