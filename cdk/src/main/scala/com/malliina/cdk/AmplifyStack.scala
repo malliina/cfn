@@ -3,7 +3,7 @@ package com.malliina.cdk
 import software.amazon.awscdk.core.{Construct, Stack}
 import software.amazon.awscdk.services.amplify
 import software.amazon.awscdk.services.amplify.CfnDomain.SubDomainSettingProperty
-import software.amazon.awscdk.services.amplify.{AutoBranchCreation, CfnBranch, CfnDomain, CodeCommitSourceCodeProvider}
+import software.amazon.awscdk.services.amplify.{AutoBranchCreation, BasicAuth, CfnBranch, CfnDomain, CodeCommitSourceCodeProvider}
 import software.amazon.awscdk.services.codecommit.Repository
 
 object AmplifyStack {
@@ -28,7 +28,13 @@ class AmplifyStack(scope: Construct, stackName: String)
       CodeCommitSourceCodeProvider.Builder.create().repository(codeCommit).build()
     )
     .autoBranchCreation(
-      AutoBranchCreation.builder().autoBuild(true).pullRequestPreview(true).build()
+      AutoBranchCreation
+        .builder()
+        .autoBuild(true)
+        .pullRequestPreview(true)
+        .patterns(list("feature/*"))
+        .basicAuth(BasicAuth.fromGeneratedPassword("amplify"))
+        .build()
     )
     .autoBranchDeletion(true)
     .build()
@@ -52,7 +58,7 @@ class AmplifyStack(scope: Construct, stackName: String)
       )
     )
     .enableAutoSubDomain(true)
-    .autoSubDomainCreationPatterns(list("*", "feature/*"))
+    .autoSubDomainCreationPatterns(list("feature/*"))
     .build()
   domain.addDependsOn(master)
   outputs(stack)(
