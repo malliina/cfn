@@ -1,4 +1,8 @@
 customHeaders:
+  - pattern: '/index.html'
+    headers:
+      - key: 'Cache-Control'
+        value: 'max-age=30'
   - pattern: '/'
     headers:
       - key: 'Cache-Control'
