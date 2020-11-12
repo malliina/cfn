@@ -1,6 +1,6 @@
 version: 1
 applications:
-  - appRoot: /website
+  - appRoot: website
     env:
       variables:
         SBT_VERSION: "1.4.2"
