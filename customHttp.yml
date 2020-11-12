@@ -1,5 +1,5 @@
 customHeaders:
-  - pattern: ''
+  - pattern: '/'
     headers:
       - key: 'Cache-Control'
         value: 'max-age=60'
