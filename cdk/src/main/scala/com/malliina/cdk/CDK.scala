@@ -15,6 +15,8 @@ object CDK {
   def main(args: Array[String]): Unit = {
     val app = new AWSApp()
 
+    val vpc = VPCStack(app, "cdkvpc")
+
     val websiteConf =
       WebsiteConf("cdk.malliina.site", "/global/route53/zone", "/global/certificates/arn")
     val website = S3WebsiteStack(websiteConf, app, "cdk-website")
