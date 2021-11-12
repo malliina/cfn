@@ -1,14 +1,3 @@
-val cdkModules =
-  Seq(
-    "amplify",
-    "codebuild",
-    "codecommit",
-    "codepipeline-actions",
-    "elasticbeanstalk",
-    "lambda",
-    "s3"
-  )
-
 inThisBuild(
   Seq(
     scalaVersion := "2.13.7",
@@ -29,12 +18,25 @@ val website = project
     )
   )
 
+val cdkModules = Seq(
+  "amplify",
+  "codebuild",
+  "codecommit",
+  "codepipeline-actions",
+  "elasticbeanstalk",
+  "elasticsearch",
+  "lambda",
+  "s3"
+)
+
 val cdk = project
   .in(file("cdk"))
   .settings(
     libraryDependencies ++= cdkModules.map { module =>
-      "software.amazon.awscdk" % module % "1.72.0"
+      "software.amazon.awscdk" % module % "1.132.0"
     }
   )
 
 val root = project.in(file(".")).aggregate(website, cdk)
+
+Global / onChangedBuildSource := ReloadOnSourceChanges
