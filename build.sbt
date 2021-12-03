@@ -33,7 +33,7 @@ val cdk = project
   .in(file("cdk"))
   .settings(
     libraryDependencies ++= cdkModules.map { module =>
-      "software.amazon.awscdk" % module % "1.132.0"
+      "software.amazon.awscdk" % module % "1.134.0"
     }
   )
 
