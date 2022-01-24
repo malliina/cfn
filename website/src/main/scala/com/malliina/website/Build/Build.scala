@@ -19,5 +19,5 @@ object Build {
     Files.write(file, index.render.getBytes(StandardCharsets.UTF_8))
   }
 
-  def index = html(body(p("Hello, world! From branch 2")))
+  def index = html(body(p("Hello, world! From demo")))
 }
