@@ -38,30 +38,6 @@ class AmplifyStack(scope: Construct, stackName: String)
     .autoBranchDeletion(true)
     .environmentVariables(map("A" -> "B"))
     .build()
-//  val master = CfnBranch.Builder
-//    .create(stack, "MasterBranch")
-//    .appId(app.getAppId)
-//    .branchName("master")
-//    .stage("PRODUCTION")
-//    .build()
-//  val domain = CfnDomain.Builder
-//    .create(stack, "Domain")
-//    .appId(app.getAppId)
-//    .domainName("malliina.site")
-//    .subDomainSettings(
-//      list(
-//        SubDomainSettingProperty
-//          .builder()
-//          .branchName(master.getBranchName)
-//          .prefix("www")
-//          .build()
-//      )
-//    )
-//    .enableAutoSubDomain(true)
-//    .autoSubDomainCreationPatterns(list("*", "pr*"))
-//    .build()
-//  domain.addDependsOn(master)
-
   val domainName = "malliina.site"
   val appDomain = app.addDomain(
     "Domain",
@@ -79,17 +55,19 @@ class AmplifyStack(scope: Construct, stackName: String)
   dev.addEnvironment("STAGE", "dev")
   appDomain.mapSubDomain(dev)
 
+  val webRoot = s"https://www.$domainName"
   app.addCustomRule(
     CustomRule.Builder
       .create()
       .source(s"https://$domainName")
-      .target(s"https://www.$domainName")
+      .target(webRoot)
       .status(RedirectStatus.TEMPORARY_REDIRECT)
       .build()
   )
 
   outputs(stack)(
     "CodeCommitHttpsUrl" -> codeCommit.getRepositoryCloneUrlHttp,
-    "AmplifyDefaultDomain" -> app.getDefaultDomain
+    "AmplifyDefaultDomain" -> app.getDefaultDomain,
+    "WebRoot" -> webRoot
   )
 }
