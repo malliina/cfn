@@ -1,9 +1,7 @@
 package com.malliina.cdk
 
 import software.amazon.awscdk.Stack
-import software.amazon.awscdk.services.amplify.CfnDomain.SubDomainSettingProperty
-import software.amazon.awscdk.services.amplify.alpha.{App, AutoBranchCreation, BasicAuth, CodeCommitSourceCodeProvider, DomainOptions}
-import software.amazon.awscdk.services.amplify.{CfnBranch, CfnDomain}
+import software.amazon.awscdk.services.amplify.alpha.{App, AutoBranchCreation, CodeCommitSourceCodeProvider, CustomRule, DomainOptions, RedirectStatus}
 import software.amazon.awscdk.services.codecommit.Repository
 import software.constructs.Construct
 
@@ -63,11 +61,13 @@ class AmplifyStack(scope: Construct, stackName: String)
 //    .autoSubDomainCreationPatterns(list("*", "pr*"))
 //    .build()
 //  domain.addDependsOn(master)
+
+  val domainName = "malliina.site"
   val appDomain = app.addDomain(
     "Domain",
     DomainOptions
       .builder()
-      .domainName("malliina.site")
+      .domainName(domainName)
       .enableAutoSubdomain(true)
       .autoSubdomainCreationPatterns(list("*", "pr*"))
       .build()
@@ -78,6 +78,15 @@ class AmplifyStack(scope: Construct, stackName: String)
   val dev = app.addBranch("dev")
   dev.addEnvironment("STAGE", "dev")
   appDomain.mapSubDomain(dev)
+
+  app.addCustomRule(
+    CustomRule.Builder
+      .create()
+      .source(s"https://$domainName")
+      .target(s"https://www.$domainName")
+      .status(RedirectStatus.TEMPORARY_REDIRECT)
+      .build()
+  )
 
   outputs(stack)(
     "CodeCommitHttpsUrl" -> codeCommit.getRepositoryCloneUrlHttp,
