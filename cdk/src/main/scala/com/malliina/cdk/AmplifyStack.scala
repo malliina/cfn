@@ -2,7 +2,7 @@ package com.malliina.cdk
 
 import software.amazon.awscdk.Stack
 import software.amazon.awscdk.services.amplify.CfnDomain.SubDomainSettingProperty
-import software.amazon.awscdk.services.amplify.alpha.{App, AutoBranchCreation, BasicAuth, CodeCommitSourceCodeProvider}
+import software.amazon.awscdk.services.amplify.alpha.{App, AutoBranchCreation, BasicAuth, CodeCommitSourceCodeProvider, DomainOptions}
 import software.amazon.awscdk.services.amplify.{CfnBranch, CfnDomain}
 import software.amazon.awscdk.services.codecommit.Repository
 import software.constructs.Construct
@@ -40,29 +40,45 @@ class AmplifyStack(scope: Construct, stackName: String)
     .autoBranchDeletion(true)
     .environmentVariables(map("A" -> "B"))
     .build()
-  val master = CfnBranch.Builder
-    .create(stack, "MasterBranch")
-    .appId(app.getAppId)
-    .branchName("master")
-    .stage("PRODUCTION")
-    .build()
-  val domain = CfnDomain.Builder
-    .create(stack, "Domain")
-    .appId(app.getAppId)
-    .domainName("malliina.site")
-    .subDomainSettings(
-      list(
-        SubDomainSettingProperty
-          .builder()
-          .branchName(master.getBranchName)
-          .prefix("www")
-          .build()
-      )
-    )
-    .enableAutoSubDomain(true)
-    .autoSubDomainCreationPatterns(list("*"))
-    .build()
-  domain.addDependsOn(master)
+//  val master = CfnBranch.Builder
+//    .create(stack, "MasterBranch")
+//    .appId(app.getAppId)
+//    .branchName("master")
+//    .stage("PRODUCTION")
+//    .build()
+//  val domain = CfnDomain.Builder
+//    .create(stack, "Domain")
+//    .appId(app.getAppId)
+//    .domainName("malliina.site")
+//    .subDomainSettings(
+//      list(
+//        SubDomainSettingProperty
+//          .builder()
+//          .branchName(master.getBranchName)
+//          .prefix("www")
+//          .build()
+//      )
+//    )
+//    .enableAutoSubDomain(true)
+//    .autoSubDomainCreationPatterns(list("*", "pr*"))
+//    .build()
+//  domain.addDependsOn(master)
+  val appDomain = app.addDomain(
+    "Domain",
+    DomainOptions
+      .builder()
+      .domainName("malliina.site")
+      .enableAutoSubdomain(true)
+      .autoSubdomainCreationPatterns(list("*", "pr*"))
+      .build()
+  )
+  val master = app.addBranch("master")
+  appDomain.mapRoot(master)
+  appDomain.mapSubDomain(master, "www")
+  val dev = app.addBranch("dev")
+  dev.addEnvironment("STAGE", "dev")
+  appDomain.mapSubDomain(dev)
+
   outputs(stack)(
     "CodeCommitHttpsUrl" -> codeCommit.getRepositoryCloneUrlHttp,
     "AmplifyDefaultDomain" -> app.getDefaultDomain
