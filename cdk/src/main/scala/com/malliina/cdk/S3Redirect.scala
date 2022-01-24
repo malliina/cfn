@@ -1,9 +1,9 @@
 package com.malliina.cdk
 
 import com.malliina.cdk.S3Redirect.RedirectConf
-import software.amazon.awscdk.core.Stack
+import software.amazon.awscdk.Stack
 import software.amazon.awscdk.services.cloudfront.CfnDistribution
-import software.amazon.awscdk.services.cloudfront.CfnDistribution.{CacheBehaviorProperty, CookiesProperty, CustomOriginConfigProperty, DefaultCacheBehaviorProperty, DistributionConfigProperty, ForwardedValuesProperty, OriginCustomHeaderProperty, OriginProperty, ViewerCertificateProperty}
+import software.amazon.awscdk.services.cloudfront.CfnDistribution._
 import software.amazon.awscdk.services.route53.CfnRecordSet
 import software.amazon.awscdk.services.route53.CfnRecordSet.AliasTargetProperty
 import software.amazon.awscdk.services.route53.targets.CloudFrontTarget

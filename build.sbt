@@ -1,6 +1,6 @@
 inThisBuild(
   Seq(
-    scalaVersion := "2.13.7",
+    scalaVersion := "2.13.8",
     organization := "com.malliina",
     version := "0.0.1",
     libraryDependencies ++= Seq(
@@ -15,7 +15,7 @@ val opensearch = project
   .settings(
     libraryDependencies ++= Seq(
       "com.amazonaws" % "aws-lambda-java-core" % "1.2.1",
-      "com.amazonaws" % "aws-lambda-java-events" % "3.10.0"
+      "com.amazonaws" % "aws-lambda-java-events" % "3.11.0"
     ),
     assembly / assemblyMergeStrategy := {
       case PathList("META-INF", _ @_*) => MergeStrategy.discard
@@ -34,7 +34,7 @@ val website = project
   .in(file("website"))
   .settings(
     libraryDependencies ++= Seq(
-      "com.lihaoyi" %% "scalatags" % "0.10.0"
+      "com.lihaoyi" %% "scalatags" % "0.11.1"
     )
   )
 
@@ -54,9 +54,10 @@ val cdkModules = Seq(
 val cdk = project
   .in(file("cdk"))
   .settings(
-    libraryDependencies ++= cdkModules.map { module =>
-      "software.amazon.awscdk" % module % "1.134.0"
-    }
+    libraryDependencies ++= Seq(
+      "software.amazon.awscdk" % "aws-cdk-lib" % "2.8.0",
+      "software.amazon.awscdk" % "amplify-alpha" % "2.8.0-alpha.0"
+    )
   )
 
 val root = project.in(file(".")).aggregate(opensearch, website, cdk)

@@ -1,10 +1,9 @@
 package com.malliina.cdk
 
-import software.amazon.awscdk.core.{Construct, Stack}
-import software.amazon.awscdk.services.amplify
-import software.amazon.awscdk.services.amplify.CfnDomain.SubDomainSettingProperty
-import software.amazon.awscdk.services.amplify.{AutoBranchCreation, BasicAuth, CfnBranch, CfnDomain, CodeCommitSourceCodeProvider}
+import software.amazon.awscdk.Stack
+import software.amazon.awscdk.services.amplify.alpha.{App, AutoBranchCreation, CodeCommitSourceCodeProvider, CustomRule, DomainOptions, RedirectStatus}
 import software.amazon.awscdk.services.codecommit.Repository
+import software.constructs.Construct
 
 object AmplifyStack {
   def apply(conf: AmplifyConf, scope: Construct, stackName: String): AmplifyStack =
@@ -20,7 +19,7 @@ class AmplifyStack(scope: Construct, stackName: String)
 
   val codeCommit = Repository.Builder.create(stack, "Repo").repositoryName(stackName).build()
 
-  val app = amplify.App.Builder
+  val app = App.Builder
     .create(stack, "AmplifyApp")
     .appName(stackName)
     .description(s"Amplify app of $stackName")
@@ -32,37 +31,43 @@ class AmplifyStack(scope: Construct, stackName: String)
         .builder()
         .autoBuild(true)
         .pullRequestPreview(true)
-        .patterns(list("feature/*"))
-        .basicAuth(BasicAuth.fromGeneratedPassword("amplify"))
+        .patterns(list("*"))
+//        .basicAuth(BasicAuth.fromGeneratedPassword("amplify"))
         .build()
     )
     .autoBranchDeletion(true)
+    .environmentVariables(map("A" -> "B"))
     .build()
-  val master = CfnBranch.Builder
-    .create(stack, "MasterBranch")
-    .appId(app.getAppId)
-    .branchName("master")
-    .stage("PRODUCTION")
-    .build()
-  val domain = CfnDomain.Builder
-    .create(stack, "Domain")
-    .appId(app.getAppId)
-    .domainName("malliina.site")
-    .subDomainSettings(
-      list(
-        SubDomainSettingProperty
-          .builder()
-          .branchName(master.getBranchName)
-          .prefix("amplify")
-          .build()
-      )
-    )
-    .enableAutoSubDomain(true)
-    .autoSubDomainCreationPatterns(list("feature/*"))
-    .build()
-  domain.addDependsOn(master)
+  val domainName = "malliina.site"
+  val appDomain = app.addDomain(
+    "Domain",
+    DomainOptions
+      .builder()
+      .domainName(domainName)
+      .enableAutoSubdomain(true)
+      .autoSubdomainCreationPatterns(list("*", "pr*"))
+      .build()
+  )
+  val master = app.addBranch("master")
+  appDomain.mapRoot(master)
+  appDomain.mapSubDomain(master, "www")
+  val dev = app.addBranch("dev")
+  dev.addEnvironment("STAGE", "dev")
+  appDomain.mapSubDomain(dev)
+
+  val webRoot = s"https://www.$domainName"
+  app.addCustomRule(
+    CustomRule.Builder
+      .create()
+      .source(s"https://$domainName")
+      .target(webRoot)
+      .status(RedirectStatus.TEMPORARY_REDIRECT)
+      .build()
+  )
+
   outputs(stack)(
     "CodeCommitHttpsUrl" -> codeCommit.getRepositoryCloneUrlHttp,
-    "AmplifyDefaultDomain" -> app.getDefaultDomain
+    "AmplifyDefaultDomain" -> app.getDefaultDomain,
+    "WebRoot" -> webRoot
   )
 }
