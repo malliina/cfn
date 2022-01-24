@@ -6,7 +6,21 @@ with application development on AWS.
 I used [startup-kit-templates](https://github.com/aws-samples/startup-kit-templates) as a starting point and modified 
 them to my needs.
 
-## Infrastructure
+## CDK v2
+
+### Amplify
+
+Deploy with
+
+    cdk deploy amplify
+
+Check [amplify.yml](amplify.yml).
+
+Verify the custom domain after the initial deployment in the AWS Console under Amplify.
+
+## YAML (Legacy)
+
+### Infrastructure
 
 The templates define the following components:
 
@@ -27,7 +41,7 @@ requests to the Beanstalk app via CloudFront.
 This [small web app](https://github.com/malliina/play-docka) is used as the default application to build and deploy 
 unless otherwise specified.
 
-## Creation
+### Creation
 
 Create an ECR repository and CodeBuild project for build images using [ecr](build-images/ecr.cfn.yml). Push an image
 to the repo by running the created CodeBuild project, then proceed with creating more CloudFormation stacks below.
@@ -35,7 +49,7 @@ to the repo by running the created CodeBuild project, then proceed with creating
 Create multiple resources from one nested stack, or create the resources separately. Add `.cfn.yml` to the below names 
 to find the relevant files.
 
-### Nested
+#### Nested
 
 Create
 
@@ -47,7 +61,7 @@ or without any Aurora database
 
 The nested templates must be available in an S3 bucket, for example `cfn-demo-templates`.
 
-### Standalone
+#### Standalone
 
 Create
 
