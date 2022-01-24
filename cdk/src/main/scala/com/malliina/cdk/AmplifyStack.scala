@@ -1,10 +1,11 @@
 package com.malliina.cdk
 
-import software.amazon.awscdk.core.{Construct, Stack}
-import software.amazon.awscdk.services.amplify
+import software.amazon.awscdk.Stack
 import software.amazon.awscdk.services.amplify.CfnDomain.SubDomainSettingProperty
-import software.amazon.awscdk.services.amplify.{AutoBranchCreation, BasicAuth, CfnBranch, CfnDomain, CodeCommitSourceCodeProvider}
+import software.amazon.awscdk.services.amplify.alpha.{App, AutoBranchCreation, BasicAuth, CodeCommitSourceCodeProvider}
+import software.amazon.awscdk.services.amplify.{CfnBranch, CfnDomain}
 import software.amazon.awscdk.services.codecommit.Repository
+import software.constructs.Construct
 
 object AmplifyStack {
   def apply(conf: AmplifyConf, scope: Construct, stackName: String): AmplifyStack =
@@ -20,7 +21,7 @@ class AmplifyStack(scope: Construct, stackName: String)
 
   val codeCommit = Repository.Builder.create(stack, "Repo").repositoryName(stackName).build()
 
-  val app = amplify.App.Builder
+  val app = App.Builder
     .create(stack, "AmplifyApp")
     .appName(stackName)
     .description(s"Amplify app of $stackName")

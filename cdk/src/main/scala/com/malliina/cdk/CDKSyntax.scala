@@ -1,13 +1,12 @@
 package com.malliina.cdk
 
-import java.util
-
-import software.amazon.awscdk.core.{CfnOutput, CfnTag, Stack}
 import software.amazon.awscdk.services.codebuild.{BuildEnvironmentVariable, BuildEnvironmentVariableType}
 import software.amazon.awscdk.services.codepipeline.{IAction, StageProps}
 import software.amazon.awscdk.services.elasticbeanstalk.CfnConfigurationTemplate.ConfigurationOptionSettingProperty
 import software.amazon.awscdk.services.iam.ServicePrincipal
+import software.amazon.awscdk.{CfnOutput, CfnTag, Stack}
 
+import java.util
 import scala.jdk.CollectionConverters.{MapHasAsJava, SeqHasAsJava}
 
 trait CDKSyntax {
@@ -23,13 +22,12 @@ trait CDKSyntax {
       .build()
   def tagList(kvs: (String, String)*): util.List[CfnTag] =
     kvs.map { case (k, v) => CfnTag.builder().key(k).value(v).build() }.asJava
-  def outputs(scope: Stack)(kvs: (String, String)*) = kvs.map {
-    case (k, v) =>
-      CfnOutput.Builder
-        .create(scope, k)
-        .exportName(k)
-        .value(v)
-        .build()
+  def outputs(scope: Stack)(kvs: (String, String)*) = kvs.map { case (k, v) =>
+    CfnOutput.Builder
+      .create(scope, k)
+      .exportName(k)
+      .value(v)
+      .build()
   }
 
   def buildEnv(value: String) =

@@ -1,7 +1,6 @@
 package com.malliina.cdk
 
 import com.malliina.cdk.S3WebsiteStack.WebsiteConf
-import software.amazon.awscdk.core.{Construct, RemovalPolicy, Stack}
 import software.amazon.awscdk.services.cloudfront.CfnDistribution
 import software.amazon.awscdk.services.cloudfront.CfnDistribution._
 import software.amazon.awscdk.services.iam.{AnyPrincipal, PolicyStatement}
@@ -10,6 +9,8 @@ import software.amazon.awscdk.services.route53.CfnRecordSet.AliasTargetProperty
 import software.amazon.awscdk.services.route53.targets.CloudFrontTarget
 import software.amazon.awscdk.services.s3.Bucket
 import software.amazon.awscdk.services.ssm.StringParameter
+import software.amazon.awscdk.{RemovalPolicy, Stack}
+import software.constructs.Construct
 
 object S3WebsiteStack {
   case class WebsiteConf(domain: String, hostedZoneParamName: String, certificateParamName: String)

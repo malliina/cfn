@@ -4,7 +4,7 @@ import com.malliina.cdk.AmplifyStack.AmplifyConf
 import com.malliina.cdk.S3Redirect.RedirectConf
 import com.malliina.cdk.S3WebsiteStack.WebsiteConf
 import com.malliina.cdk.opensearch.Opensearch
-import software.amazon.awscdk.core.{Environment, StackProps, App => AWSApp}
+import software.amazon.awscdk.{Environment, StackProps, App => AWSApp}
 
 object CDK {
   val stackProps =

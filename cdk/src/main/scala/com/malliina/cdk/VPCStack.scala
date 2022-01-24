@@ -1,10 +1,12 @@
 package com.malliina.cdk
 
 import com.malliina.cdk.VPCStack.CIDRs
-import software.amazon.awscdk.core.{Construct, Stack}
+import software.amazon.awscdk.Stack
 import software.amazon.awscdk.services.ec2._
+import software.constructs.Construct
 
 import scala.jdk.CollectionConverters.ListHasAsScala
+
 object VPCStack {
   def apply(scope: Construct, stackName: String, cidrs: CIDRs = CIDRs.default2) =
     new VPCStack(scope, stackName, cidrs)
