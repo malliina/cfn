@@ -9,20 +9,19 @@ import software.amazon.awscdk.{CfnOutput, CfnTag, Stack}
 import java.util
 import scala.jdk.CollectionConverters.{MapHasAsJava, SeqHasAsJava}
 
-trait CDKSyntax {
+trait CDKSyntax:
   def principal(service: String) = ServicePrincipal.Builder.create(service).build()
-  object principals {
+  object principals:
     val amplify = principal("amplify.amazonaws.com")
-  }
   protected def allowStatement(action: String, resource: String, moreResources: String*) =
     PolicyStatement.Builder
       .create()
       .actions(list(action))
       .effect(Effect.ALLOW)
-      .resources(list(resource +: moreResources: _*))
+      .resources(list(resource +: moreResources*))
       .build()
   def list[T](xs: T*) = xs.asJava
-  def map[T](kvs: (String, T)*) = Map(kvs: _*).asJava
+  def map[T](kvs: (String, T)*) = Map(kvs*).asJava
   def optionSetting(namespace: String, optionName: String, value: String) =
     ConfigurationOptionSettingProperty
       .builder()
@@ -51,6 +50,5 @@ trait CDKSyntax {
     StageProps
       .builder()
       .stageName(name)
-      .actions(list(actions: _*))
+      .actions(list(actions*))
       .build()
-}

@@ -2,19 +2,17 @@ package com.malliina.cdk.opensearch
 
 import com.malliina.cdk.{CDK, CDKSyntax}
 import software.amazon.awscdk.Stack
-import software.amazon.awscdk.services.cognito._
+import software.amazon.awscdk.services.cognito.*
 import software.amazon.awscdk.services.iam.{AnyPrincipal, FederatedPrincipal, ManagedPolicy, Role}
-import software.amazon.awscdk.services.opensearchservice._
+import software.amazon.awscdk.services.opensearchservice.*
 import software.constructs.Construct
 
-object Opensearch {
-  def stack(scope: Construct, stackName: String): Opensearch = {
+object Opensearch:
+  def stack(scope: Construct, stackName: String): Opensearch =
     val stack = new Stack(scope, stackName, CDK.stackProps)
     new Opensearch(stack)
-  }
-}
 
-class Opensearch(stack: Stack) extends CDKSyntax {
+class Opensearch(stack: Stack) extends CDKSyntax:
 
 //  val user = User.Builder.create(stack, "User").userName("opensearch").build()
 //  user.addToPolicy()
@@ -103,4 +101,3 @@ class Opensearch(stack: Stack) extends CDKSyntax {
     "OpensearchDomainArn" -> domain.getDomainArn,
     "OpensearchIdentityPoolId" -> identityPool.getRef
   )
-}

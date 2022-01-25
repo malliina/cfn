@@ -1,6 +1,6 @@
 inThisBuild(
   Seq(
-    scalaVersion := "2.13.8",
+    scalaVersion := "3.1.1",
     organization := "com.malliina",
     version := "0.0.1",
     libraryDependencies ++= Seq(

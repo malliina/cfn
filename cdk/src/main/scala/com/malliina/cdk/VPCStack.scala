@@ -2,12 +2,12 @@ package com.malliina.cdk
 
 import com.malliina.cdk.VPCStack.CIDRs
 import software.amazon.awscdk.Stack
-import software.amazon.awscdk.services.ec2._
+import software.amazon.awscdk.services.ec2.*
 import software.constructs.Construct
 
 import scala.jdk.CollectionConverters.ListHasAsScala
 
-object VPCStack {
+object VPCStack:
   def apply(scope: Construct, stackName: String, cidrs: CIDRs = CIDRs.default2) =
     new VPCStack(scope, stackName, cidrs)
 
@@ -18,7 +18,7 @@ object VPCStack {
     private1: String,
     private2: String
   )
-  object CIDRs {
+  object CIDRs:
     val default =
       CIDRs("10.50.0.0/16", "10.50.0.0/24", "10.50.1.0/24", "10.50.64.0/19", "10.50.96.0/19")
     val default2 =
@@ -29,12 +29,10 @@ object VPCStack {
         "172.16.64.0/19",
         "172.16.96.0/19"
       )
-  }
-}
 
 class VPCStack(scope: Construct, stackName: String, cidrs: CIDRs)
   extends Stack(scope, stackName, CDK.stackProps)
-  with CDKSyntax {
+  with CDKSyntax:
   val stack = this
 
   /** This creates a VPC along with private, public subnets, etc networking resources.
@@ -57,9 +55,7 @@ class VPCStack(scope: Construct, stackName: String, cidrs: CIDRs)
     "PublicSubnetCIDRs" -> vpc.getPublicSubnets.asScala.map(_.getIpv4CidrBlock).mkString(", ")
   )
 
-}
-
-trait VPCSyntax {
+trait VPCSyntax:
   def stack: Stack
   def vpc: Vpc
 
@@ -83,4 +79,3 @@ trait VPCSyntax {
       .cidrBlock(cidr)
       .availabilityZone(az)
       .build()
-}

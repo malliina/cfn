@@ -1,24 +1,21 @@
 package com.malliina.cdk
 
+import com.malliina.cdk.AmplifyStack.AmplifyConf
 import software.amazon.awscdk.Stack
 import software.amazon.awscdk.services.amplify.CfnDomain.SubDomainSettingProperty
-import software.amazon.awscdk.services.amplify.alpha._
+import software.amazon.awscdk.services.amplify.alpha.*
 import software.amazon.awscdk.services.amplify.{CfnBranch, CfnDomain}
 import software.amazon.awscdk.services.codecommit.Repository
 import software.amazon.awscdk.services.iam.{PolicyDocument, Role}
 import software.amazon.awscdk.services.route53.{HostedZone, HostedZoneProviderProps}
 import software.constructs.Construct
 
-object AmplifyStack {
-  def apply(conf: AmplifyConf, scope: Construct, stackName: String): AmplifyStack =
-    new AmplifyStack(scope, stackName)
+object AmplifyStack:
+  case class AmplifyConf(domainName: String)
 
-  case class AmplifyConf(int: Int)
-}
-
-class AmplifyStack(scope: Construct, stackName: String)
+class AmplifyStack(conf: AmplifyConf, scope: Construct, stackName: String)
   extends Stack(scope, stackName, CDK.stackProps)
-  with CDKSyntax {
+  with CDKSyntax:
   val stack = this
 
   val codeCommit = Repository.Builder.create(stack, "Repo").repositoryName(stackName).build()
@@ -45,7 +42,7 @@ class AmplifyStack(scope: Construct, stackName: String)
   val dns = HostedZone.fromLookup(
     stack,
     "Zone",
-    HostedZoneProviderProps.builder().domainName("malliina.site").build()
+    HostedZoneProviderProps.builder().domainName(conf.domainName).build()
   )
   val domainName = dns.getZoneName
   // without this, auto subdomain doesn't work
@@ -110,4 +107,3 @@ class AmplifyStack(scope: Construct, stackName: String)
     "WebRoot" -> webRoot,
     "DomainName" -> domainName
   )
-}

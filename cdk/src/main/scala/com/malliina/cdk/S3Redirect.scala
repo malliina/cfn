@@ -3,7 +3,7 @@ package com.malliina.cdk
 import com.malliina.cdk.S3Redirect.RedirectConf
 import software.amazon.awscdk.Stack
 import software.amazon.awscdk.services.cloudfront.CfnDistribution
-import software.amazon.awscdk.services.cloudfront.CfnDistribution._
+import software.amazon.awscdk.services.cloudfront.CfnDistribution.*
 import software.amazon.awscdk.services.route53.CfnRecordSet
 import software.amazon.awscdk.services.route53.CfnRecordSet.AliasTargetProperty
 import software.amazon.awscdk.services.route53.targets.CloudFrontTarget
@@ -11,7 +11,7 @@ import software.amazon.awscdk.services.s3.{Bucket, RedirectProtocol, RedirectTar
 import software.amazon.awscdk.services.ssm.StringParameter
 import software.constructs.Construct
 
-object S3Redirect {
+object S3Redirect:
   case class RedirectConf(
     fromDomain: String,
     toDomain: String,
@@ -20,11 +20,10 @@ object S3Redirect {
   )
   def apply(conf: RedirectConf, scope: Construct, id: String): S3Redirect =
     new S3Redirect(conf, scope, id)
-}
 
 class S3Redirect(conf: RedirectConf, scope: Construct, id: String)
   extends Stack(scope, id, CDK.stackProps)
-  with CDKSyntax {
+  with CDKSyntax:
   val stack = this
 
   val bucket = Bucket.Builder
@@ -97,4 +96,3 @@ class S3Redirect(conf: RedirectConf, scope: Construct, id: String)
         .build()
     )
     .build()
-}

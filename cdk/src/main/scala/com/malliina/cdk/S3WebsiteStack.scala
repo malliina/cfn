@@ -2,7 +2,7 @@ package com.malliina.cdk
 
 import com.malliina.cdk.S3WebsiteStack.WebsiteConf
 import software.amazon.awscdk.services.cloudfront.CfnDistribution
-import software.amazon.awscdk.services.cloudfront.CfnDistribution._
+import software.amazon.awscdk.services.cloudfront.CfnDistribution.*
 import software.amazon.awscdk.services.iam.{AnyPrincipal, PolicyStatement}
 import software.amazon.awscdk.services.route53.CfnRecordSet
 import software.amazon.awscdk.services.route53.CfnRecordSet.AliasTargetProperty
@@ -12,16 +12,15 @@ import software.amazon.awscdk.services.ssm.StringParameter
 import software.amazon.awscdk.{RemovalPolicy, Stack}
 import software.constructs.Construct
 
-object S3WebsiteStack {
+object S3WebsiteStack:
   case class WebsiteConf(domain: String, hostedZoneParamName: String, certificateParamName: String)
 
   def apply(conf: WebsiteConf, scope: Construct, name: String): S3WebsiteStack =
     new S3WebsiteStack(conf, scope, name)
-}
 
 class S3WebsiteStack(conf: WebsiteConf, scope: Construct, stackName: String)
   extends Stack(scope, stackName, CDK.stackProps)
-  with CDKSyntax {
+  with CDKSyntax:
   val stack = this
   val indexDocument = "index.html"
 
@@ -141,4 +140,3 @@ class S3WebsiteStack(conf: WebsiteConf, scope: Construct, stackName: String)
     "CloudFrontDomainName" -> cloudFront.getAttrDomainName,
     "DomainName" -> dns.getRef
   )
-}

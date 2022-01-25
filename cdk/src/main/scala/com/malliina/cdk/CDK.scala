@@ -4,16 +4,16 @@ import com.malliina.cdk.AmplifyStack.AmplifyConf
 import com.malliina.cdk.S3Redirect.RedirectConf
 import com.malliina.cdk.S3WebsiteStack.WebsiteConf
 import com.malliina.cdk.opensearch.Opensearch
-import software.amazon.awscdk.{Environment, StackProps, App => AWSApp}
+import software.amazon.awscdk.{Environment, StackProps, App as AWSApp}
 
-object CDK {
-  val stackProps =
+object CDK:
+  val stackProps: StackProps =
     StackProps
       .builder()
       .env(Environment.builder().account("297686094835").region("eu-west-1").build())
       .build()
 
-  def main(args: Array[String]): Unit = {
+  def main(args: Array[String]): Unit =
     val app = new AWSApp()
 
     val vpc = VPCStack(app, "cdkvpc")
@@ -31,10 +31,8 @@ object CDK {
       app,
       "cdk-redirect"
     )
-    val amplifyApp = AmplifyStack(AmplifyConf(42), app, "amplify")
+    val amplifyApp = AmplifyStack(AmplifyConf("malliina.site"), app, "amplify")
 
     val search = Opensearch.stack(app, "opensearch")
 
     val assembly = app.synth()
-  }
-}
