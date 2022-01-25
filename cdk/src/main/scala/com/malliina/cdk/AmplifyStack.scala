@@ -1,8 +1,12 @@
 package com.malliina.cdk
 
 import software.amazon.awscdk.Stack
-import software.amazon.awscdk.services.amplify.alpha.{App, AutoBranchCreation, CodeCommitSourceCodeProvider, CustomRule, DomainOptions, RedirectStatus}
+import software.amazon.awscdk.services.amplify.CfnDomain.SubDomainSettingProperty
+import software.amazon.awscdk.services.amplify.alpha._
+import software.amazon.awscdk.services.amplify.{CfnBranch, CfnDomain}
 import software.amazon.awscdk.services.codecommit.Repository
+import software.amazon.awscdk.services.iam.{PolicyDocument, Role}
+import software.amazon.awscdk.services.route53.{HostedZone, HostedZoneProviderProps}
 import software.constructs.Construct
 
 object AmplifyStack {
@@ -38,23 +42,58 @@ class AmplifyStack(scope: Construct, stackName: String)
     .autoBranchDeletion(true)
     .environmentVariables(map("A" -> "B"))
     .build()
-  val domainName = "malliina.site"
-  val appDomain = app.addDomain(
-    "Domain",
-    DomainOptions
-      .builder()
-      .domainName(domainName)
-      .enableAutoSubdomain(true)
-      .autoSubdomainCreationPatterns(list("*", "pr*"))
-      .build()
+  val dns = HostedZone.fromLookup(
+    stack,
+    "Zone",
+    HostedZoneProviderProps.builder().domainName("malliina.site").build()
   )
-  val master = app.addBranch("master")
-  appDomain.mapRoot(master)
-  appDomain.mapSubDomain(master, "www")
-  val dev = app.addBranch("dev")
-  dev.addEnvironment("STAGE", "dev")
-  appDomain.mapSubDomain(dev)
-
+  val domainName = dns.getZoneName
+  // without this, auto subdomain doesn't work
+  val domainRole = Role.Builder
+    .create(stack, "DomainRole")
+    .description(
+      "The service role that will be used by AWS Amplify for the auto sub-domain feature."
+    )
+    .path("/service-role/")
+    .assumedBy(principals.amplify)
+    .inlinePolicies(
+      map(
+        "DomainPolicy" -> PolicyDocument.Builder
+          .create()
+          .statements(
+            list(
+              allowStatement("route53:ChangeResourceRecordSets", dns.getHostedZoneArn),
+              allowStatement("route53:ListHostedZones", "*")
+            )
+          )
+          .build()
+      )
+    )
+    .build()
+  val master = CfnBranch.Builder
+    .create(stack, "MasterBranch")
+    .appId(app.getAppId)
+    .branchName("master")
+    .stage("PRODUCTION")
+    .build()
+  val domain = CfnDomain.Builder
+    .create(stack, "Domain")
+    .appId(app.getAppId)
+    .domainName(domainName)
+    .autoSubDomainIamRole(domainRole.getRoleArn)
+    .subDomainSettings(
+      list(
+        SubDomainSettingProperty
+          .builder()
+          .branchName(master.getBranchName)
+          .prefix("www")
+          .build()
+      )
+    )
+    .enableAutoSubDomain(true)
+    .autoSubDomainCreationPatterns(list("feature/*"))
+    .build()
+  domain.addDependsOn(master)
   val webRoot = s"https://www.$domainName"
   app.addCustomRule(
     CustomRule.Builder
@@ -68,6 +107,7 @@ class AmplifyStack(scope: Construct, stackName: String)
   outputs(stack)(
     "CodeCommitHttpsUrl" -> codeCommit.getRepositoryCloneUrlHttp,
     "AmplifyDefaultDomain" -> app.getDefaultDomain,
-    "WebRoot" -> webRoot
+    "WebRoot" -> webRoot,
+    "DomainName" -> domainName
   )
 }

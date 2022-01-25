@@ -3,7 +3,7 @@ package com.malliina.cdk
 import software.amazon.awscdk.services.codebuild.{BuildEnvironmentVariable, BuildEnvironmentVariableType}
 import software.amazon.awscdk.services.codepipeline.{IAction, StageProps}
 import software.amazon.awscdk.services.elasticbeanstalk.CfnConfigurationTemplate.ConfigurationOptionSettingProperty
-import software.amazon.awscdk.services.iam.ServicePrincipal
+import software.amazon.awscdk.services.iam.{Effect, PolicyStatement, ServicePrincipal}
 import software.amazon.awscdk.{CfnOutput, CfnTag, Stack}
 
 import java.util
@@ -11,6 +11,16 @@ import scala.jdk.CollectionConverters.{MapHasAsJava, SeqHasAsJava}
 
 trait CDKSyntax {
   def principal(service: String) = ServicePrincipal.Builder.create(service).build()
+  object principals {
+    val amplify = principal("amplify.amazonaws.com")
+  }
+  protected def allowStatement(action: String, resource: String, moreResources: String*) =
+    PolicyStatement.Builder
+      .create()
+      .actions(list(action))
+      .effect(Effect.ALLOW)
+      .resources(list(resource +: moreResources: _*))
+      .build()
   def list[T](xs: T*) = xs.asJava
   def map[T](kvs: (String, T)*) = Map(kvs: _*).asJava
   def optionSetting(namespace: String, optionName: String, value: String) =
