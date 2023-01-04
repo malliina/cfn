@@ -8,6 +8,20 @@ them to my needs.
 
 ## CDK v2
 
+### Bastion
+
+To connect to RDS, craft a tunnel via the bastion host:
+
+    aws ec2-instance-connect send-ssh-public-key \
+        --instance-id <bastion-instance-id> \
+        --instance-os-user ec2-user \
+        --ssh-public-key file:///path/to/.ssh/id_rsa.pub
+    ssh -f -N -L 3307:<rds-hostname>.eu-west-1.rds.amazonaws.com:3306 ec2-user@<bastion-dns-name> -v
+
+Then connect to:
+
+    jdbc:mysql://localhost:3307
+
 ### Amplify
 
 Deploy with

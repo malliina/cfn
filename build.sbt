@@ -14,7 +14,7 @@ val opensearch = project
   .in(file("opensearch"))
   .settings(
     libraryDependencies ++= Seq(
-      "com.amazonaws" % "aws-lambda-java-core" % "1.2.1",
+      "com.amazonaws" % "aws-lambda-java-core" % "1.2.2",
       "com.amazonaws" % "aws-lambda-java-events" % "3.11.0"
     ),
     assembly / assemblyMergeStrategy := {
@@ -33,30 +33,19 @@ val opensearch = project
 val website = project
   .in(file("website"))
   .settings(
-    libraryDependencies ++= Seq(
-      "com.lihaoyi" %% "scalatags" % "0.11.1"
-    )
+    libraryDependencies ++=
+      Seq("classic", "core").map { m => "ch.qos.logback" % s"logback-$m" % "1.4.5" } ++
+        Seq("com.lihaoyi" %% "scalatags" % "0.12.0")
   )
 
-val cdkModules = Seq(
-  "amplify",
-  "codebuild",
-  "codecommit",
-  "codepipeline-actions",
-  "cognito",
-  "elasticbeanstalk",
-  "elasticsearch",
-  "opensearchservice",
-  "lambda",
-  "s3"
-)
+val cdkVersion = "2.58.1"
 
 val cdk = project
   .in(file("cdk"))
   .settings(
     libraryDependencies ++= Seq(
-      "software.amazon.awscdk" % "aws-cdk-lib" % "2.8.0",
-      "software.amazon.awscdk" % "amplify-alpha" % "2.8.0-alpha.0"
+      "software.amazon.awscdk" % "aws-cdk-lib" % cdkVersion,
+      "software.amazon.awscdk" % "amplify-alpha" % s"$cdkVersion-alpha.0"
     )
   )
 

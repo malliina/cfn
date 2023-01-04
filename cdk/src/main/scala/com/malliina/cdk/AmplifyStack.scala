@@ -18,14 +18,18 @@ class AmplifyStack(conf: AmplifyConf, scope: Construct, stackName: String)
   with CDKSyntax:
   val stack = this
 
-  val codeCommit = Repository.Builder.create(stack, "Repo").repositoryName(stackName).build()
+  val codeCommit =
+    Repository.Builder.create(stack, "Repo").repositoryName(stackName).build()
 
   val app = App.Builder
     .create(stack, "AmplifyApp")
     .appName(stackName)
     .description(s"Amplify app of $stackName")
     .sourceCodeProvider(
-      CodeCommitSourceCodeProvider.Builder.create().repository(codeCommit).build()
+      CodeCommitSourceCodeProvider.Builder
+        .create()
+        .repository(codeCommit)
+        .build()
     )
     .autoBranchCreation(
       AutoBranchCreation
@@ -59,7 +63,10 @@ class AmplifyStack(conf: AmplifyConf, scope: Construct, stackName: String)
           .create()
           .statements(
             list(
-              allowStatement("route53:ChangeResourceRecordSets", dns.getHostedZoneArn),
+              allowStatement(
+                "route53:ChangeResourceRecordSets",
+                dns.getHostedZoneArn
+              ),
               allowStatement("route53:ListHostedZones", "*")
             )
           )

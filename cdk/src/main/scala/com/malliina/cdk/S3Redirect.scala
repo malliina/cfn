@@ -18,8 +18,6 @@ object S3Redirect:
     hostedZoneParamName: String,
     certificateParamName: String
   )
-  def apply(conf: RedirectConf, scope: Construct, id: String): S3Redirect =
-    new S3Redirect(conf, scope, id)
 
 class S3Redirect(conf: RedirectConf, scope: Construct, id: String)
   extends Stack(scope, id, CDK.stackProps)
@@ -29,7 +27,11 @@ class S3Redirect(conf: RedirectConf, scope: Construct, id: String)
   val bucket = Bucket.Builder
     .create(stack, "redirect")
     .websiteRedirect(
-      RedirectTarget.builder().hostName(conf.toDomain).protocol(RedirectProtocol.HTTPS).build()
+      RedirectTarget
+        .builder()
+        .hostName(conf.toDomain)
+        .protocol(RedirectProtocol.HTTPS)
+        .build()
     )
     .build()
   val viewerProtocolPolicy = "redirect-to-https"
@@ -75,14 +77,17 @@ class S3Redirect(conf: RedirectConf, scope: Construct, id: String)
         .viewerCertificate(
           ViewerCertificateProperty
             .builder()
-            .acmCertificateArn(StringParameter.valueFromLookup(stack, conf.certificateParamName))
+            .acmCertificateArn(
+              StringParameter.valueFromLookup(stack, conf.certificateParamName)
+            )
             .sslSupportMethod("sni-only")
             .build()
         )
         .build()
     )
     .build()
-  val hostedZoneId = StringParameter.valueFromLookup(stack, conf.hostedZoneParamName)
+  val hostedZoneId =
+    StringParameter.valueFromLookup(stack, conf.hostedZoneParamName)
   val dns = CfnRecordSet.Builder
     .create(stack, "dns")
     .`type`("A")

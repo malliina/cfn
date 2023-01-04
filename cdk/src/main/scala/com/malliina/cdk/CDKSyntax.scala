@@ -10,10 +10,15 @@ import java.util
 import scala.jdk.CollectionConverters.{MapHasAsJava, SeqHasAsJava}
 
 trait CDKSyntax:
-  def principal(service: String) = ServicePrincipal.Builder.create(service).build()
+  def principal(service: String) =
+    ServicePrincipal.Builder.create(service).build()
   object principals:
     val amplify = principal("amplify.amazonaws.com")
-  protected def allowStatement(action: String, resource: String, moreResources: String*) =
+  protected def allowStatement(
+    action: String,
+    resource: String,
+    moreResources: String*
+  ): PolicyStatement =
     PolicyStatement.Builder
       .create()
       .actions(list(action))
@@ -21,7 +26,7 @@ trait CDKSyntax:
       .resources(list(resource +: moreResources*))
       .build()
   def list[T](xs: T*) = xs.asJava
-  def map[T](kvs: (String, T)*) = Map(kvs*).asJava
+  def map[T](kvs: (String, T)*): util.Map[String, T] = Map(kvs*).asJava
   def optionSetting(namespace: String, optionName: String, value: String) =
     ConfigurationOptionSettingProperty
       .builder()
@@ -31,13 +36,16 @@ trait CDKSyntax:
       .build()
   def tagList(kvs: (String, String)*): util.List[CfnTag] =
     kvs.map { case (k, v) => CfnTag.builder().key(k).value(v).build() }.asJava
-  def outputs(scope: Stack)(kvs: (String, String)*) = kvs.map { case (k, v) =>
-    CfnOutput.Builder
-      .create(scope, k)
-      .exportName(k)
-      .value(v)
-      .build()
-  }
+  def outputs(scope: Stack, exportStackName: Boolean = true)(
+    kvs: (String, String)*
+  ) =
+    kvs.map { case (k, v) =>
+      CfnOutput.Builder
+        .create(scope, k)
+        .exportName(if exportStackName then s"${scope.getStackName}-$k" else k)
+        .value(v)
+        .build()
+    }
 
   def buildEnv(value: String) =
     BuildEnvironmentVariable

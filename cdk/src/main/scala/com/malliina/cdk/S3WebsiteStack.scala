@@ -13,10 +13,11 @@ import software.amazon.awscdk.{RemovalPolicy, Stack}
 import software.constructs.Construct
 
 object S3WebsiteStack:
-  case class WebsiteConf(domain: String, hostedZoneParamName: String, certificateParamName: String)
-
-  def apply(conf: WebsiteConf, scope: Construct, name: String): S3WebsiteStack =
-    new S3WebsiteStack(conf, scope, name)
+  case class WebsiteConf(
+    domain: String,
+    hostedZoneParamName: String,
+    certificateParamName: String
+  )
 
 class S3WebsiteStack(conf: WebsiteConf, scope: Construct, stackName: String)
   extends Stack(scope, stackName, CDK.stackProps)
@@ -39,7 +40,9 @@ class S3WebsiteStack(conf: WebsiteConf, scope: Construct, stackName: String)
       .principals(list(new AnyPrincipal()))
       .actions(list("s3:GetObject"))
       .resources(list(s"${bucket.getBucketArn}/*"))
-      .conditions(map("StringEquals" -> map(s"aws:$headerName" -> list(secretHeader))))
+      .conditions(
+        map("StringEquals" -> map(s"aws:$headerName" -> list(secretHeader)))
+      )
       .build()
   )
   val viewerProtocolPolicy = "redirect-to-https"
@@ -57,7 +60,9 @@ class S3WebsiteStack(conf: WebsiteConf, scope: Construct, stackName: String)
           list(
             CacheBehaviorProperty
               .builder()
-              .allowedMethods(list("HEAD", "GET", "POST", "PUT", "PATCH", "OPTIONS", "DELETE"))
+              .allowedMethods(
+                list("HEAD", "GET", "POST", "PUT", "PATCH", "OPTIONS", "DELETE")
+              )
               .pathPattern("assets/*")
               .targetOriginId(bucketOrigin)
               .forwardedValues(
@@ -114,7 +119,9 @@ class S3WebsiteStack(conf: WebsiteConf, scope: Construct, stackName: String)
         .viewerCertificate(
           ViewerCertificateProperty
             .builder()
-            .acmCertificateArn(StringParameter.valueFromLookup(stack, conf.certificateParamName))
+            .acmCertificateArn(
+              StringParameter.valueFromLookup(stack, conf.certificateParamName)
+            )
             .sslSupportMethod("sni-only")
             .build()
         )
@@ -124,7 +131,9 @@ class S3WebsiteStack(conf: WebsiteConf, scope: Construct, stackName: String)
   val dns = CfnRecordSet.Builder
     .create(stack, "dns")
     .name(conf.domain)
-    .hostedZoneId(StringParameter.valueFromLookup(stack, conf.hostedZoneParamName))
+    .hostedZoneId(
+      StringParameter.valueFromLookup(stack, conf.hostedZoneParamName)
+    )
     .`type`("A")
     .aliasTarget(
       AliasTargetProperty
