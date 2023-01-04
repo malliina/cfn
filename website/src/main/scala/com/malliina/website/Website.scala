@@ -2,7 +2,6 @@ package com.malliina.website
 
 import org.slf4j.{Logger, LoggerFactory}
 import scalatags.Text.all.*
-
 import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Path, Paths}
 
@@ -25,7 +24,9 @@ object Website:
     log.info(s"Wrote ${Files.size(written)} bytes to ${file.toAbsolutePath}.")
     written
 
-  def index = html(body(p("Hello, world! From demo")))
+  def index = html(
+    body(p(s"Hello, world! This is build ${BuildInfo.gitHash}."))
+  )
 
 object AppLogger:
   def apply(cls: Class[?]): Logger =

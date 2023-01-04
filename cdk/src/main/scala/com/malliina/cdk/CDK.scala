@@ -42,7 +42,8 @@ object CDK:
       app,
       "cdk-redirect"
     )
-    val amplifyApp = AmplifyStack(AmplifyConf("malliina.site"), app, "amplify")
+    val amplifyApp =
+      AmplifyStack(AmplifyConf(domainName = None), app, "amplify")
     val search = Opensearch.stack(app, "opensearch")
     val database = AuroraServerless.stack(
       Env.Qa,

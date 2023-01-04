@@ -1,3 +1,6 @@
+import scala.sys.process.Process
+import scala.util.Try
+
 inThisBuild(
   Seq(
     scalaVersion := "3.1.1",
@@ -32,10 +35,18 @@ val opensearch = project
 
 val website = project
   .in(file("website"))
+  .enablePlugins(BuildInfoPlugin)
   .settings(
     libraryDependencies ++=
       Seq("classic", "core").map { m => "ch.qos.logback" % s"logback-$m" % "1.4.5" } ++
-        Seq("com.lihaoyi" %% "scalatags" % "0.12.0")
+        Seq("com.lihaoyi" %% "scalatags" % "0.12.0"),
+    buildInfoPackage := "com.malliina.website",
+    buildInfoKeys := Seq[BuildInfoKey](
+      name,
+      version,
+      scalaVersion,
+      "gitHash" -> gitHash
+    )
   )
 
 val cdkVersion = "2.58.1"
@@ -52,3 +63,9 @@ val cdk = project
 val root = project.in(file(".")).aggregate(opensearch, website, cdk)
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
+
+def gitHash: String =
+  sys.env
+    .get("GITHUB_SHA")
+    .orElse(Try(Process("git rev-parse HEAD").lineStream.head).toOption)
+    .getOrElse("unknown")
