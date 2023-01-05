@@ -40,9 +40,11 @@ trait CDKSyntax:
     kvs: (String, String)*
   ) =
     kvs.map { case (k, v) =>
+      val exportName =
+        if exportStackName then s"${scope.getStackName}-$k" else k
       CfnOutput.Builder
-        .create(scope, k)
-        .exportName(if exportStackName then s"${scope.getStackName}-$k" else k)
+        .create(scope, exportName)
+        .exportName(exportName)
         .value(v)
         .build()
     }

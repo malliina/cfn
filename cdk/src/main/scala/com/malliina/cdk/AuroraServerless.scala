@@ -17,7 +17,7 @@ object AuroraServerless:
     env: Env,
     appName: String,
     vpc: IVpc,
-    bastionSecurityGroup: String,
+    ingressSecurityGroupIds: Seq[String],
     scope: Construct
   ): AuroraServerless =
     val stack = new Stack(
@@ -25,13 +25,13 @@ object AuroraServerless:
       s"$env-$appName-database",
       CDK.stackProps
     )
-    AuroraServerless(env, appName, vpc, bastionSecurityGroup, stack)
+    AuroraServerless(env, appName, vpc, ingressSecurityGroupIds, stack)
 
 class AuroraServerless(
   env: Env,
   appName: String,
   vpc: IVpc,
-  bastionSecurityGroup: String,
+  ingressSecurityGroupIds: Seq[String],
   stack: Stack
 ) extends CDKSyntax:
   val envName = s"$env-$appName"
@@ -65,10 +65,18 @@ class AuroraServerless(
     Port.tcp(3306),
     "Allow outbound on 3306"
   )
-  securityGroup.addIngressRule(
-    Peer.securityGroupId(bastionSecurityGroup),
-    Port.tcp(3306)
-  )
+  val appSecurityGroup = SecurityGroup.Builder
+    .create(stack, "AppSecurityGroup")
+    .description("Security group for app using this database.")
+    .vpc(vpc)
+    .build()
+  (appSecurityGroup.getSecurityGroupId +: ingressSecurityGroupIds).foreach {
+    secGroupId =>
+      securityGroup.addIngressRule(
+        Peer.securityGroupId(secGroupId),
+        Port.tcp(3306)
+      )
+  }
   val cluster = CfnDBCluster.Builder
     .create(stack, "Database")
     .databaseName(appName)
@@ -130,7 +138,8 @@ class AuroraServerless(
     .comparisonOperator(ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD)
     .build()
   cpuAlarm.getNode.addDependency(cluster)
-  val outs = outputs(stack)(
+  outputs(stack)(
+    "AppSecurityGroupId" -> appSecurityGroup.getSecurityGroupId,
 //    "DatabaseIdentifier" -> cluster.getDbClusterIdentifier,
     "DatabaseUrl" -> cluster.getAttrEndpointAddress,
     "Topic" -> alarmTopic.getTopicArn

@@ -67,9 +67,9 @@ class VPCStack(scope: Construct, stackName: String, cidrs: CIDRs)
     )
     .build()
   bastion.allowSshAccessFrom(Peer.anyIpv4())
-  val bastionSecurityGroup =
-    bastion.getInstance().getConnections.getSecurityGroups.asScala.head
-  val outs = outputs(stack)(
+  val bastionSecurityGroups =
+    bastion.getInstance().getConnections.getSecurityGroups.asScala.toList
+  outputs(stack)(
     "BastionPublicDnsName" -> bastion.getInstancePublicDnsName,
     "BastionPublicIp" -> bastion.getInstancePublicIp,
     "VPCId" -> vpc.getVpcId,

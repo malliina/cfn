@@ -49,7 +49,7 @@ object CDK:
       Env.Qa,
       "ref",
       vpc.vpc,
-      vpc.bastionSecurityGroup.getSecurityGroupId,
+      vpc.bastionSecurityGroups.map(_.getSecurityGroupId),
       app
     )
 
