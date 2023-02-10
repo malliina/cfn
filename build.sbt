@@ -49,7 +49,7 @@ val website = project
     )
   )
 
-val cdkVersion = "2.58.1"
+val cdkVersion = "2.64.0"
 
 val cdk = project
   .in(file("cdk"))

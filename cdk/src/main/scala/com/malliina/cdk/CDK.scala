@@ -31,7 +31,7 @@ object CDK:
         "/global/route53/zone",
         "/global/certificates/arn"
       )
-    val website = S3WebsiteStack(websiteConf, app, "cdk-website")
+    val website = S3WebsiteStack(websiteConf, app, "s3-website")
     val redirect = S3Redirect(
       RedirectConf(
         "old.malliina.site",

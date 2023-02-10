@@ -2,7 +2,7 @@ version: 1
 env:
   variables:
     SBT_VERSION: "1.7.1"
-    WEBSITE_TARGET: "target/site"
+    WEBSITE_TARGET: "target/website"
 frontend:
   phases:
     preBuild:
@@ -16,6 +16,6 @@ frontend:
       commands:
         - sbt website/run
   artifacts:
-    baseDirectory: target/site
+    baseDirectory: $WEBSITE_TARGET
     files:
       - "**/*"
