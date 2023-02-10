@@ -24,13 +24,21 @@ Then connect to:
 
 ### Amplify
 
-Deploy with
+Deploy the infra with
 
     cdk deploy amplify
 
-Check [amplify.yml](amplify.yml).
+Check [amplify.yml](amplify.yml) for details.
 
 Verify the custom domain after the initial deployment in the AWS Console under Amplify.
+
+The infra generates a CodeCommit repository. Add a git origin that points to the CodeCommit repo:
+
+    git remote add amplify codecommit::eu-west-1://amplify
+
+Push to the origin to trigger a deployment:
+
+    git push amplify
 
 ## YAML (Legacy)
 
