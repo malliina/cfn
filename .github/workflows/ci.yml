@@ -8,9 +8,9 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Set up Scala
-        uses: olafurpg/setup-scala@v11
+        uses: olafurpg/setup-scala@v13
         with:
           java-version: "adopt@1.11"
       - name: Install AWS CDK
