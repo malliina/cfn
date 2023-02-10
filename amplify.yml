@@ -1,8 +1,8 @@
 version: 1
 env:
   variables:
+    JAVA_VERSION: "11.0.9.hs-adpt"
     SBT_VERSION: "1.7.1"
-    WEBSITE_TARGET: "target/website"
 frontend:
   phases:
     preBuild:
@@ -10,12 +10,12 @@ frontend:
         - pwd
         - curl -s "https://get.sdkman.io" | bash
         - source "/root/.sdkman/bin/sdkman-init.sh"
-        - sdk install java 11.0.9.hs-adpt
+        - sdk install java $JAVA_VERSION
         - sdk install sbt $SBT_VERSION
     build:
       commands:
         - sbt website/run
   artifacts:
-    baseDirectory: $WEBSITE_TARGET
+    baseDirectory: target/website
     files:
       - "**/*"
