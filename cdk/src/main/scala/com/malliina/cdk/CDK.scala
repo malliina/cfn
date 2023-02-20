@@ -1,6 +1,5 @@
 package com.malliina.cdk
 
-import com.malliina.cdk.AmplifyStack.AmplifyConf
 import com.malliina.cdk.S3Redirect.RedirectConf
 import com.malliina.cdk.S3WebsiteStack.WebsiteConf
 import com.malliina.cdk.opensearch.Opensearch

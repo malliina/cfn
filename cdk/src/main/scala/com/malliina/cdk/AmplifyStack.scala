@@ -1,17 +1,15 @@
 package com.malliina.cdk
 
-import com.malliina.cdk.AmplifyStack.AmplifyConf
 import software.amazon.awscdk.Stack
 import software.amazon.awscdk.services.amplify.CfnDomain.SubDomainSettingProperty
-import software.amazon.awscdk.services.amplify.alpha.*
-import software.amazon.awscdk.services.amplify.{CfnBranch, CfnDomain}
+import software.amazon.awscdk.services.amplify.alpha.{App, AutoBranchCreation, CodeCommitSourceCodeProvider, CustomRule, RedirectStatus}
+import software.amazon.awscdk.services.amplify.{CfnApp, CfnBranch, CfnDomain}
 import software.amazon.awscdk.services.codecommit.Repository
 import software.amazon.awscdk.services.iam.{PolicyDocument, Role}
 import software.amazon.awscdk.services.route53.{HostedZone, HostedZoneProviderProps}
 import software.constructs.Construct
 
-object AmplifyStack:
-  case class AmplifyConf(domainName: Option[String])
+case class AmplifyConf(domainName: Option[String])
 
 class AmplifyStack(conf: AmplifyConf, scope: Construct, stackName: String)
   extends Stack(scope, stackName, CDK.stackProps)

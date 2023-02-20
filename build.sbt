@@ -3,7 +3,7 @@ import scala.util.Try
 
 inThisBuild(
   Seq(
-    scalaVersion := "3.1.1",
+    scalaVersion := "3.2.2",
     organization := "com.malliina",
     version := "0.0.1",
     libraryDependencies ++= Seq(
@@ -49,7 +49,7 @@ val website = project
     )
   )
 
-val cdkVersion = "2.64.0"
+val cdkVersion = "2.65.0"
 
 val cdk = project
   .in(file("cdk"))

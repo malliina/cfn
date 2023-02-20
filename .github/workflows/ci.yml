@@ -9,13 +9,13 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - name: Set up Scala
-        uses: olafurpg/setup-scala@v13
+      - uses: actions/setup-java@v3
         with:
-          java-version: "adopt@1.11"
+          distribution: 'zulu'
+          java-version: '11'
       - name: Install AWS CDK
         run: |
-          sudo npm install -g aws-cdk@2.64.0
+          sudo npm install -g aws-cdk@2.65.0
           cdk --version
       - name: Run tests
         run: sbt test
