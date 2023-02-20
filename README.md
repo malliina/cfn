@@ -40,6 +40,17 @@ Push to the origin to trigger a deployment:
 
     git push amplify
 
+### OpenSearch
+
+The initial setup is not fully automated. First deploy with
+
+    cdk deploy opensearch
+
+1. OpenSearch creates a Lambda that streams CloudWatch logs to the domain. Assign the `StreamingRole` to the Lambda.
+2. To access the dashboard, create a user in the Opensearch Cognito user pool and log in.
+3. Follow the role mapping guidance in https://aws.amazon.com/premiumsupport/knowledge-center/opensearch-troubleshoot-cloudwatch-logs/ to add the `StreamingRole` as a backend role in OpenSearch Dashboards.
+4. Create an index pattern in OpenSearch Dashboards. The pattern is most likely `cwl-*` for CloudWatch Logs.
+
 ## YAML (Legacy)
 
 ### Infrastructure

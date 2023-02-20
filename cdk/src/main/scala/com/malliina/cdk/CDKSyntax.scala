@@ -3,7 +3,7 @@ package com.malliina.cdk
 import software.amazon.awscdk.services.codebuild.{BuildEnvironmentVariable, BuildEnvironmentVariableType}
 import software.amazon.awscdk.services.codepipeline.{IAction, StageProps}
 import software.amazon.awscdk.services.elasticbeanstalk.CfnConfigurationTemplate.ConfigurationOptionSettingProperty
-import software.amazon.awscdk.services.iam.{Effect, PolicyStatement, ServicePrincipal}
+import software.amazon.awscdk.services.iam.{Effect, ManagedPolicy, PolicyStatement, ServicePrincipal}
 import software.amazon.awscdk.{CfnOutput, CfnTag, Stack}
 
 import java.util
@@ -14,6 +14,10 @@ trait CDKSyntax:
     ServicePrincipal.Builder.create(service).build()
   object principals:
     val amplify = principal("amplify.amazonaws.com")
+    val lambda = principal("lambda.amazonaws.com")
+  object policies:
+    val basicLambda =
+      ManagedPolicy.fromAwsManagedPolicyName("service-role/AWSLambdaBasicExecutionRole")
   protected def allowStatement(
     action: String,
     resource: String,
@@ -48,14 +52,12 @@ trait CDKSyntax:
         .value(v)
         .build()
     }
-
   def buildEnv(value: String) =
     BuildEnvironmentVariable
       .builder()
       .`type`(BuildEnvironmentVariableType.PLAINTEXT)
       .value(value)
       .build()
-
   def stage(name: String)(actions: IAction*) =
     StageProps
       .builder()
