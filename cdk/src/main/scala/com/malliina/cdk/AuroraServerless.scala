@@ -49,45 +49,35 @@ class AuroraServerless(
         .build()
     )
     .build()
-  val subnet = CfnDBSubnetGroup.Builder
-    .create(stack, "Subnets")
-    .dbSubnetGroupDescription("Database subnet group")
-    .subnetIds(vpc.getPrivateSubnets.asScala.map(_.getSubnetId).asJava)
-    .build()
-  val securityGroup = SecurityGroup.Builder
-    .create(stack, "SecurityGroup")
-    .description(s"Access to database $envName.")
-    .allowAllOutbound(false)
-    .vpc(vpc)
-    .build()
+  val subnet = dbSubnetGroup(stack, "Subnets") { b =>
+    b.dbSubnetGroupDescription("Database subnet group")
+      .subnetIds(vpc.getPrivateSubnets.asScala.map(_.getSubnetId).asJava)
+  }
+  val securityGroup = secGroup(stack, "SecurityGroup", vpc) { b =>
+    b.description(s"Access to database $envName.")
+      .allowAllOutbound(false)
+  }
   securityGroup.addEgressRule(
     Peer.anyIpv4(),
     Port.tcp(3306),
     "Allow outbound on 3306"
   )
-  val appSecurityGroup = SecurityGroup.Builder
-    .create(stack, "AppSecurityGroup")
-    .description("Security group for app using this database.")
-    .vpc(vpc)
-    .build()
-  (appSecurityGroup.getSecurityGroupId +: ingressSecurityGroupIds).foreach {
-    secGroupId =>
-      securityGroup.addIngressRule(
-        Peer.securityGroupId(secGroupId),
-        Port.tcp(3306)
-      )
+  val appSecurityGroup = secGroup(stack, "AppSecurityGroup", vpc) { b =>
+    b.description("Security group for app using this database.")
+  }
+  (appSecurityGroup.getSecurityGroupId +: ingressSecurityGroupIds).foreach { secGroupId =>
+    securityGroup.addIngressRule(
+      Peer.securityGroupId(secGroupId),
+      Port.tcp(3306)
+    )
   }
   val cluster = CfnDBCluster.Builder
     .create(stack, "Database")
     .databaseName(appName)
     .engine("aurora-mysql")
     .engineVersion("8.0.mysql_aurora.3.02.2")
-    .masterUsername(
-      s"{{resolve:secretsmanager:${secret.getSecretName}::username}}"
-    )
-    .masterUserPassword(
-      s"{{resolve:secretsmanager:${secret.getSecretName}::password}}"
-    )
+    .masterUsername(resolveJson(secret.getSecretName, "username"))
+    .masterUserPassword(resolveJson(secret.getSecretName, "password"))
     .serverlessV2ScalingConfiguration(
       ServerlessV2ScalingConfigurationProperty
         .builder()
@@ -99,18 +89,14 @@ class AuroraServerless(
     .vpcSecurityGroupIds(list(securityGroup.getSecurityGroupId))
 //    .deletionProtection(true)
     .build()
-  val serverlessInstance =
-    CfnDBInstance.Builder
-      .create(stack, "Instance")
-      .dbInstanceClass("db.serverless")
+  val serverlessInstance = dbInstance(stack, "Instance") { b =>
+    b.dbInstanceClass("db.serverless")
       .engine("aurora-mysql")
       .dbClusterIdentifier(cluster.getRef)
-      .build()
-  val alarmTopic =
-    Topic.Builder
-      .create(stack, "AlarmTopic")
-      .displayName(s"Database alarms for $envName")
-      .build()
+  }
+  val alarmTopic = topic(stack, "AlarmTopic") { b =>
+    b.displayName(s"Database alarms for $envName")
+  }
   val cpuAlarmThresholdPercent = 80
   val cpuMetric = Metric.Builder
     .create()
