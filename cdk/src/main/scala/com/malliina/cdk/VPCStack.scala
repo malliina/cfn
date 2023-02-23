@@ -10,10 +10,11 @@ class VPCStack(scope: Construct, stackName: String, cidrs: CIDRs = CIDRs.default
   extends Stack(scope, stackName, CDK.stackProps)
   with CDKSyntax:
   val stack = this
+  override val construct: Construct = stack
 
   /** This creates a VPC along with private, public subnets, etc networking resources.
     */
-  val vpc = buildVpc(stack, "VPC") { b =>
+  val vpc = buildVpc("VPC") { b =>
     b.ipAddresses(IpAddresses.cidr(cidrs.vpc))
       .enableDnsSupport(true)
       .enableDnsHostnames(true)

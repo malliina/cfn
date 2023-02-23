@@ -10,27 +10,25 @@ import software.amazon.awscdk.services.logs.{FilterPattern, ILogGroup, LogGroup,
 import software.amazon.awscdk.services.opensearchservice.*
 import software.constructs.Construct
 
-object Opensearch:
-  def stack(scope: Construct, stackName: String): Opensearch =
+object OpenSearch:
+  def stack(scope: Construct, stackName: String): OpenSearch =
     val stack = new Stack(scope, stackName, CDK.stackProps)
-    new Opensearch(stack)
+    new OpenSearch(stack)
 
-class Opensearch(stack: Stack) extends CDKSyntax:
-
+class OpenSearch(stack: Stack) extends CDKSyntax:
 //  val user = User.Builder.create(stack, "User").userName("opensearch").build()
 //  user.addToPolicy()
+  override val construct: Construct = stack
 
   /** This role gives Amazon OpenSearch Service permissions to configure the Amazon Cognito user and
     * identity pools and use them for OpenSearch Dashboards/Kibana authentication. It is separate
     * from the IAM role that allows users access to OpenSearch Dashboards/Kibana after they log in.
     */
-  val cognitoRole = Role.Builder
-    .create(stack, "Role")
-    .managedPolicies(
+  val cognitoRole = role("Role") { b =>
+    b.managedPolicies(
       list(ManagedPolicy.fromAwsManagedPolicyName("AmazonOpenSearchServiceCognitoAccess"))
-    )
-    .assumedBy(principal("es.amazonaws.com"))
-    .build()
+    ).assumedBy(principal("es.amazonaws.com"))
+  }
   val userPool = UserPool.Builder.create(stack, "UserPool").userPoolName("opensearch").build()
   userPool.addDomain(
     "Domain",
@@ -100,11 +98,9 @@ class Opensearch(stack: Stack) extends CDKSyntax:
         .build()
     )
     .build()
-  val lambdaStreamRole = Role.Builder
-    .create(stack, "StreamingRole")
-    .assumedBy(principals.lambda)
-    .managedPolicies(list(policies.basicLambda))
-    .build()
+  val lambdaStreamRole = role("StreamingRole") { b =>
+    b.assumedBy(principals.lambda).managedPolicies(list(policies.basicLambda))
+  }
   domain.grantReadWrite(lambdaStreamRole)
   domain.grantReadWrite(authRole)
   outputs(stack)(

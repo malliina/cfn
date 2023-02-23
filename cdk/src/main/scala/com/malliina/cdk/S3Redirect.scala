@@ -23,6 +23,7 @@ class S3Redirect(conf: RedirectConf, scope: Construct, id: String)
   extends Stack(scope, id, CDK.stackProps)
   with CDKSyntax:
   val stack = this
+  override val construct: Construct = stack
 
   val bucket = Bucket.Builder
     .create(stack, "redirect")
@@ -77,17 +78,14 @@ class S3Redirect(conf: RedirectConf, scope: Construct, id: String)
         .viewerCertificate(
           ViewerCertificateProperty
             .builder()
-            .acmCertificateArn(
-              StringParameter.valueFromLookup(stack, conf.certificateParamName)
-            )
+            .acmCertificateArn(stringParameter(conf.certificateParamName))
             .sslSupportMethod("sni-only")
             .build()
         )
         .build()
     )
     .build()
-  val hostedZoneId =
-    StringParameter.valueFromLookup(stack, conf.hostedZoneParamName)
+  val hostedZoneId = stringParameter(conf.hostedZoneParamName)
   val dns = CfnRecordSet.Builder
     .create(stack, "dns")
     .`type`("A")

@@ -2,7 +2,7 @@ package com.malliina.cdk
 
 import com.malliina.cdk.S3Redirect.RedirectConf
 import com.malliina.cdk.S3WebsiteStack.WebsiteConf
-import com.malliina.cdk.opensearch.Opensearch
+import com.malliina.cdk.opensearch.OpenSearch
 import software.amazon.awscdk.services.ec2.{Vpc, VpcLookupOptions}
 import software.amazon.awscdk.{Environment, StackProps, App as AWSApp}
 
@@ -43,7 +43,7 @@ object CDK:
     )
     val amplifyApp =
       AmplifyStack(AmplifyConf(domainName = None), app, "amplify")
-    val search = Opensearch.stack(app, "opensearch")
+    val search = OpenSearch.stack(app, "opensearch")
     val database = AuroraServerless.stack(
       Env.Qa,
       "ref",

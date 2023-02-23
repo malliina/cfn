@@ -34,6 +34,7 @@ class AuroraServerless(
   ingressSecurityGroupIds: Seq[String],
   stack: Stack
 ) extends CDKSyntax:
+  override val construct: Construct = stack
   val envName = s"$env-$appName"
   val secret = Secret.Builder
     .create(stack, "Credentials")
@@ -49,11 +50,11 @@ class AuroraServerless(
         .build()
     )
     .build()
-  val subnet = dbSubnetGroup(stack, "Subnets") { b =>
+  val subnet = dbSubnetGroup("Subnets") { b =>
     b.dbSubnetGroupDescription("Database subnet group")
       .subnetIds(vpc.getPrivateSubnets.asScala.map(_.getSubnetId).asJava)
   }
-  val securityGroup = secGroup(stack, "SecurityGroup", vpc) { b =>
+  val securityGroup = secGroup("SecurityGroup", vpc) { b =>
     b.description(s"Access to database $envName.")
       .allowAllOutbound(false)
   }
@@ -62,7 +63,7 @@ class AuroraServerless(
     Port.tcp(3306),
     "Allow outbound on 3306"
   )
-  val appSecurityGroup = secGroup(stack, "AppSecurityGroup", vpc) { b =>
+  val appSecurityGroup = secGroup("AppSecurityGroup", vpc) { b =>
     b.description("Security group for app using this database.")
   }
   (appSecurityGroup.getSecurityGroupId +: ingressSecurityGroupIds).foreach { secGroupId =>
@@ -89,40 +90,37 @@ class AuroraServerless(
     .vpcSecurityGroupIds(list(securityGroup.getSecurityGroupId))
 //    .deletionProtection(true)
     .build()
-  val serverlessInstance = dbInstance(stack, "Instance") { b =>
+  val serverlessInstance = dbInstance("Instance") { b =>
     b.dbInstanceClass("db.serverless")
       .engine("aurora-mysql")
       .dbClusterIdentifier(cluster.getRef)
   }
-  val alarmTopic = topic(stack, "AlarmTopic") { b =>
+  val alarmTopic = topic("AlarmTopic") { b =>
     b.displayName(s"Database alarms for $envName")
   }
   val cpuAlarmThresholdPercent = 80
-  val cpuMetric = Metric.Builder
-    .create()
-    .metricName("CPUUtilization")
-    .namespace("AWS/RDS")
-    .unit(CloudWatchUnit.PERCENT)
-    .statistic("Average")
-    .period(Duration.seconds(300))
-    .dimensionsMap(
-      map(
-        "DBClusterIdentifier" -> cluster.getRef,
-        "Role" -> "WRITER"
+  val cpuMetric = metric { b =>
+    b.metricName("CPUUtilization")
+      .namespace("AWS/RDS")
+      .unit(CloudWatchUnit.PERCENT)
+      .statistic("Average")
+      .period(Duration.seconds(300))
+      .dimensionsMap(
+        map(
+          "DBClusterIdentifier" -> cluster.getRef,
+          "Role" -> "WRITER"
+        )
       )
-    )
-    .build()
-  val cpuAlarm = Alarm.Builder
-    .create(stack, "CpuAlarm")
-    .alarmDescription(
+  }
+  val cpuAlarm = alarm("CpuAlarm") { b =>
+    b.alarmDescription(
       s"CPU utilization of cluster ${cluster.getRef} over $cpuAlarmThresholdPercent%"
-    )
-    .treatMissingData(TreatMissingData.NOT_BREACHING)
-    .metric(cpuMetric)
-    .evaluationPeriods(2)
-    .threshold(cpuAlarmThresholdPercent)
-    .comparisonOperator(ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD)
-    .build()
+    ).treatMissingData(TreatMissingData.NOT_BREACHING)
+      .metric(cpuMetric)
+      .evaluationPeriods(2)
+      .threshold(cpuAlarmThresholdPercent)
+      .comparisonOperator(ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD)
+  }
   cpuAlarm.getNode.addDependency(cluster)
   outputs(stack)(
     "AppSecurityGroupId" -> appSecurityGroup.getSecurityGroupId,

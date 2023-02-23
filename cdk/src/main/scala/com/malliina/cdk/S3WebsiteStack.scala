@@ -23,6 +23,8 @@ class S3WebsiteStack(conf: WebsiteConf, scope: Construct, stackName: String)
   extends Stack(scope, stackName, CDK.stackProps)
   with CDKSyntax:
   val stack = this
+  override val construct: Construct = stack
+
   val indexDocument = "index.html"
 
   val headerName = "Referer"
@@ -119,9 +121,7 @@ class S3WebsiteStack(conf: WebsiteConf, scope: Construct, stackName: String)
         .viewerCertificate(
           ViewerCertificateProperty
             .builder()
-            .acmCertificateArn(
-              StringParameter.valueFromLookup(stack, conf.certificateParamName)
-            )
+            .acmCertificateArn(stringParameter(conf.certificateParamName))
             .sslSupportMethod("sni-only")
             .build()
         )
@@ -131,9 +131,7 @@ class S3WebsiteStack(conf: WebsiteConf, scope: Construct, stackName: String)
   val dns = CfnRecordSet.Builder
     .create(stack, "dns")
     .name(conf.domain)
-    .hostedZoneId(
-      StringParameter.valueFromLookup(stack, conf.hostedZoneParamName)
-    )
+    .hostedZoneId(stringParameter(conf.hostedZoneParamName))
     .`type`("A")
     .aliasTarget(
       AliasTargetProperty
