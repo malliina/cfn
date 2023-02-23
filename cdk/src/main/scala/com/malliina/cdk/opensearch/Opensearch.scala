@@ -45,20 +45,7 @@ class Opensearch(stack: Stack) extends CDKSyntax:
       .identityPoolName("opensearch")
       .allowUnauthenticatedIdentities(false)
       .build()
-  val userRole = Role.Builder
-    .create(stack, "UserRole")
-    .assumedBy(
-      new FederatedPrincipal(
-        "cognito-identity.amazonaws.com",
-        map(
-          "StringEquals" -> map("cognito-identity.amazonaws.com:aud" -> identityPool.getRef),
-          "ForAnyValue:StringLike" -> map("cognito-identity.amazonaws.com:amr" -> "authenticated")
-        ),
-        "sts:AssumeRoleWithWebIdentity"
-      )
-    )
-    .build()
-  val authRole = userRole("UserRole", authenticated = true)
+  val authRole = userRole("AuthUserRole", authenticated = true)
   val unauthRole = userRole("UnauthUserRole", authenticated = false)
   def userRole(id: String, authenticated: Boolean) =
     val auth = if authenticated then "authenticated" else "unauthenticated"
@@ -79,7 +66,7 @@ class Opensearch(stack: Stack) extends CDKSyntax:
   val attachment = CfnIdentityPoolRoleAttachment.Builder
     .create(stack, "RoleAttachment")
     .identityPoolId(identityPool.getRef)
-    .roles(map("authenticated" -> userRole.getRoleArn))
+    .roles(map("authenticated" -> authRole.getRoleArn, "unauthenticated" -> unauthRole.getRoleArn))
     .build()
 //  val pattern = FilterPattern.spaceDelimited("timestamp", "level", "logger", "", "message")
   val domain = Domain.Builder
@@ -109,7 +96,7 @@ class Opensearch(stack: Stack) extends CDKSyntax:
     .fineGrainedAccessControl(
       AdvancedSecurityOptions
         .builder()
-        .masterUserArn(userRole.getRoleArn)
+        .masterUserArn(authRole.getRoleArn)
         .build()
     )
     .build()
@@ -119,7 +106,7 @@ class Opensearch(stack: Stack) extends CDKSyntax:
     .managedPolicies(list(policies.basicLambda))
     .build()
   domain.grantReadWrite(lambdaStreamRole)
-  domain.grantReadWrite(userRole)
+  domain.grantReadWrite(authRole)
   outputs(stack)(
     "OpensearchUserPoolArn" -> userPool.getUserPoolArn,
     "OpensearchUserPoolId" -> userPool.getUserPoolId,
