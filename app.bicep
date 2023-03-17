@@ -42,6 +42,25 @@ resource site 'Microsoft.Web/sites@2021-03-01' = {
     }
   }
 
+  resource logSettings 'config' = {
+    name: 'logs'
+    properties: {
+       applicationLogs: {
+          fileSystem: {
+            level: 'Information'
+          }
+       }
+       httpLogs: {
+          fileSystem: {
+             enabled: true
+          }
+       }
+       detailedErrorMessages: {
+          enabled: true
+       }
+    }
+  }
+
   resource slotConfig 'config' = {
     name: 'slotConfigNames'
     properties: {
