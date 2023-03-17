@@ -3,6 +3,8 @@ package com.malliina.app
 import cats.data.Kleisli
 import cats.effect.{ExitCode, IO, IOApp}
 import com.comcast.ip4s.{Port, host, port}
+import io.circe.Json
+import io.circe.syntax.EncoderOps
 import org.http4s.CacheDirective.{`must-revalidate`, `no-cache`, `no-store`}
 import org.http4s.{HttpRoutes, BuildInfo as _, *}
 import org.http4s.headers.`Cache-Control`
@@ -34,8 +36,11 @@ class Service extends Implicits:
   val noCache = `Cache-Control`(`no-cache`(), `no-store`, `must-revalidate`)
 
   val html = AppHtml(!BuildInfo.isProd)
-  val routes = HttpRoutes.of[IO] { case req @ GET -> Root =>
-    ok(html.index.tags)
+  val routes = HttpRoutes.of[IO] {
+    case GET -> Root =>
+      ok(html.index.tags)
+    case GET -> Root / "health" =>
+      ok(Json.obj("gitHash" -> BuildInfo.gitHash.asJson))
   }
   val router: Kleisli[IO, Request[IO], Response[IO]] = Router("/" -> routes).orNotFound
 

@@ -28,7 +28,7 @@ val app = project
       "com.lihaoyi" %% "scalatags" % "0.12.0"
     ),
     buildInfoPackage := "com.malliina.app",
-    buildInfoKeys := Seq[BuildInfoKey]("isProd" -> isProd.value),
+    buildInfoKeys := Seq[BuildInfoKey]("isProd" -> isProd.value, "gitHash" -> gitHash),
     assemblyMergeStrategy := {
       case PathList("module-info.class") => MergeStrategy.discard
       case x =>
