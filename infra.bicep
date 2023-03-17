@@ -5,8 +5,25 @@ resource keyVault 'Microsoft.KeyVault/vaults@2022-07-01' existing = {
   name: 'vault-${uniqueId}'
 }
 
+module networking 'networking.bicep' = {
+  name: 'demo-networking-${uniqueId}'
+  params: {
+    location: location
+  }
+}
+
+
+module database 'database.bicep' = {
+  name: 'demo-infra-${uniqueId}'
+  params: {
+    location: location
+    dbPass: keyVault.getSecret('DEMO-ADMIN-DB-PASS')
+    subnetId: networking.outputs.subnetId
+  }
+}
+
 module logs 'app.bicep' = {
-  name: 'demo-${uniqueId}'
+  name: 'demo-app-${uniqueId}'
   params: {
     location: location
     dbPass: keyVault.getSecret('DEMO-DB-PASS')
