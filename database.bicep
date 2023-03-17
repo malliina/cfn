@@ -14,7 +14,7 @@ resource database 'Microsoft.DBforMySQL/flexibleServers@2021-05-01' = {
   }
   properties: {
     version: '8.0.21'
-    administratorLogin: 'admin'
+    administratorLogin: 'malliina'
     administratorLoginPassword: dbPass
     storage: {
       autoGrow: 'Enabled'
