@@ -13,6 +13,31 @@ inThisBuild(
   )
 )
 
+val isProd = settingKey[Boolean]("true if prod, false otherwise")
+
+val app = project
+  .in(file("app"))
+  .enablePlugins(BuildInfoPlugin, LiveRevolverPlugin)
+  .settings(
+    isProd := false,
+    libraryDependencies ++= Seq("ember-server", "dsl", "circe").map { m =>
+      "org.http4s" %% s"http4s-$m" % "0.23.18"
+    } ++ Seq("classic", "core").map { m =>
+      "ch.qos.logback" % s"logback-$m" % "1.4.5"
+    } ++ Seq(
+      "com.lihaoyi" %% "scalatags" % "0.12.0"
+    ),
+    buildInfoPackage := "com.malliina.app",
+    buildInfoKeys := Seq[BuildInfoKey]("isProd" -> isProd.value),
+    assemblyMergeStrategy := {
+      case PathList("module-info.class") => MergeStrategy.discard
+      case x =>
+        val oldStrategy = (ThisBuild / assemblyMergeStrategy).value
+        oldStrategy(x)
+    },
+    assembly / assemblyJarName := "app.jar"
+  )
+
 val opensearch = project
   .in(file("opensearch"))
   .settings(
@@ -60,7 +85,7 @@ val cdk = project
     )
   )
 
-val root = project.in(file(".")).aggregate(opensearch, website, cdk)
+val root = project.in(file(".")).aggregate(app, opensearch, website, cdk)
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
 

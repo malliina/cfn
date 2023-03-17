@@ -1,0 +1,48 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - master
+
+env:
+  AZURE_RG: rg-fnxr3ec3ms6mu
+  AZURE_WEBAPP_NAME: demo-nuqmhn2cxlhle
+  AZURE_WEBAPP_PACKAGE_PATH: ${{ github.workspace }}
+  AZURE_SLOT: staging
+
+jobs:
+  deploy:
+    name: Build and Deploy
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+      - name: Login via Azure CLI
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+          cache: 'sbt'
+      - name: Deploy app infra
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RG }}
+          template: ./app.bicep
+          failOnStdErr: false
+      - name: Build with sbt
+        run: |
+          ls -al
+          sbt "set isProd := true" app/assembly
+          ls -al
+      - name: Deploy to Azure WebApp
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          slot-name: ${{ env.AZURE_SLOT }}
+          package: '${{ env.AZURE_WEBAPP_PACKAGE_PATH }}/app/target/scala-*/app.jar'
+      - name: Azure logout
+        run: |
+          az logout
