@@ -17,7 +17,7 @@ resource subnet 'Microsoft.Network/virtualNetworks/subnets@2021-05-01' = {
   parent: vnet
   name: 'subnet-${uniqueId}'
   properties: {
-    addressPrefix: '10.0.0.0/16'
+    addressPrefix: '10.0.0.0/24'
   }
 }
 
@@ -25,7 +25,7 @@ resource bastionSubnet 'Microsoft.Network/virtualNetworks/subnets@2021-05-01' = 
   parent: vnet
   name: 'AzureBastionSubnet'
   properties: {
-    addressPrefix: '10.1.0.0/24'
+    addressPrefix: '10.0.1.0/24'
   }
 }
 
