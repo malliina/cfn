@@ -30,7 +30,7 @@ jobs:
         uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{ env.AZURE_RG }}
-          template: ./app.bicep
+          template: ./infra.bicep
           failOnStdErr: false
       - name: Build with sbt
         run: |
