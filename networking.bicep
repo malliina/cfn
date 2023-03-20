@@ -29,6 +29,9 @@ resource vnet 'Microsoft.Network/virtualNetworks@2022-09-01' = {
 
   resource vmSubnet 'subnets' = {
     name: 'vm-subnet-${uniqueId}'
+    dependsOn: [
+      databaseSubnet
+    ]
     properties: {
       addressPrefix: '10.0.1.0/24'
       privateEndpointNetworkPolicies: 'Enabled'
