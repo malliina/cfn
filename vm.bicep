@@ -1,27 +1,12 @@
 param location string = resourceGroup().location
 param uniqueId string = uniqueString(resourceGroup().id)
 
-param vnetName string
 param adminUsername string
 @secure()
 param adminPublicKey string
+param subnetId string
 
 var vmName = 'vm-${uniqueId}'
-
-resource vnet 'Microsoft.Network/virtualNetworks@2022-09-01' existing = {
-  scope: resourceGroup()
-  name: vnetName
-}
-
-resource subnet 'Microsoft.Network/virtualNetworks/subnets@2021-05-01' = {
-  parent: vnet
-  name: 'vm-subnet-${uniqueId}'
-  properties: {
-    addressPrefix: '10.0.3.0/24'
-    privateEndpointNetworkPolicies: 'Enabled'
-    privateLinkServiceNetworkPolicies: 'Enabled'
-  }
-}
 
 resource networkSecurityGroup 'Microsoft.Network/networkSecurityGroups@2022-09-01' = {
   name: 'vm-nsg-${uniqueId}'
@@ -67,7 +52,7 @@ resource networkInterface 'Microsoft.Network/networkInterfaces@2022-09-01' = {
         name: 'ipconfig1'
         properties: {
           subnet: {
-            id: subnet.id
+            id: subnetId
           }
           privateIPAllocationMethod: 'Dynamic'
           publicIPAddress: {

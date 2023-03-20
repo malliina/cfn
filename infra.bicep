@@ -36,6 +36,6 @@ module vm 'vm.bicep' = {
     location: location
     adminPublicKey: keyVault.getSecret('DEMO-SSH-PUBLIC-KEY')
     adminUsername: 'mle'
-    vnetName: networking.outputs.vnetName
+    subnetId: networking.outputs.vmSubnetId
   }
 }
