@@ -70,3 +70,4 @@ resource bastionHost 'Microsoft.Network/bastionHosts@2022-01-01' = {
 
 output databaseSubnetId string = databaseSubnet.id
 output bastionId string = bastionHost.id
+output vnetName string = vnet.name

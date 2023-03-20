@@ -12,7 +12,6 @@ module networking 'networking.bicep' = {
   }
 }
 
-
 module database 'database.bicep' = {
   name: 'demo-infra-${uniqueId}'
   params: {
@@ -28,5 +27,15 @@ module logs 'app.bicep' = {
     location: location
     dbPass: keyVault.getSecret('DEMO-DB-PASS')
     logstreamsPass: keyVault.getSecret('DEMO-LOGSTREAMS-PASS')
+  }
+}
+
+module vm 'vm.bicep' = {
+  name: 'demo-vm-${uniqueId}'
+  params: {
+    location: location
+    adminPublicKey: keyVault.getSecret('DEMO-SSH-PUBLIC-KEY')
+    adminUsername: 'mle'
+    vnetName: networking.outputs.vnetName
   }
 }
