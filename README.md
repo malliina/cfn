@@ -51,6 +51,18 @@ The initial setup is not fully automated. First deploy with
 3. Follow the role mapping guidance in https://aws.amazon.com/premiumsupport/knowledge-center/opensearch-troubleshoot-cloudwatch-logs/ to add the `StreamingRole` as a backend role in OpenSearch Dashboards.
 4. Create an index pattern in OpenSearch Dashboards. The pattern is most likely `cwl-*` for CloudWatch Logs.
 
+## Azure / bicep
+
+[Install](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) Azure CLI.
+
+Create a resource group (unless you already have one):
+
+    az group create --name exampleRG --location northeurope
+
+Deploy the resources to the resource group:
+
+    az deployment group create --resource-group exampleRG --template-file infra.bicep
+
 ## YAML (Legacy)
 
 ### Infrastructure

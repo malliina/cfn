@@ -5,7 +5,7 @@ param uniqueId string = uniqueString(resourceGroup().id)
 param dbPass string
 param subnetId string
 
-resource database 'Microsoft.DBforMySQL/flexibleServers@2021-05-01' = {
+resource server 'Microsoft.DBforMySQL/flexibleServers@2021-05-01' = {
   name: 'demo-db-${uniqueId}'
   location: location
   sku: {
@@ -30,13 +30,13 @@ resource database 'Microsoft.DBforMySQL/flexibleServers@2021-05-01' = {
     }
   }
 
-  resource fw 'firewallRules' = {
-    name: 'demo-fw-${uniqueId}'
+  resource database 'databases' = {
+    name: 'demo'
     properties: {
-      endIpAddress: '0.0.0.0'
-      startIpAddress: '255.255.255.255'
+      charset: 'utf8'
+      collation: 'utf8_general_ci'
     }
   }
 }
 
-output databaseName string = database.name
+output serverName string = server.name
