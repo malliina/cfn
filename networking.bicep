@@ -13,11 +13,19 @@ resource vnet 'Microsoft.Network/virtualNetworks@2021-05-01' = {
   }
 }
 
-resource subnet 'Microsoft.Network/virtualNetworks/subnets@2021-05-01' = {
+resource databaseSubnet 'Microsoft.Network/virtualNetworks/subnets@2021-05-01' = {
   parent: vnet
-  name: 'subnet-${uniqueId}'
+  name: 'database-subnet-${uniqueId}'
   properties: {
     addressPrefix: '10.0.0.0/24'
+    delegations: [
+      {
+        name: 'delegation-mysql-${uniqueId}'
+        properties: {
+          serviceName: 'Microsoft.DBforMySQL/flexibleServers'
+        }
+      }
+    ]
   }
 }
 
@@ -60,5 +68,5 @@ resource bastionHost 'Microsoft.Network/bastionHosts@2022-01-01' = {
   }
 }
 
-output subnetId string = subnet.id
+output databaseSubnetId string = databaseSubnet.id
 output bastionId string = bastionHost.id

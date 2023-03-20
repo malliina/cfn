@@ -18,7 +18,7 @@ module database 'database.bicep' = {
   params: {
     location: location
     dbPass: keyVault.getSecret('DEMO-ADMIN-DB-PASS')
-    subnetId: networking.outputs.subnetId
+    subnetId: networking.outputs.databaseSubnetId
   }
 }
 
