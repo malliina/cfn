@@ -9,7 +9,7 @@ class AppHtml(isHotReloaded: Boolean):
   def index = page("Hello!")
 
   def page(msg: String) = TagPage(
-    html(
+    html(lang := "en")(
       head(
         if isHotReloaded then script(src := LiveReload.script, defer)
         else empty
