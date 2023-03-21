@@ -4,6 +4,7 @@ param uniqueId string = uniqueString(resourceGroup().id)
 var databaseSubnetName = 'database-subnet-${uniqueId}'
 var vmSubnetName = 'vm-subnet-${uniqueId}'
 
+// https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/scenarios-virtual-networks
 resource vnet 'Microsoft.Network/virtualNetworks@2022-09-01' = {
   name: 'demo-vnet-${uniqueId}'
   location: location
