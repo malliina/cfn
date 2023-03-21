@@ -22,9 +22,14 @@ val app = project
     isProd := false,
     libraryDependencies ++= Seq("ember-server", "dsl", "circe").map { m =>
       "org.http4s" %% s"http4s-$m" % "0.23.18"
+    } ++ Seq("core", "hikari").map { m =>
+      "org.tpolecat" %% s"doobie-$m" % "1.0.0-RC2"
     } ++ Seq("classic", "core").map { m =>
       "ch.qos.logback" % s"logback-$m" % "1.4.5"
+    } ++ Seq("config", "okclient-io").map { m =>
+      "com.malliina" %% m % "3.4.0"
     } ++ Seq(
+      "mysql" % "mysql-connector-java" % "8.0.32",
       "com.lihaoyi" %% "scalatags" % "0.12.0"
     ),
     buildInfoPackage := "com.malliina.app",

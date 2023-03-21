@@ -40,3 +40,4 @@ resource server 'Microsoft.DBforMySQL/flexibleServers@2021-05-01' = {
 }
 
 output serverName string = server.name
+output dbName string = server::database.name

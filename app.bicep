@@ -3,10 +3,14 @@ param location string = resourceGroup().location
 param uniqueId string = uniqueString(resourceGroup().id)
 
 param vnetSubnetId string
+param dbServerName string
+param dbName string
 @secure()
 param dbPass string
 @secure()
 param logstreamsPass string
+
+var dbUrl = 'jdbc:mysql://${dbServerName}.mysql.database.azure.com/${dbName}'
 
 resource appServicePlan 'Microsoft.Web/serverfarms@2021-03-01' existing = {
   name: 'plan-win-${uniqueId}'
@@ -37,6 +41,7 @@ resource site 'Microsoft.Web/sites@2021-03-01' = {
     name: 'appsettings'
     properties: {
       WEBSITES_ENABLE_APP_SERVICE_STORAGE: 'false'
+      DB_URL: dbUrl
       DB_PASS: dbPass
       LOGSTREAMS_USER: 'demo'
       LOGSTREAMS_PASS: logstreamsPass
@@ -96,6 +101,7 @@ resource site 'Microsoft.Web/sites@2021-03-01' = {
       name: 'appsettings'
       properties: {
         WEBSITES_ENABLE_APP_SERVICE_STORAGE: 'false'
+        DB_URL: dbUrl
         DB_PASS: dbPass
         LOGSTREAMS_USER: 'demo-staging'
         LOGSTREAMS_PASS: logstreamsPass

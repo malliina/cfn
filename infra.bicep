@@ -26,7 +26,9 @@ module logs 'app.bicep' = {
   params: {
     location: location
     vnetSubnetId: networking.outputs.appSubnetId
-    dbPass: keyVault.getSecret('DEMO-DB-PASS')
+    dbServerName: database.outputs.serverName
+    dbName: database.outputs.dbName
+    dbPass: keyVault.getSecret('DEMO-ADMIN-DB-PASS')
     logstreamsPass: keyVault.getSecret('DEMO-LOGSTREAMS-PASS')
   }
 }

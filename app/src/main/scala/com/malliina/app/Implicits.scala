@@ -1,6 +1,7 @@
 package com.malliina.app
 
 import cats.effect.IO
+import cats.effect.kernel.Async
 import org.http4s.circe.CirceInstances
 import org.http4s.dsl.Http4sDsl
 import org.http4s.headers.`Content-Type`
@@ -21,8 +22,8 @@ trait MyScalatagsInstances:
       .contramap[C](content => content.render)
       .withContentType(`Content-Type`(mediaType, charset))
 
-trait Implicits
+trait Implicits[F[_]]
   extends syntax.AllSyntax
-  with Http4sDsl[IO]
+  with Http4sDsl[F]
   with MyScalatagsInstances
   with CirceInstances
