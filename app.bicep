@@ -2,6 +2,7 @@
 param location string = resourceGroup().location
 param uniqueId string = uniqueString(resourceGroup().id)
 
+param vnetSubnetId string
 @secure()
 param dbPass string
 @secure()
@@ -22,9 +23,11 @@ resource site 'Microsoft.Web/sites@2021-03-01' = {
       javaVersion: '11'
       alwaysOn: true
       webSocketsEnabled: true
+      vnetRouteAllEnabled: true
     }
     httpsOnly: true
     serverFarmId: appServicePlan.id
+    virtualNetworkSubnetId: vnetSubnetId
   }
   identity: {
     type: 'SystemAssigned'
@@ -82,9 +85,11 @@ resource site 'Microsoft.Web/sites@2021-03-01' = {
         javaVersion: '11'
         alwaysOn: true
         webSocketsEnabled: true
+        vnetRouteAllEnabled: true
       }
       httpsOnly: true
       serverFarmId: appServicePlan.id
+      virtualNetworkSubnetId: vnetSubnetId
     }
 
     resource settings 'config' = {
