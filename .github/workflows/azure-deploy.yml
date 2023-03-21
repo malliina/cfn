@@ -35,7 +35,7 @@ jobs:
       - name: Build with sbt
         run: |
           ls -al
-          sbt "set isProd := true" app/assembly
+          sbt "set app / isProd := true" app/assembly
           ls -al
       - name: Deploy to Azure WebApp
         uses: azure/webapps-deploy@v2
