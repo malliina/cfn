@@ -2,8 +2,10 @@ name: Deploy
 
 on:
   push:
-    branches:
-      - master
+    tags:
+      - v*
+#    branches:
+#      - master
 
 env:
   AZURE_RG: rg-fnxr3ec3ms6mu

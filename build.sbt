@@ -25,7 +25,7 @@ val app = project
     } ++ Seq("core", "hikari").map { m =>
       "org.tpolecat" %% s"doobie-$m" % "1.0.0-RC2"
     } ++ Seq("classic", "core").map { m =>
-      "ch.qos.logback" % s"logback-$m" % "1.4.5"
+      "ch.qos.logback" % s"logback-$m" % "1.4.6"
     } ++ Seq("config", "okclient-io").map { m =>
       "com.malliina" %% m % "3.4.0"
     } ++ Seq(
@@ -49,7 +49,7 @@ val opensearch = project
   .settings(
     libraryDependencies ++= Seq(
       "com.amazonaws" % "aws-lambda-java-core" % "1.2.2",
-      "com.amazonaws" % "aws-lambda-java-events" % "3.11.0"
+      "com.amazonaws" % "aws-lambda-java-events" % "3.11.1"
     ),
     assembly / assemblyMergeStrategy := {
       case PathList("META-INF", _ @_*) => MergeStrategy.discard
@@ -69,8 +69,9 @@ val website = project
   .enablePlugins(BuildInfoPlugin)
   .settings(
     libraryDependencies ++=
-      Seq("classic", "core").map { m => "ch.qos.logback" % s"logback-$m" % "1.4.5" } ++
-        Seq("com.lihaoyi" %% "scalatags" % "0.12.0"),
+      Seq("classic", "core").map { m =>
+        "ch.qos.logback" % s"logback-$m" % "1.4.5"
+      } ++ Seq("com.lihaoyi" %% "scalatags" % "0.12.0"),
     buildInfoPackage := "com.malliina.website",
     buildInfoKeys := Seq[BuildInfoKey](
       name,
@@ -80,7 +81,7 @@ val website = project
     )
   )
 
-val cdkVersion = "2.65.0"
+val cdkVersion = "2.69.0"
 
 val cdk = project
   .in(file("cdk"))
