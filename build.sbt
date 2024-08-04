@@ -3,11 +3,11 @@ import scala.util.Try
 
 inThisBuild(
   Seq(
-    scalaVersion := "3.2.2",
+    scalaVersion := "3.4.2",
     organization := "com.malliina",
     version := "0.0.1",
     libraryDependencies ++= Seq(
-      "org.scalameta" %% "munit" % "0.7.29" % Test
+      "org.scalameta" %% "munit" % "1.0.0" % Test
     ),
     testFrameworks += new TestFramework("munit.Framework")
   )
@@ -21,13 +21,13 @@ val app = project
   .settings(
     isProd := false,
     libraryDependencies ++= Seq("ember-server", "dsl", "circe").map { m =>
-      "org.http4s" %% s"http4s-$m" % "0.23.18"
+      "org.http4s" %% s"http4s-$m" % "0.23.27"
     } ++ Seq("core", "hikari").map { m =>
-      "org.tpolecat" %% s"doobie-$m" % "1.0.0-RC2"
+      "org.tpolecat" %% s"doobie-$m" % "1.0.0-RC5"
     } ++ Seq("classic", "core").map { m =>
-      "ch.qos.logback" % s"logback-$m" % "1.4.6"
+      "ch.qos.logback" % s"logback-$m" % "1.5.6"
     } ++ Seq("config", "okclient-io").map { m =>
-      "com.malliina" %% m % "3.4.0"
+      "com.malliina" %% m % "3.7.3"
     } ++ Seq(
       "mysql" % "mysql-connector-java" % "8.0.32",
       "com.lihaoyi" %% "scalatags" % "0.12.0"
@@ -70,7 +70,7 @@ val website = project
   .settings(
     libraryDependencies ++=
       Seq("classic", "core").map { m =>
-        "ch.qos.logback" % s"logback-$m" % "1.4.5"
+        "ch.qos.logback" % s"logback-$m" % "1.5.6"
       } ++ Seq("com.lihaoyi" %% "scalatags" % "0.12.0"),
     buildInfoPackage := "com.malliina.website",
     buildInfoKeys := Seq[BuildInfoKey](
