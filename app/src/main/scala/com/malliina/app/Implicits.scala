@@ -5,7 +5,7 @@ import cats.effect.kernel.Async
 import org.http4s.circe.CirceInstances
 import org.http4s.dsl.Http4sDsl
 import org.http4s.headers.`Content-Type`
-import org.http4s.{Charset, DefaultCharset, EntityEncoder, MediaType, syntax}
+import org.http4s.{Charset, EntityEncoder, MediaType, syntax}
 import scalatags.generic.Frag
 
 trait MyScalatagsInstances:

@@ -3,17 +3,21 @@ import scala.util.Try
 
 inThisBuild(
   Seq(
-    scalaVersion := "3.2.2",
+    scalaVersion := "3.6.2",
     organization := "com.malliina",
     version := "0.0.1",
     libraryDependencies ++= Seq(
-      "org.scalameta" %% "munit" % "0.7.29" % Test
-    ),
-    testFrameworks += new TestFramework("munit.Framework")
+      "org.scalameta" %% "munit" % "1.1.0" % Test
+    )
   )
 )
 
 val isProd = settingKey[Boolean]("true if prod, false otherwise")
+
+val versions = new {
+  val logback = "1.5.16"
+  val scalatags = "0.13.1"
+}
 
 val app = project
   .in(file("app"))
@@ -21,16 +25,13 @@ val app = project
   .settings(
     isProd := false,
     libraryDependencies ++= Seq("ember-server", "dsl", "circe").map { m =>
-      "org.http4s" %% s"http4s-$m" % "0.23.18"
-    } ++ Seq("core", "hikari").map { m =>
-      "org.tpolecat" %% s"doobie-$m" % "1.0.0-RC2"
+      "org.http4s" %% s"http4s-$m" % "0.23.30"
     } ++ Seq("classic", "core").map { m =>
-      "ch.qos.logback" % s"logback-$m" % "1.4.6"
-    } ++ Seq("config", "okclient-io").map { m =>
-      "com.malliina" %% m % "3.4.0"
+      "ch.qos.logback" % s"logback-$m" % versions.logback
     } ++ Seq(
-      "mysql" % "mysql-connector-java" % "8.0.32",
-      "com.lihaoyi" %% "scalatags" % "0.12.0"
+      "com.malliina" %% "database" % "6.9.8",
+      "mysql" % "mysql-connector-java" % "8.0.33",
+      "com.lihaoyi" %% "scalatags" % versions.scalatags
     ),
     buildInfoPackage := "com.malliina.app",
     buildInfoKeys := Seq[BuildInfoKey]("isProd" -> isProd.value, "gitHash" -> gitHash),
@@ -48,8 +49,8 @@ val opensearch = project
   .in(file("opensearch"))
   .settings(
     libraryDependencies ++= Seq(
-      "com.amazonaws" % "aws-lambda-java-core" % "1.2.2",
-      "com.amazonaws" % "aws-lambda-java-events" % "3.11.1"
+      "com.amazonaws" % "aws-lambda-java-core" % "1.2.3",
+      "com.amazonaws" % "aws-lambda-java-events" % "3.15.0"
     ),
     assembly / assemblyMergeStrategy := {
       case PathList("META-INF", _ @_*) => MergeStrategy.discard
@@ -70,8 +71,8 @@ val website = project
   .settings(
     libraryDependencies ++=
       Seq("classic", "core").map { m =>
-        "ch.qos.logback" % s"logback-$m" % "1.4.5"
-      } ++ Seq("com.lihaoyi" %% "scalatags" % "0.12.0"),
+        "ch.qos.logback" % s"logback-$m" % versions.logback
+      } ++ Seq("com.lihaoyi" %% "scalatags" % versions.scalatags),
     buildInfoPackage := "com.malliina.website",
     buildInfoKeys := Seq[BuildInfoKey](
       name,
@@ -81,7 +82,7 @@ val website = project
     )
   )
 
-val cdkVersion = "2.69.0"
+val cdkVersion = "2.179.0"
 
 val cdk = project
   .in(file("cdk"))
