@@ -1,9 +1,9 @@
 package com.malliina.cdk.lambda
 
 import com.malliina.cdk.{CDK, CDKSyntax}
-import software.amazon.awscdk.pipelines.{CodePipelineSource, GitHubSourceOptions, ShellStep}
+import software.amazon.awscdk.pipelines.{CodePipelineSource, ShellStep}
 import software.amazon.awscdk.services.lambda.{Code, Function as LambdaFunction, Runtime as LambdaRuntime}
-import software.amazon.awscdk.{SecretValue, Stack, Stage, Duration as AWSDuration}
+import software.amazon.awscdk.{Stack, Stage, Duration as AWSDuration}
 import software.constructs.Construct
 
 class LambdaStack(val construct: Construct, stackName: String)
@@ -15,20 +15,11 @@ class LambdaStack(val construct: Construct, stackName: String)
       .synth(
         ShellStep.Builder
           .create("Synth")
-          .input(
-            CodePipelineSource.gitHub(
-              "malliina/cfn",
-              "master"
-//              GitHubSourceOptions
-//                .builder()
-//                .authentication(SecretValue.secretsManager("github-token"))
-//                .build()
-            )
-          )
+          .input(CodePipelineSource.gitHub("malliina/cfn", "master"))
           .commands(list("./cdk/build.sh"))
           .build()
       )
-//  pipeline.addStage(LambdaStage(stack, "FunctionStage"))
+  pipeline.addStage(LambdaStage(stack, "FunctionStage"))
 
 class LambdaStage(scope: Construct, id: String) extends Stage(scope, id):
   val func = SimpleLambda(this, "FunctionStack")
