@@ -3,6 +3,7 @@ package com.malliina.cdk
 import com.malliina.cdk.S3Redirect.RedirectConf
 import com.malliina.cdk.S3WebsiteStack.WebsiteConf
 import com.malliina.cdk.StaticWebsite.StaticConf
+import com.malliina.cdk.lambda.LambdaStack
 import com.malliina.cdk.opensearch.OpenSearch
 import software.amazon.awscdk.services.ec2.{Vpc, VpcLookupOptions}
 import software.amazon.awscdk.{Environment, StackProps, App as AWSApp}
@@ -54,5 +55,6 @@ object CDK:
       vpc.bastionSecurityGroups.map(_.getSecurityGroupId),
       app
     )
+    val simple = LambdaStack(app, "simple-lambda")
 
     val assembly = app.synth()

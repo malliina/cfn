@@ -5,6 +5,7 @@ import software.amazon.awscdk.services.cloudwatch.{Alarm, Metric}
 import software.amazon.awscdk.services.codebuild.{BuildEnvironmentVariable, BuildEnvironmentVariableType}
 import software.amazon.awscdk.services.codecommit.Repository
 import software.amazon.awscdk.services.codepipeline.{IAction, StageProps}
+import software.amazon.awscdk.services.codestar.CfnGitHubRepository
 import software.amazon.awscdk.services.ec2.{IVpc, SecurityGroup, Vpc}
 import software.amazon.awscdk.services.elasticbeanstalk.CfnConfigurationTemplate.ConfigurationOptionSettingProperty
 import software.amazon.awscdk.services.iam.*
