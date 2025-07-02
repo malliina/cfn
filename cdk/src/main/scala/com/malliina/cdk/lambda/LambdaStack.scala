@@ -18,11 +18,11 @@ class LambdaStack(val construct: Construct, stackName: String)
           .input(
             CodePipelineSource.gitHub(
               "malliina/cfn",
-              "master",
-              GitHubSourceOptions
-                .builder()
-                .authentication(SecretValue.secretsManager("github-token"))
-                .build()
+              "master"
+//              GitHubSourceOptions
+//                .builder()
+//                .authentication(SecretValue.secretsManager("github-token"))
+//                .build()
             )
           )
           .commands(list("./cdk/build.sh"))

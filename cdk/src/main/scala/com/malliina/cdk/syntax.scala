@@ -4,7 +4,7 @@ import software.amazon.awscdk.pipelines.CodePipeline
 import software.amazon.awscdk.services.cloudwatch.{Alarm, Metric}
 import software.amazon.awscdk.services.codebuild.{BuildEnvironmentVariable, BuildEnvironmentVariableType}
 import software.amazon.awscdk.services.codecommit.Repository
-import software.amazon.awscdk.services.codepipeline.{IAction, StageProps}
+import software.amazon.awscdk.services.codepipeline.{IAction, PipelineType, StageProps}
 import software.amazon.awscdk.services.codestar.CfnGitHubRepository
 import software.amazon.awscdk.services.ec2.{IVpc, SecurityGroup, Vpc}
 import software.amazon.awscdk.services.elasticbeanstalk.CfnConfigurationTemplate.ConfigurationOptionSettingProperty
@@ -100,7 +100,9 @@ trait CDKSyntax extends CDKSimpleSyntax:
   def codePipeline(construct: Construct, id: String)(
     prep: CodePipeline.Builder => CodePipeline.Builder
   ) =
-    init[CodePipeline, CodePipeline.Builder](CodePipeline.Builder.create(construct, id))(prep)
+    init[CodePipeline, CodePipeline.Builder](
+      CodePipeline.Builder.create(construct, id).pipelineType(PipelineType.V2)
+    )(prep)
   def stringParameter(name: String) = StringParameter.valueFromLookup(construct, name)
   def alarm(id: String)(f: Alarm.Builder => Alarm.Builder) =
     init(Alarm.Builder.create(construct, id))(f)
