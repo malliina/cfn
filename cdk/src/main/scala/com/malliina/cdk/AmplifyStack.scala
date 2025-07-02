@@ -17,9 +17,8 @@ class AmplifyStack(conf: AmplifyConf, scope: Construct, stackName: String)
   override val construct: Construct = this
   val stack = this
 
-  val codeCommit = codeCommitRepo("Repo") { b =>
+  val codeCommit = codeCommitRepo("Repo"): b =>
     b.repositoryName(stackName)
-  }
   val app = App.Builder
     .create(stack, "AmplifyApp")
     .appName(stackName)
@@ -58,14 +57,14 @@ class AmplifyStack(conf: AmplifyConf, scope: Construct, stackName: String)
     )
     val zoneName = dns.getZoneName
     // without this, auto subdomain doesn't work
-    val domainRole = role("DomainRole") { b =>
+    val domainRole = role("DomainRole"): b =>
       b.description(
         "The service role that will be used by AWS Amplify for the auto sub-domain feature."
       ).path("/service-role/")
         .assumedBy(principals.amplify)
         .inlinePolicies(
           map(
-            "DomainPolicy" -> policyDocument { b =>
+            "DomainPolicy" -> policyDocument: b =>
               b.statements(
                 list(
                   allowStatement(
@@ -75,10 +74,8 @@ class AmplifyStack(conf: AmplifyConf, scope: Construct, stackName: String)
                   allowStatement("route53:ListHostedZones", "*")
                 )
               )
-            }
           )
         )
-    }
 
     val domain = CfnDomain.Builder
       .create(stack, "Domain")

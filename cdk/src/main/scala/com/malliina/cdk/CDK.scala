@@ -2,6 +2,7 @@ package com.malliina.cdk
 
 import com.malliina.cdk.S3Redirect.RedirectConf
 import com.malliina.cdk.S3WebsiteStack.WebsiteConf
+import com.malliina.cdk.StaticWebsite.StaticConf
 import com.malliina.cdk.opensearch.OpenSearch
 import software.amazon.awscdk.services.ec2.{Vpc, VpcLookupOptions}
 import software.amazon.awscdk.{Environment, StackProps, App as AWSApp}
@@ -13,8 +14,8 @@ object CDK:
       .env(
         Environment
           .builder()
-          .account("297686094835")
-          .region("eu-west-1")
+          .account("490166768057")
+          .region("eu-north-1")
           .build()
       )
       .build()
@@ -26,10 +27,12 @@ object CDK:
 
     val websiteConf =
       WebsiteConf(
-        "cdk.malliina.site",
+        "cdk.malliina.com",
         "/global/route53/zone",
         "/global/certificates/arn"
       )
+    val static =
+      StaticWebsite(StaticConf("cdk.malliina.com", "/global/certificates/arn"), app, "s3-static")
     val website = S3WebsiteStack(websiteConf, app, "s3-website")
     val redirect = S3Redirect(
       RedirectConf(

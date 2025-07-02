@@ -24,11 +24,10 @@ class OpenSearch(stack: Stack) extends CDKSyntax:
     * identity pools and use them for OpenSearch Dashboards/Kibana authentication. It is separate
     * from the IAM role that allows users access to OpenSearch Dashboards/Kibana after they log in.
     */
-  val cognitoRole = role("Role") { b =>
+  val cognitoRole = role("Role"): b =>
     b.managedPolicies(
       list(ManagedPolicy.fromAwsManagedPolicyName("AmazonOpenSearchServiceCognitoAccess"))
     ).assumedBy(principal("es.amazonaws.com"))
-  }
   val userPool = UserPool.Builder.create(stack, "UserPool").userPoolName("opensearch").build()
   userPool.addDomain(
     "Domain",
@@ -98,9 +97,8 @@ class OpenSearch(stack: Stack) extends CDKSyntax:
         .build()
     )
     .build()
-  val lambdaStreamRole = role("StreamingRole") { b =>
+  val lambdaStreamRole = role("StreamingRole"): b =>
     b.assumedBy(principals.lambda).managedPolicies(list(policies.basicLambda))
-  }
   domain.grantReadWrite(lambdaStreamRole)
   domain.grantReadWrite(authRole)
   outputs(stack)(

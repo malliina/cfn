@@ -1,24 +1,20 @@
 package com.malliina.cdk
 
-import com.malliina.cdk.S3WebsiteStack.WebsiteConf
+import com.malliina.cdk.StaticWebsite.StaticConf
 import software.amazon.awscdk.services.cloudfront.CfnDistribution
 import software.amazon.awscdk.services.cloudfront.CfnDistribution.*
 import software.amazon.awscdk.services.iam.{AnyPrincipal, PolicyStatement}
-import software.amazon.awscdk.services.route53.CfnRecordSet
-import software.amazon.awscdk.services.route53.CfnRecordSet.AliasTargetProperty
-import software.amazon.awscdk.services.route53.targets.CloudFrontTarget
-import software.amazon.awscdk.services.s3.Bucket
+import software.amazon.awscdk.services.s3.{BlockPublicAccess, Bucket}
 import software.amazon.awscdk.{RemovalPolicy, Stack}
 import software.constructs.Construct
 
-object S3WebsiteStack:
-  case class WebsiteConf(
+object StaticWebsite:
+  case class StaticConf(
     domain: String,
-    hostedZoneParamName: String,
     certificateParamName: String
   )
 
-class S3WebsiteStack(conf: WebsiteConf, scope: Construct, stackName: String)
+class StaticWebsite(conf: StaticConf, scope: Construct, stackName: String)
   extends Stack(scope, stackName, CDK.stackProps)
   with CDKSyntax:
   val stack = this
@@ -34,6 +30,7 @@ class S3WebsiteStack(conf: WebsiteConf, scope: Construct, stackName: String)
     .websiteIndexDocument(indexDocument)
     .websiteErrorDocument("error.html")
     .removalPolicy(RemovalPolicy.RETAIN)
+    .blockPublicAccess(BlockPublicAccess.Builder.create().blockPublicPolicy(false).build())
     .build()
   bucket.addToResourcePolicy(
     PolicyStatement.Builder
@@ -53,7 +50,7 @@ class S3WebsiteStack(conf: WebsiteConf, scope: Construct, stackName: String)
     .distributionConfig(
       DistributionConfigProperty
         .builder()
-        .comment(s"Website hosting for ${conf.domain}")
+        .comment(s"Static website at ${conf.domain}")
         .enabled(true)
         .defaultRootObject(indexDocument)
         .aliases(list(conf.domain))
@@ -127,22 +124,8 @@ class S3WebsiteStack(conf: WebsiteConf, scope: Construct, stackName: String)
         .build()
     )
     .build()
-  val dns = CfnRecordSet.Builder
-    .create(stack, "dns")
-    .name(conf.domain)
-    .hostedZoneId(stringParameter(conf.hostedZoneParamName))
-    .`type`("A")
-    .aliasTarget(
-      AliasTargetProperty
-        .builder()
-        .dnsName(cloudFront.getAttrDomainName)
-        .hostedZoneId(CloudFrontTarget.CLOUDFRONT_ZONE_ID)
-        .build()
-    )
-    .build()
 
   val outs = outputs(stack)(
     "WebsiteURL" -> bucket.getBucketWebsiteUrl,
-    "CloudFrontDomainName" -> cloudFront.getAttrDomainName,
-    "DomainName" -> dns.getRef
+    "CloudFrontDomainName" -> cloudFront.getAttrDomainName
   )

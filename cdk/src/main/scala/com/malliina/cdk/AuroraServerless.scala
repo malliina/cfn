@@ -50,28 +50,24 @@ class AuroraServerless(
         .build()
     )
     .build()
-  val subnet = dbSubnetGroup("Subnets") { b =>
+  val subnet = dbSubnetGroup("Subnets"): b =>
     b.dbSubnetGroupDescription("Database subnet group")
       .subnetIds(vpc.getPrivateSubnets.asScala.map(_.getSubnetId).asJava)
-  }
-  val securityGroup = secGroup("SecurityGroup", vpc) { b =>
+  val securityGroup = secGroup("SecurityGroup", vpc): b =>
     b.description(s"Access to database $envName.")
       .allowAllOutbound(false)
-  }
   securityGroup.addEgressRule(
     Peer.anyIpv4(),
     Port.tcp(3306),
     "Allow outbound on 3306"
   )
-  val appSecurityGroup = secGroup("AppSecurityGroup", vpc) { b =>
+  val appSecurityGroup = secGroup("AppSecurityGroup", vpc): b =>
     b.description("Security group for app using this database.")
-  }
-  (appSecurityGroup.getSecurityGroupId +: ingressSecurityGroupIds).foreach { secGroupId =>
+  (appSecurityGroup.getSecurityGroupId +: ingressSecurityGroupIds).foreach: secGroupId =>
     securityGroup.addIngressRule(
       Peer.securityGroupId(secGroupId),
       Port.tcp(3306)
     )
-  }
   val cluster = CfnDBCluster.Builder
     .create(stack, "Database")
     .databaseName(appName)
@@ -90,16 +86,14 @@ class AuroraServerless(
     .vpcSecurityGroupIds(list(securityGroup.getSecurityGroupId))
 //    .deletionProtection(true)
     .build()
-  val serverlessInstance = dbInstance("Instance") { b =>
+  val serverlessInstance = dbInstance("Instance"): b =>
     b.dbInstanceClass("db.serverless")
       .engine("aurora-mysql")
       .dbClusterIdentifier(cluster.getRef)
-  }
-  val alarmTopic = topic("AlarmTopic") { b =>
+  val alarmTopic = topic("AlarmTopic"): b =>
     b.displayName(s"Database alarms for $envName")
-  }
   val cpuAlarmThresholdPercent = 80
-  val cpuMetric = metric { b =>
+  val cpuMetric = metric: b =>
     b.metricName("CPUUtilization")
       .namespace("AWS/RDS")
       .unit(CloudWatchUnit.PERCENT)
@@ -111,8 +105,7 @@ class AuroraServerless(
           "Role" -> "WRITER"
         )
       )
-  }
-  val cpuAlarm = alarm("CpuAlarm") { b =>
+  val cpuAlarm = alarm("CpuAlarm"): b =>
     b.alarmDescription(
       s"CPU utilization of cluster ${cluster.getRef} over $cpuAlarmThresholdPercent%"
     ).treatMissingData(TreatMissingData.NOT_BREACHING)
@@ -120,7 +113,6 @@ class AuroraServerless(
       .evaluationPeriods(2)
       .threshold(cpuAlarmThresholdPercent)
       .comparisonOperator(ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD)
-  }
   cpuAlarm.getNode.addDependency(cluster)
   outputs(stack)(
     "AppSecurityGroupId" -> appSecurityGroup.getSecurityGroupId,
