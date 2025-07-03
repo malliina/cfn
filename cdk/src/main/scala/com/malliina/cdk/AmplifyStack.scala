@@ -2,7 +2,7 @@ package com.malliina.cdk
 
 import software.amazon.awscdk.{SecretValue, Stack}
 import software.amazon.awscdk.services.amplify.CfnDomain.SubDomainSettingProperty
-import software.amazon.awscdk.services.amplify.alpha.*
+import software.amazon.awscdk.services.amplify.alpha.{App, AutoBranchCreation, CustomRule, GitHubSourceCodeProvider, RedirectStatus}
 import software.amazon.awscdk.services.amplify.{CfnBranch, CfnDomain}
 import software.amazon.awscdk.services.route53.{HostedZone, HostedZoneProviderProps}
 import software.constructs.Construct
