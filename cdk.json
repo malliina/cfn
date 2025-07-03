@@ -1,3 +1,4 @@
 {
+	"notices": false,
 	"app": "sbt \"project cdk\" run"
 }
