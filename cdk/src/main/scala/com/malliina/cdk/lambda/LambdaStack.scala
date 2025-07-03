@@ -24,7 +24,7 @@ class LambdaStack(val construct: Construct, stackName: String)
 class LambdaStage(scope: Construct, id: String) extends Stage(scope, id):
   val func = SimpleLambda(this, "FunctionStack")
 
-class SimpleLambda(scope: Construct, id: String, jarTarget: String = "simple/target/jar")
+class SimpleLambda(scope: Construct, id: String, jarTarget: String = "simple/jartarget")
   extends Stack(scope, id)
   with CDKSimpleSyntax:
   val stack = this

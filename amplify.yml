@@ -1,8 +1,8 @@
 version: 1
 env:
   variables:
-    JAVA_VERSION: "11.0.9.hs-adpt"
-    SBT_VERSION: "1.8.2"
+    JAVA_VERSION: "21.0.7-zulu"
+    SBT_VERSION: "1.11.2"
 frontend:
   phases:
     preBuild:
