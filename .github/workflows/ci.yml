@@ -5,17 +5,18 @@ on: push
 jobs:
   build:
     name: Build
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-java@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
         with:
-          distribution: 'zulu'
-          java-version: '11'
+          distribution: zulu
+          java-version: 21
+      - uses: sbt/setup-sbt@v1
       - name: Install AWS CDK
         run: |
-          sudo npm install -g aws-cdk@2.69.0
+          sudo npm install -g aws-cdk@2.203.0
           cdk --version
       - name: Run tests
         run: sbt test
