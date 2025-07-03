@@ -14,7 +14,7 @@ import software.constructs.Construct
 object S3WebsiteStack:
   case class WebsiteConf(
     domain: String,
-    hostedZoneParamName: String,
+    hostedZoneParamName: Option[String],
     certificateParamName: String
   )
 
@@ -126,22 +126,25 @@ class S3WebsiteStack(conf: WebsiteConf, scope: Construct, stackName: String)
                       .sslSupportMethod("sni-only")
               )
       )
-  val dns = CfnRecordSet.Builder
-    .create(stack, "dns")
-    .make: b =>
-      b.name(conf.domain)
-        .hostedZoneId(stringParameter(conf.hostedZoneParamName))
-        .`type`("A")
-        .aliasTarget(
-          AliasTargetProperty
-            .builder()
-            .make: b =>
-              b.dnsName(cloudFront.getAttrDomainName)
-                .hostedZoneId(CloudFrontTarget.CLOUDFRONT_ZONE_ID)
-        )
+  conf.hostedZoneParamName.foreach: hostedZoneParam =>
+    val dns = CfnRecordSet.Builder
+      .create(stack, "dns")
+      .make: b =>
+        b.name(conf.domain)
+          .hostedZoneId(stringParameter(hostedZoneParam))
+          .`type`("A")
+          .aliasTarget(
+            AliasTargetProperty
+              .builder()
+              .make: b =>
+                b.dnsName(cloudFront.getAttrDomainName)
+                  .hostedZoneId(CloudFrontTarget.CLOUDFRONT_ZONE_ID)
+          )
+    val dnsOut = outputs(stack)(
+      "DomainName" -> dns.getRef
+    )
 
   val outs = outputs(stack)(
     "WebsiteURL" -> bucket.getBucketWebsiteUrl,
-    "CloudFrontDomainName" -> cloudFront.getAttrDomainName,
-    "DomainName" -> dns.getRef
+    "CloudFrontDomainName" -> cloudFront.getAttrDomainName
   )

@@ -29,22 +29,23 @@ object CDK extends CDKSimpleSyntax:
     val websiteConf =
       WebsiteConf(
         "cdk.malliina.com",
-        "/global/route53/zone",
+        None, // "/global/route53/zone",
         "/global/certificates/arn"
       )
     val static =
       StaticWebsite(StaticConf("cdk.malliina.com", "/global/certificates/arn"), app, "s3-static")
     val website = S3WebsiteStack(websiteConf, app, "s3-website")
-    val redirect = S3Redirect(
-      RedirectConf(
-        "old.malliina.site",
-        websiteConf.domain,
-        websiteConf.hostedZoneParamName,
-        websiteConf.certificateParamName
-      ),
-      app,
-      "cdk-redirect"
-    )
+    websiteConf.hostedZoneParamName.foreach: hostedZone =>
+      val redirect = S3Redirect(
+        RedirectConf(
+          "old.malliina.site",
+          websiteConf.domain,
+          hostedZone,
+          websiteConf.certificateParamName
+        ),
+        app,
+        "cdk-redirect"
+      )
     val amplifyApp =
       AmplifyStack(AmplifyConf(domainName = None), app, "amplify")
     val search = OpenSearch.stack(app, "opensearch")
