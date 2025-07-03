@@ -8,18 +8,18 @@ import com.malliina.cdk.opensearch.OpenSearch
 import software.amazon.awscdk.services.ec2.{Vpc, VpcLookupOptions}
 import software.amazon.awscdk.{Environment, StackProps, App as AWSApp}
 
-object CDK:
+object CDK extends CDKSimpleSyntax:
   val stackProps: StackProps =
     StackProps
       .builder()
-      .env(
-        Environment
-          .builder()
-          .account("490166768057")
-          .region("eu-north-1")
-          .build()
-      )
-      .build()
+      .make: b =>
+        b.env(
+          Environment
+            .builder()
+            .make: b =>
+              b.account("490166768057")
+                .region("eu-north-1")
+        )
 
   def main(args: Array[String]): Unit =
     val app = new AWSApp()

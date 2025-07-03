@@ -1,13 +1,11 @@
 package com.malliina.cdk
 
-import software.amazon.awscdk.services.cloudwatch.actions.SnsAction
-import software.amazon.awscdk.services.cloudwatch.{Alarm, CfnAlarm, ComparisonOperator, Metric, TreatMissingData, Unit as CloudWatchUnit}
-import software.amazon.awscdk.services.ec2.{IVpc, Peer, Port, SecurityGroup}
-import software.amazon.awscdk.{Duration, RemovalPolicy, SecretValue, SecretsManagerSecretOptions, Stack}
-import software.amazon.awscdk.services.rds.{AuroraMysqlClusterEngineProps, AuroraMysqlEngineVersion, CfnDBCluster, CfnDBInstance, CfnDBSubnetGroup, DatabaseCluster, DatabaseClusterEngine, DatabaseSecret}
-import software.amazon.awscdk.services.rds.CfnDBCluster.{ScalingConfigurationProperty, ServerlessV2ScalingConfigurationProperty}
-import software.amazon.awscdk.services.sns.Topic
+import software.amazon.awscdk.services.cloudwatch.{ComparisonOperator, TreatMissingData, Unit as CloudWatchUnit}
+import software.amazon.awscdk.services.ec2.{IVpc, Peer, Port}
+import software.amazon.awscdk.services.rds.CfnDBCluster
+import software.amazon.awscdk.services.rds.CfnDBCluster.ServerlessV2ScalingConfigurationProperty
 import software.amazon.awscdk.services.secretsmanager.{Secret, SecretStringGenerator}
+import software.amazon.awscdk.{Duration, RemovalPolicy, Stack}
 import software.constructs.Construct
 
 import scala.jdk.CollectionConverters.{ListHasAsScala, SeqHasAsJava}
@@ -38,18 +36,18 @@ class AuroraServerless(
   val envName = s"$env-$appName"
   val secret = Secret.Builder
     .create(stack, "Credentials")
-    .secretName(s"$env/$appName")
-    .removalPolicy(RemovalPolicy.DESTROY)
-    .generateSecretString(
-      SecretStringGenerator
-        .builder()
-        .secretStringTemplate(s"""{"username": "$appName"}""")
-        .generateStringKey("password")
-        .excludePunctuation(true)
-        .excludeCharacters("""/@\"'\\""")
-        .build()
-    )
-    .build()
+    .make: b =>
+      b.secretName(s"$env/$appName")
+        .removalPolicy(RemovalPolicy.DESTROY)
+        .generateSecretString(
+          SecretStringGenerator
+            .builder()
+            .make: b =>
+              b.secretStringTemplate(s"""{"username": "$appName"}""")
+                .generateStringKey("password")
+                .excludePunctuation(true)
+                .excludeCharacters("""/@\"'\\""")
+        )
   val subnet = dbSubnetGroup("Subnets"): b =>
     b.dbSubnetGroupDescription("Database subnet group")
       .subnetIds(vpc.getPrivateSubnets.asScala.map(_.getSubnetId).asJava)
@@ -70,22 +68,22 @@ class AuroraServerless(
     )
   val cluster = CfnDBCluster.Builder
     .create(stack, "Database")
-    .databaseName(appName)
-    .engine("aurora-mysql")
-    .engineVersion("8.0.mysql_aurora.3.02.2")
-    .masterUsername(resolveJson(secret.getSecretName, "username"))
-    .masterUserPassword(resolveJson(secret.getSecretName, "password"))
-    .serverlessV2ScalingConfiguration(
-      ServerlessV2ScalingConfigurationProperty
-        .builder()
-        .minCapacity(0.5)
-        .maxCapacity(4)
-        .build()
-    )
-    .dbSubnetGroupName(subnet.getRef)
-    .vpcSecurityGroupIds(list(securityGroup.getSecurityGroupId))
-//    .deletionProtection(true)
-    .build()
+    .make: b =>
+      b.databaseName(appName)
+        .engine("aurora-mysql")
+        .engineVersion("8.0.mysql_aurora.3.02.2")
+        .masterUsername(resolveJson(secret.getSecretName, "username"))
+        .masterUserPassword(resolveJson(secret.getSecretName, "password"))
+        .serverlessV2ScalingConfiguration(
+          ServerlessV2ScalingConfigurationProperty
+            .builder()
+            .make: b =>
+              b.minCapacity(0.5)
+                .maxCapacity(4)
+        )
+        .dbSubnetGroupName(subnet.getRef)
+        .vpcSecurityGroupIds(list(securityGroup.getSecurityGroupId))
+  //    .deletionProtection(true)
   val serverlessInstance = dbInstance("Instance"): b =>
     b.dbInstanceClass("db.serverless")
       .engine("aurora-mysql")

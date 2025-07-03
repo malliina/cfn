@@ -27,75 +27,75 @@ class S3Redirect(conf: RedirectConf, scope: Construct, id: String)
 
   val bucket = Bucket.Builder
     .create(stack, "redirect")
-    .websiteRedirect(
-      RedirectTarget
-        .builder()
-        .hostName(conf.toDomain)
-        .protocol(RedirectProtocol.HTTPS)
-        .build()
-    )
-    .build()
+    .make: b =>
+      b.websiteRedirect(
+        RedirectTarget
+          .builder()
+          .make: b =>
+            b.hostName(conf.toDomain)
+              .protocol(RedirectProtocol.HTTPS)
+      )
   val viewerProtocolPolicy = "redirect-to-https"
   val bucketOrigin = "bucket"
   val cloudFront = CfnDistribution.Builder
     .create(stack, "cloudfront")
-    .distributionConfig(
-      DistributionConfigProperty
-        .builder()
-        .comment(s"Redirect from ${conf.fromDomain} to ${conf.toDomain}")
-        .enabled(true)
-        .aliases(list(conf.fromDomain))
-        .defaultCacheBehavior(
-          DefaultCacheBehaviorProperty
-            .builder()
-            .allowedMethods(list("HEAD", "GET"))
-            .targetOriginId(bucketOrigin)
-            .forwardedValues(
-              ForwardedValuesProperty
-                .builder()
-                .queryString(true)
-                .cookies(CookiesProperty.builder().forward("none").build())
-                .build()
-            )
-            .viewerProtocolPolicy(viewerProtocolPolicy)
-            .build()
-        )
-        .origins(
-          list(
-            OriginProperty
-              .builder()
-              .domainName(bucket.getBucketWebsiteDomainName)
-              .id(bucketOrigin)
-              .customOriginConfig(
-                CustomOriginConfigProperty
+    .make: b =>
+      b.distributionConfig(
+        DistributionConfigProperty
+          .builder()
+          .make: b =>
+            b.comment(s"Redirect from ${conf.fromDomain} to ${conf.toDomain}")
+              .enabled(true)
+              .aliases(list(conf.fromDomain))
+              .defaultCacheBehavior(
+                DefaultCacheBehaviorProperty
                   .builder()
-                  .originProtocolPolicy("http-only")
-                  .build()
+                  .make: b =>
+                    b.allowedMethods(list("HEAD", "GET"))
+                      .targetOriginId(bucketOrigin)
+                      .forwardedValues(
+                        ForwardedValuesProperty
+                          .builder()
+                          .make: b =>
+                            b.queryString(true)
+                              .cookies(CookiesProperty.builder().make(_.forward("none")))
+                      )
+                      .viewerProtocolPolicy(viewerProtocolPolicy)
               )
-              .build()
-          )
-        )
-        .viewerCertificate(
-          ViewerCertificateProperty
-            .builder()
-            .acmCertificateArn(stringParameter(conf.certificateParamName))
-            .sslSupportMethod("sni-only")
-            .build()
-        )
-        .build()
-    )
-    .build()
+              .origins(
+                list(
+                  OriginProperty
+                    .builder()
+                    .make: b =>
+                      b.domainName(bucket.getBucketWebsiteDomainName)
+                        .id(bucketOrigin)
+                        .customOriginConfig(
+                          CustomOriginConfigProperty
+                            .builder()
+                            .make: b =>
+                              b.originProtocolPolicy("http-only")
+                        )
+                )
+              )
+              .viewerCertificate(
+                ViewerCertificateProperty
+                  .builder()
+                  .make: b =>
+                    b.acmCertificateArn(stringParameter(conf.certificateParamName))
+                      .sslSupportMethod("sni-only")
+              )
+      )
   val hostedZoneId = stringParameter(conf.hostedZoneParamName)
   val dns = CfnRecordSet.Builder
     .create(stack, "dns")
-    .`type`("A")
-    .name(conf.fromDomain)
-    .hostedZoneId(hostedZoneId)
-    .aliasTarget(
-      AliasTargetProperty
-        .builder()
-        .dnsName(cloudFront.getAttrDomainName)
-        .hostedZoneId(CloudFrontTarget.CLOUDFRONT_ZONE_ID)
-        .build()
-    )
-    .build()
+    .make: b =>
+      b.`type`("A")
+        .name(conf.fromDomain)
+        .hostedZoneId(hostedZoneId)
+        .aliasTarget(
+          AliasTargetProperty
+            .builder()
+            .make: b =>
+              b.dnsName(cloudFront.getAttrDomainName)
+                .hostedZoneId(CloudFrontTarget.CLOUDFRONT_ZONE_ID)
+        )

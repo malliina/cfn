@@ -16,7 +16,7 @@ object OpenSearch:
     new OpenSearch(stack)
 
 class OpenSearch(stack: Stack) extends CDKSyntax:
-//  val user = User.Builder.create(stack, "User").userName("opensearch").build()
+//  val user = User.Builder.create(stack, "User").make(_.userName("opensearch"))
 //  user.addToPolicy()
   override val construct: Construct = stack
 
@@ -28,75 +28,77 @@ class OpenSearch(stack: Stack) extends CDKSyntax:
     b.managedPolicies(
       list(ManagedPolicy.fromAwsManagedPolicyName("AmazonOpenSearchServiceCognitoAccess"))
     ).assumedBy(principal("es.amazonaws.com"))
-  val userPool = UserPool.Builder.create(stack, "UserPool").userPoolName("opensearch").build()
+  val userPool = UserPool.Builder.create(stack, "UserPool").make(_.userPoolName("opensearch"))
   userPool.addDomain(
     "Domain",
     UserPoolDomainOptions
       .builder()
-      .cognitoDomain(CognitoDomainOptions.builder().domainPrefix("malliinasearch").build())
-      .build()
+      .make: b =>
+        b.cognitoDomain(CognitoDomainOptions.builder().make(_.domainPrefix("malliinasearch")))
   )
   val identityPool =
     CfnIdentityPool.Builder
       .create(stack, "IdentityPool")
-      .identityPoolName("opensearch")
-      .allowUnauthenticatedIdentities(false)
-      .build()
+      .make: b =>
+        b.identityPoolName("opensearch")
+          .allowUnauthenticatedIdentities(false)
   val authRole = userRole("AuthUserRole", authenticated = true)
   val unauthRole = userRole("UnauthUserRole", authenticated = false)
   def userRole(id: String, authenticated: Boolean) =
     val auth = if authenticated then "authenticated" else "unauthenticated"
     Role.Builder
       .create(stack, id)
-      .assumedBy(
-        new FederatedPrincipal(
-          "cognito-identity.amazonaws.com",
-          map(
-            "StringEquals" -> map("cognito-identity.amazonaws.com:aud" -> identityPool.getRef),
-            "ForAnyValue:StringLike" -> map("cognito-identity.amazonaws.com:amr" -> auth)
-          ),
-          "sts:AssumeRoleWithWebIdentity"
+      .make: b =>
+        b.assumedBy(
+          new FederatedPrincipal(
+            "cognito-identity.amazonaws.com",
+            map(
+              "StringEquals" -> map("cognito-identity.amazonaws.com:aud" -> identityPool.getRef),
+              "ForAnyValue:StringLike" -> map("cognito-identity.amazonaws.com:amr" -> auth)
+            ),
+            "sts:AssumeRoleWithWebIdentity"
+          )
         )
-      )
-      .build()
   // The above role should be attached to the authenticated role of the identity pool
   val attachment = CfnIdentityPoolRoleAttachment.Builder
     .create(stack, "RoleAttachment")
-    .identityPoolId(identityPool.getRef)
-    .roles(map("authenticated" -> authRole.getRoleArn, "unauthenticated" -> unauthRole.getRoleArn))
-    .build()
+    .make: b =>
+      b.identityPoolId(identityPool.getRef)
+        .roles(
+          map("authenticated" -> authRole.getRoleArn, "unauthenticated" -> unauthRole.getRoleArn)
+        )
 //  val pattern = FilterPattern.spaceDelimited("timestamp", "level", "logger", "", "message")
   val domain = Domain.Builder
     .create(stack, "Domain")
-    .version(EngineVersion.OPENSEARCH_2_3)
-    .domainName("search")
-    .enableVersionUpgrade(true)
-    .cognitoDashboardsAuth(
-      CognitoOptions
-        .builder()
-        .userPoolId(userPool.getUserPoolId)
-        .identityPoolId(identityPool.getRef)
-        .role(cognitoRole)
-        .build()
-    )
-    .capacity(
-      CapacityConfig
-        .builder()
-        .dataNodes(1)
-        .dataNodeInstanceType("t3.small.search")
-        .masterNodes(0)
-        .build()
-    )
-    .nodeToNodeEncryption(true)
-    .encryptionAtRest(EncryptionAtRestOptions.builder().enabled(true).build())
-    .enforceHttps(true)
-    .fineGrainedAccessControl(
-      AdvancedSecurityOptions
-        .builder()
-        .masterUserArn(authRole.getRoleArn)
-        .build()
-    )
-    .build()
+    .make: b =>
+      b.version(EngineVersion.OPENSEARCH_2_3)
+        .domainName("search")
+        .enableVersionUpgrade(true)
+        .cognitoDashboardsAuth(
+          CognitoOptions
+            .builder()
+            .make: b =>
+              b.userPoolId(userPool.getUserPoolId)
+                .identityPoolId(identityPool.getRef)
+                .role(cognitoRole)
+        )
+        .capacity(
+          CapacityConfig
+            .builder()
+            .make: b =>
+              b.dataNodes(1)
+                .dataNodeInstanceType("t3.small.search")
+                .masterNodes(0)
+        )
+        .nodeToNodeEncryption(true)
+        .encryptionAtRest(EncryptionAtRestOptions.builder().make(_.enabled(true)))
+        .enforceHttps(true)
+        .fineGrainedAccessControl(
+          AdvancedSecurityOptions
+            .builder()
+            .make: b =>
+              b.masterUserArn(authRole.getRoleArn)
+        )
   val lambdaStreamRole = role("StreamingRole"): b =>
     b.assumedBy(principals.lambda).managedPolicies(list(policies.basicLambda))
   domain.grantReadWrite(lambdaStreamRole)

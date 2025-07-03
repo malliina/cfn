@@ -27,103 +27,102 @@ class StaticWebsite(conf: StaticConf, scope: Construct, stackName: String)
 
   val bucket = Bucket.Builder
     .create(stack, "bucket")
-    .websiteIndexDocument(indexDocument)
-    .websiteErrorDocument("error.html")
-    .removalPolicy(RemovalPolicy.RETAIN)
-    .blockPublicAccess(BlockPublicAccess.Builder.create().blockPublicPolicy(false).build())
-    .build()
+    .make: b =>
+      b.websiteIndexDocument(indexDocument)
+        .websiteErrorDocument("error.html")
+        .removalPolicy(RemovalPolicy.RETAIN)
+        .blockPublicAccess(BlockPublicAccess.Builder.create().make(_.blockPublicPolicy(false)))
   bucket.addToResourcePolicy(
     PolicyStatement.Builder
       .create()
-      .principals(list(new AnyPrincipal()))
-      .actions(list("s3:GetObject"))
-      .resources(list(s"${bucket.getBucketArn}/*"))
-      .conditions(
-        map("StringEquals" -> map(s"aws:$headerName" -> list(secretHeader)))
-      )
-      .build()
+      .make: b =>
+        b.principals(list(new AnyPrincipal()))
+          .actions(list("s3:GetObject"))
+          .resources(list(s"${bucket.getBucketArn}/*"))
+          .conditions(
+            map("StringEquals" -> map(s"aws:$headerName" -> list(secretHeader)))
+          )
   )
   val viewerProtocolPolicy = "redirect-to-https"
   val bucketOrigin = "bucket"
   val cloudFront = CfnDistribution.Builder
     .create(stack, "cloudfront")
-    .distributionConfig(
-      DistributionConfigProperty
-        .builder()
-        .comment(s"Static website at ${conf.domain}")
-        .enabled(true)
-        .defaultRootObject(indexDocument)
-        .aliases(list(conf.domain))
-        .cacheBehaviors(
-          list(
-            CacheBehaviorProperty
-              .builder()
-              .allowedMethods(
-                list("HEAD", "GET", "POST", "PUT", "PATCH", "OPTIONS", "DELETE")
-              )
-              .pathPattern("assets/*")
-              .targetOriginId(bucketOrigin)
-              .forwardedValues(
-                ForwardedValuesProperty
-                  .builder()
-                  .queryString(true)
-                  .cookies(CookiesProperty.builder().forward("none").build())
-                  .build()
-              )
-              .viewerProtocolPolicy(viewerProtocolPolicy)
-              .build()
-          )
-        )
-        .defaultCacheBehavior(
-          DefaultCacheBehaviorProperty
-            .builder()
-            .allowedMethods(list("HEAD", "GET"))
-            .targetOriginId(bucketOrigin)
-            .forwardedValues(
-              ForwardedValuesProperty
-                .builder()
-                .queryString(true)
-                .headers(list("Authorization"))
-                .cookies(CookiesProperty.builder().forward("all").build())
-                .build()
-            )
-            .viewerProtocolPolicy(viewerProtocolPolicy)
-            .build()
-        )
-        .origins(
-          list(
-            OriginProperty
-              .builder()
-              .domainName(bucket.getBucketWebsiteDomainName)
-              .id(bucketOrigin)
-              .customOriginConfig(
-                CustomOriginConfigProperty
-                  .builder()
-                  .originProtocolPolicy("http-only")
-                  .build()
-              )
-              .originCustomHeaders(
+    .make: b =>
+      b.distributionConfig(
+        DistributionConfigProperty
+          .builder()
+          .make: b =>
+            b.comment(s"Static website at ${conf.domain}")
+              .enabled(true)
+              .defaultRootObject(indexDocument)
+              .aliases(list(conf.domain))
+              .cacheBehaviors(
                 list(
-                  OriginCustomHeaderProperty
+                  CacheBehaviorProperty
                     .builder()
-                    .headerName(headerName)
-                    .headerValue(secretHeader)
-                    .build()
+                    .make: b =>
+                      b.allowedMethods(
+                        list("HEAD", "GET", "POST", "PUT", "PATCH", "OPTIONS", "DELETE")
+                      ).pathPattern("assets/*")
+                        .targetOriginId(bucketOrigin)
+                        .forwardedValues(
+                          ForwardedValuesProperty
+                            .builder()
+                            .make: b =>
+                              b.queryString(true)
+                                .cookies(CookiesProperty.builder().make(_.forward("none")))
+                        )
+                        .viewerProtocolPolicy(viewerProtocolPolicy)
                 )
               )
-              .build()
-          )
-        )
-        .viewerCertificate(
-          ViewerCertificateProperty
-            .builder()
-            .acmCertificateArn(stringParameter(conf.certificateParamName))
-            .sslSupportMethod("sni-only")
-            .build()
-        )
-        .build()
-    )
-    .build()
+              .defaultCacheBehavior(
+                DefaultCacheBehaviorProperty
+                  .builder()
+                  .make: b =>
+                    b.allowedMethods(list("HEAD", "GET"))
+                      .targetOriginId(bucketOrigin)
+                      .forwardedValues(
+                        ForwardedValuesProperty
+                          .builder()
+                          .make: b =>
+                            b.queryString(true)
+                              .headers(list("Authorization"))
+                              .cookies(CookiesProperty.builder().make(_.forward("all")))
+                      )
+                      .viewerProtocolPolicy(viewerProtocolPolicy)
+              )
+              .origins(
+                list(
+                  OriginProperty
+                    .builder()
+                    .make: b =>
+                      b.domainName(bucket.getBucketWebsiteDomainName)
+                        .id(bucketOrigin)
+                        .customOriginConfig(
+                          CustomOriginConfigProperty
+                            .builder()
+                            .make: b =>
+                              b.originProtocolPolicy("http-only")
+                        )
+                        .originCustomHeaders(
+                          list(
+                            OriginCustomHeaderProperty
+                              .builder()
+                              .make: b =>
+                                b.headerName(headerName)
+                                  .headerValue(secretHeader)
+                          )
+                        )
+                )
+              )
+              .viewerCertificate(
+                ViewerCertificateProperty
+                  .builder()
+                  .make: b =>
+                    b.acmCertificateArn(stringParameter(conf.certificateParamName))
+                      .sslSupportMethod("sni-only")
+              )
+      )
 
   val outs = outputs(stack)(
     "WebsiteURL" -> bucket.getBucketWebsiteUrl,
