@@ -1,28 +1,30 @@
 import scala.sys.process.Process
 import scala.util.Try
 
+val versions = new {
+  val cdk = "2.223.0"
+  val database = "6.10.1"
+  val http4s = "0.23.33"
+  val javaCore = "1.4.0"
+  val javaEvents = "3.16.1"
+  val logback = "1.5.21"
+  val munit = "1.2.1"
+  val mysql = "8.0.33"
+  val scalatags = "0.13.1"
+}
+
 inThisBuild(
   Seq(
     scalaVersion := "3.7.1",
     organization := "com.malliina",
     version := "0.0.1",
     libraryDependencies ++= Seq(
-      "org.scalameta" %% "munit" % "1.1.1" % Test
+      "org.scalameta" %% "munit" % versions.munit % Test
     )
   )
 )
 
 val isProd = settingKey[Boolean]("true if prod, false otherwise")
-
-val versions = new {
-  val database = "6.9.10"
-  val http4s = "0.23.30"
-  val javaCore = "1.3.0"
-  val javaEvents = "3.16.0"
-  val logback = "1.5.18"
-  val mysql = "8.0.33"
-  val scalatags = "0.13.1"
-}
 
 val app = project
   .in(file("app"))
@@ -101,14 +103,12 @@ val website = project
     )
   )
 
-val cdkVersion = "2.203.0"
-
 val cdk = project
   .in(file("cdk"))
   .settings(
     libraryDependencies ++= Seq(
-      "software.amazon.awscdk" % "aws-cdk-lib" % cdkVersion,
-      "software.amazon.awscdk" % "amplify-alpha" % s"$cdkVersion-alpha.0"
+      "software.amazon.awscdk" % "aws-cdk-lib" % versions.cdk,
+      "software.amazon.awscdk" % "amplify-alpha" % s"${versions.cdk}-alpha.0"
     )
   )
 
