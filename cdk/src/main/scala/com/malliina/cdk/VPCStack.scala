@@ -14,23 +14,22 @@ class VPCStack(scope: Construct, stackName: String, cidrs: CIDRs = CIDRs.default
 
   /** This creates a VPC along with private, public subnets, etc networking resources.
     */
-  val vpc = buildVpc("VPC") { b =>
+  val vpc = buildVpc("VPC"): b =>
     b.ipAddresses(IpAddresses.cidr(cidrs.vpc))
       .enableDnsSupport(true)
       .enableDnsHostnames(true)
       .maxAzs(2)
-  }
   val azs = vpc.getAvailabilityZones.asScala
   val az1 = azs(0)
   val az2 = azs(1)
 
   val bastion = BastionHostLinux.Builder
     .create(stack, "BastionHost")
-    .vpc(vpc)
-    .subnetSelection(
-      SubnetSelection.builder().subnetType(SubnetType.PUBLIC).build()
-    )
-    .build()
+    .make: b =>
+      b.vpc(vpc)
+        .subnetSelection(
+          SubnetSelection.builder().make(_.subnetType(SubnetType.PUBLIC))
+        )
   bastion.allowSshAccessFrom(Peer.anyIpv4())
   val bastionSecurityGroups =
     bastion.getInstance().getConnections.getSecurityGroups.asScala.toList
@@ -47,19 +46,19 @@ class VPCStack(scope: Construct, stackName: String, cidrs: CIDRs = CIDRs.default
       .mkString(", ")
   )
 
-trait VPCSyntax:
+trait VPCSyntax extends CDKSimpleSyntax:
   def stack: Stack
   def vpc: Vpc
 
   private def aclAssociation(id: String, subnet: ISubnet) =
     SubnetNetworkAclAssociation.Builder
       .create(stack, id)
-      .subnet(subnet)
-      .networkAcl(
-        NetworkAcl
-          .fromNetworkAclId(stack, s"ACL-$id", vpc.getVpcDefaultNetworkAcl)
-      )
-      .build()
+      .make: b =>
+        b.subnet(subnet)
+          .networkAcl(
+            NetworkAcl
+              .fromNetworkAclId(stack, s"ACL-$id", vpc.getVpcDefaultNetworkAcl)
+          )
   private def routeAssociation(
     id: String,
     subnet: Subnet,
@@ -67,14 +66,14 @@ trait VPCSyntax:
   ) =
     CfnSubnetRouteTableAssociation.Builder
       .create(stack, id)
-      .subnetId(subnet.getSubnetId)
-      .routeTableId(routeTable.getRef)
-      .build()
+      .make: b =>
+        b.subnetId(subnet.getSubnetId)
+          .routeTableId(routeTable.getRef)
 
   private def subnet(id: String, cidr: String, az: String) =
     Subnet.Builder
       .create(stack, id)
-      .vpcId(vpc.getVpcId)
-      .cidrBlock(cidr)
-      .availabilityZone(az)
-      .build()
+      .make: b =>
+        b.vpcId(vpc.getVpcId)
+          .cidrBlock(cidr)
+          .availabilityZone(az)

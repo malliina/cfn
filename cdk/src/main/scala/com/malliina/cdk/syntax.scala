@@ -4,7 +4,7 @@ import software.amazon.awscdk.pipelines.CodePipeline
 import software.amazon.awscdk.services.cloudwatch.{Alarm, Metric}
 import software.amazon.awscdk.services.codebuild.{BuildEnvironmentVariable, BuildEnvironmentVariableType}
 import software.amazon.awscdk.services.codecommit.Repository
-import software.amazon.awscdk.services.codepipeline.{IAction, StageProps}
+import software.amazon.awscdk.services.codepipeline.{IAction, PipelineType, StageProps}
 import software.amazon.awscdk.services.ec2.{IVpc, SecurityGroup, Vpc}
 import software.amazon.awscdk.services.elasticbeanstalk.CfnConfigurationTemplate.ConfigurationOptionSettingProperty
 import software.amazon.awscdk.services.iam.*
@@ -31,48 +31,55 @@ trait CDKSimpleSyntax:
     action: String,
     resource: String,
     moreResources: String*
-  ): PolicyStatement = policyStatement { b =>
+  ): PolicyStatement = policyStatement: b =>
     b.actions(list(action))
       .effect(Effect.ALLOW)
       .resources(list(resource +: moreResources*))
-  }
   def list[T](xs: T*) = xs.asJava
   def map[T](kvs: (String, T)*): util.Map[String, T] = Map(kvs*).asJava
   def tagList(kvs: (String, String)*): util.List[CfnTag] =
-    kvs.map { case (k, v) => CfnTag.builder().key(k).value(v).build() }.asJava
+    kvs
+      .map:
+        case (k, v) => CfnTag.builder().make(_.key(k).value(v))
+      .asJava
   def resolveJson(secretName: String, secretKey: String) =
     s"{{resolve:secretsmanager:$secretName::$secretKey}}"
   def policyStatement(f: PolicyStatement.Builder => PolicyStatement.Builder) =
-    init(PolicyStatement.Builder.create()) { b =>
-      f(b)
-    }
+    PolicyStatement.Builder.create().make(f)
   def policyDocument(f: PolicyDocument.Builder => PolicyDocument.Builder) =
-    init(PolicyDocument.Builder.create())(f)
+    PolicyDocument.Builder.create().make(f)
   def optionSetting(namespace: String, optionName: String, value: String) =
-    init(ConfigurationOptionSettingProperty.builder()) { b =>
-      b.namespace(namespace).optionName(optionName).value(value)
-    }
+    ConfigurationOptionSettingProperty
+      .builder()
+      .make: b =>
+        b.namespace(namespace).optionName(optionName).value(value)
   def buildEnv(value: String) =
-    init(BuildEnvironmentVariable.builder()) { b =>
-      b.`type`(BuildEnvironmentVariableType.PLAINTEXT).value(value)
-    }
+    BuildEnvironmentVariable
+      .builder()
+      .make: b =>
+        b.`type`(BuildEnvironmentVariableType.PLAINTEXT).value(value)
   def stage(name: String)(actions: IAction*) =
-    init(StageProps.builder()) { b =>
-      b.stageName(name).actions(list(actions*))
-    }
-  def metric(f: Metric.Builder => Metric.Builder) = init(Metric.Builder.create())(f)
+    StageProps
+      .builder()
+      .make: b =>
+        b.stageName(name).actions(list(actions*))
+  def metric(f: Metric.Builder => Metric.Builder) = Metric.Builder.create().make(f)
   def outputs(scope: Stack, exportStackName: Boolean = true)(
     kvs: (String, String)*
   ) =
-    kvs.map { case (k, v) =>
-      val exportName =
-        if exportStackName then s"${scope.getStackName}-$k" else k
-      init(CfnOutput.Builder.create(scope, k)) { b =>
-        b.exportName(exportName)
-          .value(v)
-      }
-    }
+    kvs.map:
+      case (k, v) =>
+        val exportName =
+          if exportStackName then s"${scope.getStackName}-$k" else k
+        CfnOutput.Builder
+          .create(scope, k)
+          .make: b =>
+            b.exportName(exportName)
+              .value(v)
+
   protected def init[T, B <: CfnBuilder[T]](b: B)(f: B => B): T = f(b).build()
+
+  extension [T, B <: CfnBuilder[T]](b: B) def make(configure: B => B): T = init(b)(configure)
 
 trait CDKSyntax extends CDKSimpleSyntax:
   def construct: Construct
@@ -83,13 +90,11 @@ trait CDKSyntax extends CDKSimpleSyntax:
   def secGroup(id: String, vpc: IVpc)(
     f: SecurityGroup.Builder => SecurityGroup.Builder
   ) =
-    init(SecurityGroup.Builder.create(construct, id)) { b =>
+    init(SecurityGroup.Builder.create(construct, id)): b =>
       f(b.vpc(vpc))
-    }
   def topic(id: String)(f: Topic.Builder => Topic.Builder) =
-    init(Topic.Builder.create(construct, id)) { b =>
+    init(Topic.Builder.create(construct, id)): b =>
       f(b)
-    }
   def dbInstance(id: String)(
     f: CfnDBInstance.Builder => CfnDBInstance.Builder
   ) =
@@ -97,15 +102,16 @@ trait CDKSyntax extends CDKSimpleSyntax:
   def dbSubnetGroup(id: String)(
     f: CfnDBSubnetGroup.Builder => CfnDBSubnetGroup.Builder
   ) =
-    init(CfnDBSubnetGroup.Builder.create(construct, id)) { b =>
+    init(CfnDBSubnetGroup.Builder.create(construct, id)): b =>
       f(b)
-    }
   def codeCommitRepo(id: String)(f: Repository.Builder => Repository.Builder) =
     init(Repository.Builder.create(construct, id))(f)
   def codePipeline(construct: Construct, id: String)(
     prep: CodePipeline.Builder => CodePipeline.Builder
   ) =
-    init[CodePipeline, CodePipeline.Builder](CodePipeline.Builder.create(construct, id))(prep)
+    init[CodePipeline, CodePipeline.Builder](
+      CodePipeline.Builder.create(construct, id).pipelineType(PipelineType.V2)
+    )(prep)
   def stringParameter(name: String) = StringParameter.valueFromLookup(construct, name)
   def alarm(id: String)(f: Alarm.Builder => Alarm.Builder) =
     init(Alarm.Builder.create(construct, id))(f)

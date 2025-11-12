@@ -3,17 +3,26 @@ import scala.util.Try
 
 inThisBuild(
   Seq(
-    scalaVersion := "3.4.2",
+    scalaVersion := "3.7.1",
     organization := "com.malliina",
     version := "0.0.1",
     libraryDependencies ++= Seq(
-      "org.scalameta" %% "munit" % "1.0.0" % Test
-    ),
-    testFrameworks += new TestFramework("munit.Framework")
+      "org.scalameta" %% "munit" % "1.1.1" % Test
+    )
   )
 )
 
 val isProd = settingKey[Boolean]("true if prod, false otherwise")
+
+val versions = new {
+  val database = "6.9.10"
+  val http4s = "0.23.30"
+  val javaCore = "1.3.0"
+  val javaEvents = "3.16.0"
+  val logback = "1.5.18"
+  val mysql = "8.0.33"
+  val scalatags = "0.13.1"
+}
 
 val app = project
   .in(file("app"))
@@ -21,16 +30,13 @@ val app = project
   .settings(
     isProd := false,
     libraryDependencies ++= Seq("ember-server", "dsl", "circe").map { m =>
-      "org.http4s" %% s"http4s-$m" % "0.23.27"
-    } ++ Seq("core", "hikari").map { m =>
-      "org.tpolecat" %% s"doobie-$m" % "1.0.0-RC5"
+      "org.http4s" %% s"http4s-$m" % versions.http4s
     } ++ Seq("classic", "core").map { m =>
-      "ch.qos.logback" % s"logback-$m" % "1.5.6"
-    } ++ Seq("config", "okclient-io").map { m =>
-      "com.malliina" %% m % "3.7.3"
+      "ch.qos.logback" % s"logback-$m" % versions.logback
     } ++ Seq(
-      "mysql" % "mysql-connector-java" % "8.0.32",
-      "com.lihaoyi" %% "scalatags" % "0.12.0"
+      "com.malliina" %% "database" % versions.database,
+      "mysql" % "mysql-connector-java" % versions.mysql,
+      "com.lihaoyi" %% "scalatags" % versions.scalatags
     ),
     buildInfoPackage := "com.malliina.app",
     buildInfoKeys := Seq[BuildInfoKey]("isProd" -> isProd.value, "gitHash" -> gitHash),
@@ -44,12 +50,26 @@ val app = project
     assembly / assemblyJarName := "app.jar"
   )
 
+val simple = project
+  .in(file("simple"))
+  .settings(
+    assembly / assemblyJarName := "simple.jar",
+    assembly := {
+      val name = (assembly / assemblyJarName).value
+      val src = assembly.value
+      val dest = target.value / name
+      IO.copyFile(src, dest)
+      streams.value.log.info(s"Copied '$src' to '$dest'.")
+      dest
+    }
+  )
+
 val opensearch = project
   .in(file("opensearch"))
   .settings(
     libraryDependencies ++= Seq(
-      "com.amazonaws" % "aws-lambda-java-core" % "1.2.2",
-      "com.amazonaws" % "aws-lambda-java-events" % "3.11.1"
+      "com.amazonaws" % "aws-lambda-java-core" % versions.javaCore,
+      "com.amazonaws" % "aws-lambda-java-events" % versions.javaEvents
     ),
     assembly / assemblyMergeStrategy := {
       case PathList("META-INF", _ @_*) => MergeStrategy.discard
@@ -70,8 +90,8 @@ val website = project
   .settings(
     libraryDependencies ++=
       Seq("classic", "core").map { m =>
-        "ch.qos.logback" % s"logback-$m" % "1.5.6"
-      } ++ Seq("com.lihaoyi" %% "scalatags" % "0.12.0"),
+        "ch.qos.logback" % s"logback-$m" % versions.logback
+      } ++ Seq("com.lihaoyi" %% "scalatags" % versions.scalatags),
     buildInfoPackage := "com.malliina.website",
     buildInfoKeys := Seq[BuildInfoKey](
       name,
@@ -81,7 +101,7 @@ val website = project
     )
   )
 
-val cdkVersion = "2.69.0"
+val cdkVersion = "2.203.0"
 
 val cdk = project
   .in(file("cdk"))
@@ -92,7 +112,7 @@ val cdk = project
     )
   )
 
-val root = project.in(file(".")).aggregate(app, opensearch, website, cdk)
+val root = project.in(file(".")).aggregate(app, opensearch, website, cdk, simple)
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
 

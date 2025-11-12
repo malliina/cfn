@@ -1,11 +1,9 @@
 package com.malliina.cdk
 
-import software.amazon.awscdk.Stack
+import software.amazon.awscdk.{SecretValue, Stack}
 import software.amazon.awscdk.services.amplify.CfnDomain.SubDomainSettingProperty
-import software.amazon.awscdk.services.amplify.alpha.{App, AutoBranchCreation, CodeCommitSourceCodeProvider, CustomRule, RedirectStatus}
-import software.amazon.awscdk.services.amplify.{CfnApp, CfnBranch, CfnDomain}
-import software.amazon.awscdk.services.codecommit.Repository
-import software.amazon.awscdk.services.iam.{PolicyDocument, Role}
+import software.amazon.awscdk.services.amplify.alpha.{App, AutoBranchCreation, CustomRule, GitHubSourceCodeProvider, RedirectStatus}
+import software.amazon.awscdk.services.amplify.{CfnBranch, CfnDomain}
 import software.amazon.awscdk.services.route53.{HostedZone, HostedZoneProviderProps}
 import software.constructs.Construct
 
@@ -17,55 +15,54 @@ class AmplifyStack(conf: AmplifyConf, scope: Construct, stackName: String)
   override val construct: Construct = this
   val stack = this
 
-  val codeCommit = codeCommitRepo("Repo") { b =>
-    b.repositoryName(stackName)
-  }
   val app = App.Builder
     .create(stack, "AmplifyApp")
-    .appName(stackName)
-    .description(s"Amplify app of $stackName")
-    .sourceCodeProvider(
-      CodeCommitSourceCodeProvider.Builder
-        .create()
-        .repository(codeCommit)
-        .build()
-    )
-    .autoBranchCreation(
-      AutoBranchCreation
-        .builder()
-        .autoBuild(true)
-        .pullRequestPreview(true)
-        .patterns(list("*", "**/*"))
-//        .basicAuth(BasicAuth.fromGeneratedPassword("amplify"))
-        .build()
-    )
-    .autoBranchDeletion(true)
-    .environmentVariables(map("A" -> "B"))
-    .build()
+    .make: b =>
+      b.appName(stackName)
+        .description(s"Amplify app of $stackName")
+        .sourceCodeProvider(
+          GitHubSourceCodeProvider.Builder
+            .create()
+            .make: b =>
+              b.owner("malliina")
+                .repository("cfn")
+                .oauthToken(SecretValue.secretsManager("github-token"))
+        )
+        .autoBranchCreation(
+          AutoBranchCreation
+            .builder()
+            .make: b =>
+              b.autoBuild(true)
+                .pullRequestPreview(true)
+                .patterns(list("*", "**/*"))
+            //        .basicAuth(BasicAuth.fromGeneratedPassword("amplify"))
+        )
+        .autoBranchDeletion(true)
+        .environmentVariables(map("A" -> "B"))
   val master = CfnBranch.Builder
     .create(stack, "MasterBranch")
-    .appId(app.getAppId)
-    .branchName("master")
-    .stage("PRODUCTION")
-    .build()
+    .make: b =>
+      b.appId(app.getAppId)
+        .branchName("master")
+        .stage("PRODUCTION")
   val amplifyDomainUrl =
     s"https://${master.getBranchName}.${app.getDefaultDomain}"
-  conf.domainName.foreach { domainName =>
+  conf.domainName.foreach: domainName =>
     val dns = HostedZone.fromLookup(
       stack,
       "Zone",
-      HostedZoneProviderProps.builder().domainName(domainName).build()
+      HostedZoneProviderProps.builder().make(_.domainName(domainName))
     )
     val zoneName = dns.getZoneName
     // without this, auto subdomain doesn't work
-    val domainRole = role("DomainRole") { b =>
+    val domainRole = role("DomainRole"): b =>
       b.description(
         "The service role that will be used by AWS Amplify for the auto sub-domain feature."
       ).path("/service-role/")
         .assumedBy(principals.amplify)
         .inlinePolicies(
           map(
-            "DomainPolicy" -> policyDocument { b =>
+            "DomainPolicy" -> policyDocument: b =>
               b.statements(
                 list(
                   allowStatement(
@@ -75,45 +72,41 @@ class AmplifyStack(conf: AmplifyConf, scope: Construct, stackName: String)
                   allowStatement("route53:ListHostedZones", "*")
                 )
               )
-            }
           )
         )
-    }
 
     val domain = CfnDomain.Builder
       .create(stack, "Domain")
-      .appId(app.getAppId)
-      .domainName(domainName)
-      .autoSubDomainIamRole(domainRole.getRoleArn)
-      .subDomainSettings(
-        list(
-          SubDomainSettingProperty
-            .builder()
-            .branchName(master.getBranchName)
-            .prefix("www")
-            .build()
-        )
-      )
-      .enableAutoSubDomain(true)
-      .autoSubDomainCreationPatterns(list("feature/*"))
-      .build()
+      .make: b =>
+        b.appId(app.getAppId)
+          .domainName(domainName)
+          .autoSubDomainIamRole(domainRole.getRoleArn)
+          .subDomainSettings(
+            list(
+              SubDomainSettingProperty
+                .builder()
+                .make: b =>
+                  b.branchName(master.getBranchName)
+                    .prefix("www")
+            )
+          )
+          .enableAutoSubDomain(true)
+          .autoSubDomainCreationPatterns(list("feature/*"))
     domain.addDependency(master)
     val webRoot = s"https://www.$domainName"
     app.addCustomRule(
       CustomRule.Builder
         .create()
-        .source(s"https://$domainName")
-        .target(webRoot)
-        .status(RedirectStatus.TEMPORARY_REDIRECT)
-        .build()
+        .make: b =>
+          b.source(s"https://$domainName")
+            .target(webRoot)
+            .status(RedirectStatus.TEMPORARY_REDIRECT)
     )
     outputs(stack)(
       "WebRoot" -> webRoot,
       "DomainName" -> domainName
     )
-  }
   outputs(stack)(
-    "CodeCommitHttpsUrl" -> codeCommit.getRepositoryCloneUrlHttp,
     "AmplifyDefaultDomain" -> app.getDefaultDomain,
     "AmplifyDomainUrl" -> amplifyDomainUrl
   )
