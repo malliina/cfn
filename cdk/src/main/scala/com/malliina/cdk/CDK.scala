@@ -26,14 +26,18 @@ object CDK extends CDKSimpleSyntax:
 
     val vpc = VPCStack(app, "cdkvpc")
 
+    val static =
+      StaticWebsite(
+        StaticConf("cdk.malliina.com", "/global/certificates/wildcard-malliina-com"),
+        app,
+        "s3-static"
+      )
     val websiteConf =
       WebsiteConf(
         "cdk.malliina.com",
         None, // "/global/route53/zone",
         "/global/certificates/arn"
       )
-    val static =
-      StaticWebsite(StaticConf("cdk.malliina.com", "/global/certificates/arn"), app, "s3-static")
     val website = S3WebsiteStack(websiteConf, app, "s3-website")
     websiteConf.hostedZoneParamName.foreach: hostedZone =>
       val redirect = S3Redirect(

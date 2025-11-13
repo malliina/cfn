@@ -1,10 +1,10 @@
 package com.malliina.cdk
 
 import com.malliina.cdk.StaticWebsite.StaticConf
-import software.amazon.awscdk.services.cloudfront.CfnDistribution
+import software.amazon.awscdk.services.cloudfront.{CfnDistribution, S3OriginAccessControl, Signing}
 import software.amazon.awscdk.services.cloudfront.CfnDistribution.*
-import software.amazon.awscdk.services.iam.{AnyPrincipal, PolicyStatement}
-import software.amazon.awscdk.services.s3.{BlockPublicAccess, Bucket}
+import software.amazon.awscdk.services.iam.{Effect, PolicyDocument, PolicyStatement}
+import software.amazon.awscdk.services.s3.{Bucket, BucketPolicy}
 import software.amazon.awscdk.{RemovalPolicy, Stack}
 import software.constructs.Construct
 
@@ -22,57 +22,35 @@ class StaticWebsite(conf: StaticConf, scope: Construct, stackName: String)
 
   val indexDocument = "index.html"
 
-  val headerName = "Referer"
-  val secretHeader = "secret"
-
-  val bucket = Bucket.Builder
+  val bucket: Bucket = Bucket.Builder
     .create(stack, "bucket")
     .make: b =>
-      b.websiteIndexDocument(indexDocument)
-        .websiteErrorDocument("error.html")
-        .removalPolicy(RemovalPolicy.RETAIN)
-        .blockPublicAccess(BlockPublicAccess.Builder.create().make(_.blockPublicPolicy(false)))
-  bucket.addToResourcePolicy(
-    PolicyStatement.Builder
-      .create()
-      .make: b =>
-        b.principals(list(new AnyPrincipal()))
-          .actions(list("s3:GetObject"))
-          .resources(list(s"${bucket.getBucketArn}/*"))
-          .conditions(
-            map("StringEquals" -> map(s"aws:$headerName" -> list(secretHeader)))
-          )
-  )
+      b.removalPolicy(RemovalPolicy.DESTROY)
+        .autoDeleteObjects(true)
   val viewerProtocolPolicy = "redirect-to-https"
   val bucketOrigin = "bucket"
-  val cloudFront = CfnDistribution.Builder
+  val oac = S3OriginAccessControl.Builder.create(stack, "oac").signing(Signing.SIGV4_ALWAYS).build()
+  val cloudFront: CfnDistribution = CfnDistribution.Builder
     .create(stack, "cloudfront")
     .make: b =>
       b.distributionConfig(
         DistributionConfigProperty
           .builder()
           .make: b =>
-            b.comment(s"Static website at ${conf.domain}")
+            b
+              .aliases(list("s3.malliina.com"))
               .enabled(true)
               .defaultRootObject(indexDocument)
-              .aliases(list(conf.domain))
-              .cacheBehaviors(
+              .customErrorResponses(
                 list(
-                  CacheBehaviorProperty
+                  CustomErrorResponseProperty
                     .builder()
-                    .make: b =>
-                      b.allowedMethods(
-                        list("HEAD", "GET", "POST", "PUT", "PATCH", "OPTIONS", "DELETE")
-                      ).pathPattern("assets/*")
-                        .targetOriginId(bucketOrigin)
-                        .forwardedValues(
-                          ForwardedValuesProperty
-                            .builder()
-                            .make: b =>
-                              b.queryString(true)
-                                .cookies(CookiesProperty.builder().make(_.forward("none")))
-                        )
-                        .viewerProtocolPolicy(viewerProtocolPolicy)
+                    .make: rp =>
+                      rp.errorCode(404).responseCode(404).responsePagePath("/404.html"),
+                  CustomErrorResponseProperty
+                    .builder()
+                    .make: rp =>
+                      rp.errorCode(403).responseCode(403).responsePagePath("/403.html")
                 )
               )
               .defaultCacheBehavior(
@@ -86,7 +64,6 @@ class StaticWebsite(conf: StaticConf, scope: Construct, stackName: String)
                           .builder()
                           .make: b =>
                             b.queryString(true)
-                              .headers(list("Authorization"))
                               .cookies(CookiesProperty.builder().make(_.forward("all")))
                       )
                       .viewerProtocolPolicy(viewerProtocolPolicy)
@@ -96,23 +73,10 @@ class StaticWebsite(conf: StaticConf, scope: Construct, stackName: String)
                   OriginProperty
                     .builder()
                     .make: b =>
-                      b.domainName(bucket.getBucketWebsiteDomainName)
+                      b.domainName(bucket.getBucketDomainName)
                         .id(bucketOrigin)
-                        .customOriginConfig(
-                          CustomOriginConfigProperty
-                            .builder()
-                            .make: b =>
-                              b.originProtocolPolicy("http-only")
-                        )
-                        .originCustomHeaders(
-                          list(
-                            OriginCustomHeaderProperty
-                              .builder()
-                              .make: b =>
-                                b.headerName(headerName)
-                                  .headerValue(secretHeader)
-                          )
-                        )
+                        .originAccessControlId(oac.getOriginAccessControlId)
+                        .s3OriginConfig(S3OriginConfigProperty.builder().build())
                 )
               )
               .viewerCertificate(
@@ -124,7 +88,31 @@ class StaticWebsite(conf: StaticConf, scope: Construct, stackName: String)
               )
       )
 
+  val cloudFrontArn =
+    s"arn:aws:cloudfront::$getAccount:distribution/${cloudFront.getDistributionRef.getDistributionId}"
+  val bp = BucketPolicy.Builder
+    .create(stack, "bucketpolicy")
+    .make: b =>
+      b.bucket(bucket)
+        .document(
+          PolicyDocument.Builder
+            .create()
+            .make: pd =>
+              pd.statements(
+                list(
+                  PolicyStatement.Builder
+                    .create()
+                    .make: s =>
+                      s.actions(list("s3:GetObject"))
+                        .principals(list(principal("cloudfront.amazonaws.com")))
+                        .effect(Effect.ALLOW)
+                        .resources(list(s"${bucket.getBucketArn}/*"))
+                        .conditions(map("StringEquals" -> map("AWS:SourceArn" -> cloudFrontArn)))
+                )
+              )
+        )
   val outs = outputs(stack)(
+    "BucketDomain" -> bucket.getBucketDomainName,
     "WebsiteURL" -> bucket.getBucketWebsiteUrl,
     "CloudFrontDomainName" -> cloudFront.getAttrDomainName
   )
